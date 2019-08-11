@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -xe
+
+# For now we don't attempt updates
+if test -d mod/pfds; then
+    echo error: pfds directory already exists 1>&2
+    exit 2
+fi
+
+tmpdir="$(mktemp -d "tmp-pfds-XXXXXXX")"
+trap "$(printf "rm -rf %q" "$tmpdir")" EXIT
+
+git clone -b v0.3 https://github.com/ijp/pfds.git "$tmpdir/pfds"
+
+actual_hash="$(git -C "$tmpdir/pfds" rev-parse v0.3^{})"
+if test "$actual_hash" != 454033f82dac7c0b0ea9e84eed1e8ed316487c78; then
+    echo "ERROR: cloned unexpected pfds v0.3 hash $actual_hash" 1>&2
+    exit 2
+fi
+
+mv "$tmpdir/pfds" mod/pfds

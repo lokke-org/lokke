@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+exec ./guile "$0" "$@"
+!#
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ;; srfi-88
+
+;; FIXME: not positive it wasn't an artifact of other problems, but
+;; may have observed that --language=lokke causes everything, even
+;; scheme modules to pass through the lokke reader.  For now we'll
+;; avoid setting the lanugage.
+
+(use-modules
+ ((ice-9 eval-string) :select (eval-string))
+ ((lokke core) :select (println))
+ ((lokke compile) :select (load-file))
+ ((lokke ns) :select (default-environment))
+ ((srfi srfi-69)
+  select: (make-hash-table
+           hash-table->alist
+           hash-table-ref
+           hash-table-set!
+           hash-table-update!
+           hash-table-update!/default)))
+
+(define not-even-started 254)
+
+(define err current-error-port)
+(define str string-append)
+
+(define usage
+  (string-append
+   "Usage:\n"
+   "  lokke --help\n"
+   "  lokke OPTS\n"
+   "  lokke OPTS -- CLOJURE_PROGRAM_ARG...\n"
+   "OPTS:\n"
+   "  -i, --init PATH    load path\n"
+   "  -e, --eval CODE    evaluate code, printing non-nil values\n"))
+
+(define (quit msg status)
+  (display msg (err))
+  (exit status))
+
+(define (misuse)
+  (quit usage not-even-started))
+
+(define (make-options-hash)
+  (let ((result (make-hash-table)))
+    (hash-table-set! result 'actions '())
+    (hash-table-set! result 'args '())
+    result))
+
+(define (parse-args args)
+  (define (clean-up result)
+    (hash-table-update! result 'actions (lambda (x) (reverse! x)))
+    result)
+  (define (add-loader path)
+    (lambda (actions)
+      (cons (lambda () (load-file path)) actions)))
+  (define (add-evaluator code)
+    (lambda (actions)
+      (cons (lambda ()
+              (let ((result (eval-string code lang: 'lokke compile?: #t)))
+                (unless (nil? result)
+                  (println result))))
+            actions)))
+  (let loop ((args (cdr args))
+             (result (make-options-hash)))
+    (if (null? args)
+        result
+        (let ((arg (car args)))
+          (cond
+           ((equal? "--help" arg) (quit usage 0))
+           ((member arg '("-i" "--init"))
+            (when (null? (cdr args))
+              (quit (format #f "No argument for ~a\n" arg) not-even-started))
+            (hash-table-update! result 'actions (add-loader (cadr args)))
+            (loop (cddr args) result))
+           ((member arg '("-e" "--eval"))
+            (when (null? (cdr args))
+              (quit (format #f "No argument for ~a\n" arg) not-even-started))
+            (hash-table-update! result 'actions (add-evaluator (cadr args)))
+            (loop (cddr args) result))
+           ((equal? "--help" arg) (quit usage 0))
+           ((equal? "--" arg)
+            (hash-table-set! result 'args (cdr args))
+            result)
+           (else
+            (format (err) "Unrecognized argument: ~s\n" arg)
+            (quit usage not-even-started)))))))
+
+(define (main args)
+  (let ((opts (parse-args args)))
+    ;; FIXME: is this what we want or should *command-line-args* just
+    ;; be a subset?  This is also a fluid...
+    (set-program-arguments (cons (car (program-arguments))
+                                 (hash-table-ref opts 'args)))
+    ;; FIXME: ...and this?
+    (set-current-module (default-environment))
+    (for-each (lambda (action) (action))
+              (hash-table-ref opts 'actions))
+    0))
+
+(exit (main (program-arguments)))
+
+;; Local Variables:
+;; mode: scheme
+;; End:

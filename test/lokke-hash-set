@@ -1,0 +1,82 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ;; srfi-88
+
+(use-modules
+ ((lokke scm test-anything)
+  select: (tap-test-runner))
+ ((lokke collection) select: (counted? reduce seq))
+ ((lokke hash-set) prefix: t/)
+ ((srfi srfi-1)
+  select: (iota))
+ ((srfi srfi-64)
+  select: (test-assert
+           test-begin
+           test-end
+           test-eq
+           test-equal
+           test-eqv
+           test-group
+           test-runner-current
+           test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(test-assert (t/hash-set? (t/hash-set)))
+(test-assert (not (t/hash-set? 'something)))
+
+(test-assert (counted? (t/hash-set)))
+
+(test-equal (t/hash-set) (t/hash-set))
+(test-equal (t/hash-set 1) (t/hash-set 1))
+(test-equal (t/hash-set 1 2) (t/hash-set 1 2))
+(test-assert (not (equal? (t/hash-set) (t/hash-set 1))))
+
+(test-equal (t/hash-set 1) (t/set '(1)))
+
+(test-equal (t/hash-set 1) (t/conj (t/hash-set) 1))
+(test-equal (t/hash-set 1 2) (t/conj (t/hash-set) 1 2))
+(test-assert (not (equal? (t/hash-set) (t/conj (t/hash-set) 1))))
+
+(test-equal (t/hash-set 2) (t/disj (t/hash-set 1 2) 1))
+(test-equal (t/hash-set) (t/disj (t/hash-set 1 2) 1 2))
+(test-equal (t/hash-set) (t/disj (t/hash-set 1 2) 1 2 3))
+
+(test-eqv 0 (t/count (t/hash-set)))
+(test-eqv 1 (t/count (t/hash-set 1)))
+(test-eqv 2 (t/count (t/hash-set 1 2)))
+
+(test-equal (t/hash-set) (t/empty (t/hash-set 1 2 3)))
+
+(test-assert (not (t/contains? (t/hash-set) 1)))
+(test-assert (t/contains? (t/hash-set 1) 1))
+(test-assert (t/contains? (t/hash-set 1 2 3) 2))
+
+(test-eq #nil (t/get (t/hash-set) 1))
+(test-assert (t/get (t/hash-set 1) 1))
+(test-assert (t/get (t/hash-set 1 2 3) 2))
+(test-eq 'not-found (t/get (t/hash-set) 1 'not-found))
+
+(test-eqv 15 (reduce + 0 (t/hash-set 1 2 3 4 5)))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

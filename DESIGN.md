@@ -1,0 +1,323 @@
+
+Compilation
+-----------
+
+The current approach is to let the Scheme macro-expansion process act
+as the primary "compiler" just as it does for Guile itself.  It's
+unclear whether or not this is the approach we'll want to keep.
+
+The Scheme compiler compiles from Scheme to the next level down in
+Guile's language tower which is tree-il.  We explicitly invoke the
+Scheme compiler in an environment (which is a Guile module, which is a
+Clojure namespace) that has macros defined that implement much of
+Clojure when expanded.
+
+After that expansion, we walk the tree-il representation in order to
+rewrite normal (x ...) calls as (invoke x ...), where invoke is a
+generic function that has specializations allowing it to handle
+Clojure's "invokable" instances, e.g. (:foo #{bar}), ([1 2 3] 2), etc.
+Once the final tree-il code is ready, we return it to Guile for
+compilation or execution via the lower levels of language tower.
+
+The compilation process uses some symbols starting with /lokke/ as a
+side channel for communication (discussed further below), which is
+fine since symbols staring with "/" are illegal in Clojure itself.
+
+Clojure's "compound" (namespaced) symbols like clojure.string/join
+present another wrinkle.  The current (incomplete) handling just
+rewrites those in the reader as (/lokke/scoped-sym clojure.string/join
+(clojure string) join).  Before passing a form to a Clojure syntax
+expander (created with the Clojure side defmacro), all of the
+scoped-sym references are transformed back to their corresponding
+compound symbols (e.g. clojure.string/join), and then, once the
+expander has returned the expansion, any compound symbols are
+rewritten as scoped-syms.
+
+The compilation module (namespace) also includes a definition of
+/lokke/scoped-sym as a syntax that expands into a normal guile module
+lookup, i.e. (@ (clojure string) join) so that any compound symbols
+that still exist after all of the macros have been expanded will be
+rewritten as references to the correct module variable.
+
+There is a similar "domain shift" with respect to Clojure hash-map and
+hash-set literals, i.e. {...} and #{...}.  Those are always presented
+to the Clojure defmacro transformers as actual instances of hash-map
+and hash-set, but the compiler itself always sees them as
+psuedo-function invocations like (/lokke/reader-hash-map ...) and
+(/lokke/reader-hash-set ...) since the Scheme syntax expander wouldn't
+know what to do with a hash-map or hash-set instance.
+
+That is, #{foo} is an actual hash-map instance containing the symbol
+foo whenever it is encountered by Clojure code during compilation, for
+example whenever a Clojure defmacro expander sees it, but it will be
+(/lokke/reader-hash-set foo) whenever it is encountered by the Scheme
+syntax expander.
+
+In part, we've started with this approach because we wanted to try
+relying on the normal Scheme macroexpander (the way Guile's Scheme
+dialect does), so that, amoung other things, we can use hygenic macros
+(i.e. define-syntax) when feasible.  We also wanted to try to make it
+easier to write the syntax pattern matchers which can only directly
+match Scheme symbols, lists, vectors, etc., not Clojure vectors,
+seqs...
+
+This is another choice that may or may not turn out to be desirable in
+the long run, and even if we don't decide to purse a completely
+independent compiler, perhaps we'll end up wanting to rewrite the
+macros to be able to handle/match Clojure data structures directly.
+Though that could make them notably more complicated and might
+preclude the simpler syntax-rules style macros in some cases (as
+compared to syntax-case).
+
+In order to support this domain shifting approach there are two
+flavors of the reader functions, one for the compiler, and then the
+"normal" flavor.  The former produces input suitable for the compiler,
+including, for example, the`(/lokke/vector 1 2 3)` style forms instead
+of native Clojure instances.  The normal reader returns native data
+structures as you might expect, though of course the contents will be
+unevaluated.
+
+The compiler represents lists as scheme lists so that the syntax
+expander will handle expansions normally.  The intention is for any
+quoted lists to end up compiled to normal Guile const lists (which are
+immutable, though possibly only when compiled right now).
+
+Modules and namespaces
+----------------------
+
+- Namespaces *are* Guile modules, but all of the normal infrastructure
+  (`ns`, `require`, etc.) expects them to be located underneath `(lokke
+  ns)` in the Guile module tree.  So for example `(require
+  'clojure.string)` will actually try to find the Guile module `(lokke
+  ns clojure string)`.
+
+- Guile's module definitions are normally private unless exported, so
+  we arrange for all clojure defs to also export the name in order to
+  match Clojure's semantics.
+
+- Currently Clojure namespaces can be written in either Clojure or
+  Scheme, though some care must be taken with the latter, and
+  namespace lookups will load the first suitably located file ending
+  in ".clj" or ".scm" after compiling it with the appropriate compiler
+  with a ".clj" file taking precedence within a given directory.
+
+- Guile's module lookups, of course, only search for ".scm" (by
+  default, though there is a way to change that).
+
+- Right now, all namespaces starting with `(lokke clojure core)` are
+  considered "core" modules, and are treated a bit differently.
+  They're considered to be relevant to the bootstrapping process
+  (i.e. before clojure.core is ready) and so (for example) their `ns`
+  forms do not automatically `refer-clojure` (since no one's likely to
+  want an infinite recursion at startup).
+
+Metadata
+--------
+
+- ...is currently quite broken.  But the current plan is to support
+  it, but not any more than is really useful at any given point.
+
+- What we have so far begins to handle metadata as Scheme
+  [parameters](https://srfi.schemers.org/srfi-39/srfi-39.html)
+
+- We're currently planning to see if we can just avoid ever supporting
+  metadata on some things, symbols being a clear example, or at least
+  making support optional, since doing so would introduce overhead,
+  and it would add a substantial impedence mismatch with the Scheme
+  side.  The former because symbols could no longer be simple unique
+  pointers (because immutability requires a new object every time the
+  metadat changes), and the latter because Clojure and Scheme symbols
+  wouldn't have the same representation anymore, affecting all kinsds
+  of things, likely including the compler.
+
+Concurrency
+-----------
+
+Guile's intends to avoid crashes or corruption when executing code in
+parallel, but it does not make any guarantees about outcomes without
+appropriate synchronization.  From the Guile Reference Manual:
+
+> All libguile functions are (intended to be) robust in the face of
+> multiple threads using them concurrently.  This means that there is
+> no risk of the internal data structures of libguile becoming
+> corrupted in such a way that the process crashes.
+
+> A program might still produce nonsensical results, though.
+
+Currently Lokke intends to follow a similar approach.
+
+TODO
+----
+
+- fn does not support destructuring yet.  Perhaps just do the same
+  thing we did for let and define fn in terms of primitive-fn so we
+  can redefine fn without worring about
+  module/variable/etc. visibility for now (c.f. fix-let).
+
+- let is still somewhat flaky, e.g. destructuring let inside a simple
+  fn can't see fn args right now (defn foo [x] (let [[y] x] y))
+
+- Finish ns implementation (:as, etc.).
+
+  One relatively simple initial approach for handling :as might be to
+  just store them in a hash map in the module (ns) bound to a known
+  and possibly hidden name, i.e. /lokke/ns-aliases.  Then /lokke/@
+  might just need to be adjusted to consult that too.
+
+- Investigate GOOPS read-only slots -- daviid mentioned that GNOME
+  uses them, e.g. <read-only-slot> in gobject/gtype.scm.
+
+- Fix metadata at least enough for now.
+
+- Implement dynamic variables, binding, etc. (cf. Guile parameters).
+
+- Incorporate the existing, unfinished atom implementation.
+
+- Add reader conditionals after bikeshedding about the name(s).
+
+- Make sure (comment ...) works.
+
+- Examine (srfi srfi-45) wrt lazy seqs.
+
+- clean UP...
+
+- remove vestigial bits from the reader (syntax, synquote, etc.?)
+
+- Create clojure.string, clojure.edn, maybe some suitable File and/or
+  clojure.java.io, and clojure.java.shell shims, etc.
+
+- Contemplate eval-when -- do we have it where we need it, does it,
+  and/or can it work reasonably from the Clojure side?
+
+- Contemplate exceptions - most likely candidates are prompts or guile
+  throw either way we only have a token - for prompts it's unique
+  "tag" (currently a pair), and for throw it's a symbol.
+
+  We might want some "imposter" bindings/whatever to handle at least
+  the common cases, i.e. (throw (Exception. "no way")).  Suposse
+  we might be able to get away with some (define-imposter Exception
+  ...) that would among other things, create an Exception. function
+  that would do something plausible.  It might also say bind Exception
+  to a GOOPS class, and record a corresponding catch/prompt key/tag
+  somwhere we can find later when catching.
+
+  Upstream debate over exceptions in the context of cljs suggested
+  that they may really want to head toward just being able to throw a
+  data-carrying-object and then do something with it -- didn't sound
+  like they were in favor of keeping much of the JVM class/hierarchy
+  matching business as the non-platform-specific method.
+
+- I'm still not sure whether the way we're handling the compilation
+  environment, via default-environment, bootstrap, (lokke user), etc.,
+  is very solid and/or what we really want.
+
+  It's notable that the Scheme compiler appears to use more anonymous,
+  throwaway environments for compilation, but when I tried that there
+  were problems (that might or might not have been caused by other
+  bugs).  For example repeated loads of compiled modules (across
+  heaps) would fail on lookups to the anonomyous modules -- no fun
+  figuring that one out...
+
+- Note that Guile's --language argument, i.e. --language=lokke appears
+  to cause guile to set the reader to lokke universally, which
+  breaks (use-modules ...), etc.
+
+- Improve hash-map and hash-set seqs, which may require improvements
+  to pfds or...
+
+- Replace all pr, prn, print, and println defs with pr-to, ... and
+  then make pr and prn normal functions that (pr-to *out* obj), etc.
+  Might also want to consider making pr-to, etc. part of clojure.core
+  and just document it as a Lokke addition.
+
+- Use SPDX license identifiers, and can we automate copyright notice
+  updates (years) via git?
+
+- Settle Scheme side binding vector vs list question and bring code
+  into compliance.
+
+  Using (let [] ...) from guile is the most similar syntax, but it
+  makes the macroexpansion more difficult and/or potentially ambiguous
+  (because [ and ] are reader equivalent to ( and ) in guile).  And if
+  you use (let () ...), then it's potentially more confusing to a
+  reader that may not realize you've clobbered Scheme let.  At a
+  minimum fn's syntax may be more ambiguous with lists instead of
+  vectors, i.e. (fn ([x] 0)).
+
+- Fix up lokke-vector.c docstrings
+
+- Handle all the FIXMEs...
+  
+- Test lazy/infinite seqs.
+
+- Run some large structure memory tests.
+
+- Redirect the defn name to procedure-name, etc.?
+
+- Fix up source-properties, etc.
+
+- arguement lists like (fn [& xs] ...) are not lazy collections,
+  they're handled natively as guile (lambda args ...) etc.
+
+- Do we care about `allow-legacy-syntax-objects?`
+
+  A parameter that indicates whether the expander should support
+  legacy syntax objects, as described above.  For ABI stability
+  reasons, the default is ‘#t’.  Use ‘parameterize’ to bind it to
+  ‘#f’.  *Note Parameters::.
+
+
+Hacking
+-------
+
+- For now, EPL licenced code ported from upstream should go in a
+  separate, nested epl namespace, e.g. (lokke ns clojure core epl),
+  and we need to figure out how we want to handle Signed-off-by for
+  that and other non-trivial cases.
+
+- When defining syntaxes - note the use of (expand ...) functions in
+  say (lokke base syntax).  The relevant cases just call a common
+  expand(er) to do the work.  That makes sure that the scoping of
+  introduced variables will be correct, as compared to what may happen
+  if you just redirect one syntax-case redirect to another via
+  recursive expansion.
+
+- Guile has no syntax/macro dependency tracking, so changes to a macro
+  will not automatically propagate outside the module they're defined
+  in.  You can set GUILE_AUTO_COMPILE=fresh to force Guile to
+  recompile everything (or you can just find and delete the relevant
+  .go files in ~/.cache/guile/... if you know what they are).
+
+- Current Guile may proceed with no more than a warning while loading
+  a module when you might expect it to halt.  It might do that when
+  there's an undefined variable or circular dependency (and the
+  warning there may only be about a missing definition).  By default
+  it will also just fall back to the old compiled code for a module
+  (if any) when auto-compilation fails.
+
+- Failing to get the distinctions between export, reexport, replace,
+  etc. right can produce some confusing results with respect to
+  binding definitions/visibility.
+
+- For more diagnostic information (and yes, we definitely need
+  something more sophisticated...), there are a few debug settings you
+  can set to #t, including:
+    - (language lokke spec) debug-lang?
+    - (lokke base syntax) debug-let? debug-fn?
+    - (lokke compile) debug-il?
+    - (lokke reader) debug-reader?
+
+- If you want to see where a call is coming from:
+
+    (let ((s (make-stack #t)))
+      (display-backtrace s (current-error-port) 0 100))
+
+- "unexpected syntax in form": might mean there's a missing
+  use-modules in the namespace declaring the syntax.
+
+- On the Guile side there are a variety of options for defining
+  functions, e.g. those based on `lambda`, `lambda*`, `match-lambda*`,
+  or GOOPS methods (at least).
+
+- At the moment in some cases we treat keywords much like symbols.
+  cf. the (lokke symbol) module.

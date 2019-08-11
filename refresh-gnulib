@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -ex
+
+gnulib-tool --no-vc-files --source-base=gnulib --add-import "$@"

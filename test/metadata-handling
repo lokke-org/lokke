@@ -1,0 +1,70 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version.
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix) ;; srfi-88
+
+(use-modules
+ ((lokke collection) select: (merge))
+ ((lokke hash-map) select: (conj hash-map))
+ ((lokke hash-set) select: (hash-set))
+ ((lokke metadata) prefix: t/)
+ ((lokke reader) prefix: lokke/)
+ ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke scm vector) :select (lokke-vector))
+ ((srfi srfi-64)
+  select: (test-assert
+           test-begin
+           test-end
+           test-equal
+           test-group
+           test-runner-current
+           test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(test-equal (lokke-vector 1) (lokke/read-string "^:foo [1]"))
+(test-equal (hash-map #:foo #t) (t/meta (lokke/read-string "^:foo [1]")))
+
+(test-equal (lokke-vector 1) (lokke/read-string "^{:bar :baz} [1]"))
+(test-equal (hash-map #:bar #:baz)
+  (t/meta (lokke/read-string "^{:bar :baz} [1]")))
+
+(test-equal (lokke-vector 1) (lokke/read-string "^:foo ^{:bar :baz} [1]"))
+(test-equal (hash-map #:foo #t #:bar #:baz)
+  (t/meta (lokke/read-string "^:foo ^{:bar :baz} [1]")))
+
+(test-equal (lokke-vector 1) (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]"))
+(test-equal (hash-map #:bar #:bax)
+  (t/meta (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]")))
+
+(test-equal (lokke-vector 1) (lokke/read-string "^foo [1]"))
+(test-equal (hash-map #:tag 'foo) (t/meta (lokke/read-string "^foo [1]")))
+
+(test-equal (lokke-vector 1) (lokke/read-string "^\"foo\" [1]"))
+(test-equal (hash-map #:tag "foo") (t/meta (lokke/read-string "^\"foo\" [1]")))
+
+(test-equal (hash-map #:x '(inc 1)) (t/meta (lokke/read-string "^{:x (inc 1)} [1]")))
+
+;; FIXME: crashes
+;; (test-equal '() (t/meta (lokke/read-string "^{:tag foo :doc bar} [1]")))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

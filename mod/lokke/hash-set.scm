@@ -1,0 +1,163 @@
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ;; srfi-88
+
+(define-module (lokke hash-set)
+  use-module: ((ice-9 control) select: (call/ec))
+  use-module: ((lokke collection)
+               select: (<coll>
+                        conj
+                        cons
+                        contains?
+                        count
+                        counted?
+                        empty
+                        get
+                        into
+                        lazy-seq
+                        reduce
+                        rest seq))
+  use-module: ((lokke invoke) select: (invoke))
+  use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
+  use-module: (oop goops)
+  use-module: ((pfds hamts) prefix: hamts/)
+  use-module: ((srfi srfi-41) select: (stream-lambda))
+  use-module: ((srfi srfi-69) prefix: hash/)
+  use-module: ((rnrs) :prefix rnrs/)
+  export: (<hash-set>
+           disj
+           foo
+           hash-set
+           hash-set?
+           set)
+  re-export: (conj contains? count empty get into invoke pr pr-str print print-str)
+  duplicates: (merge-generics replace warn-override-core warn last))
+
+(define-class <hash-set> (<coll>)
+  (internals init-keyword: internals:))
+
+(define-syntax-rule (set-hamt s) (slot-ref s 'internals))
+
+(define (read-only-str s) (substring/read-only s 0))
+
+(define (render-str s render)
+  (let* ((first? #t)
+         (content (hamts/hamt-fold (lambda (x _ result)
+                                     (when first? (set! first? #f))
+                                     (cons (string-append (if first? "" " ")
+                                                          (render x))
+                                           result))
+                                   '()
+                                   (set-hamt s)))
+         (content (reverse! content)))
+    (read-only-str (apply string-append "#{" (append content '("}"))))))
+
+(define-method (pr-str (m <hash-set>)) (render-str m pr-str))
+(define-method (print-str (m <hash-set>)) (render-str m print-str))
+
+(define (show s emit)
+  (display "#{" (*out*))
+  (let ((first? #t))
+    (hamts/hamt-fold (lambda (k _ result)
+                       (if first?
+                           (set! first? #f)
+                           (display " " (*out*)))
+                       (emit k))
+                     #t
+                     (set-hamt s)))
+  (display "}" (*out*)))
+
+(define-method (pr (s <hash-set>)) (show s pr))
+(define-method (print (s <hash-set>)) (show s print))
+
+(define (hash-set? x) (is-a? x <hash-set>))
+
+(define (set coll)
+  (make <hash-set>
+    internals: (reduce (lambda (result x)
+                         (hamts/hamt-set result x x))
+                       (hamts/make-hamt hash/hash eqv?)
+                       coll)))
+
+(define (hash-set . xs) (set xs))
+
+(define-method (conj (s <hash-set>) . xs)
+  (make <hash-set>
+    internals: (reduce (lambda (result x) (hamts/hamt-set result x x))
+                       (set-hamt s)
+                       xs)))
+
+(define-method (disj (s <hash-set>) . xs)
+  (make <hash-set>
+    internals: (reduce (lambda (result x) (hamts/hamt-delete result x))
+                       (set-hamt s)
+                       xs)))
+
+(define-method (count (x <hash-set>))
+  (hamts/hamt-size (set-hamt x)))
+
+(define-method (counted? (x <hash-set>))
+  #t)
+
+(define-method (empty (x <hash-set>))
+  (hash-set))
+
+;; not-empty - generic default is correct
+
+(define-method (contains? (s <hash-set>) x)
+  (hamts/hamt-contains? (set-hamt s) x))
+
+(define-method (get (s <hash-set>) x)
+  (hamts/hamt-ref (set-hamt s) x #nil))
+
+(define-method (get (s <hash-set>) x not-found)
+  (hamts/hamt-ref (set-hamt s) x not-found))
+
+(define-method (invoke (s <hash-set>) item)
+  (get s item))
+
+(define-method (equal? (s1 <hash-set>) (s2 <hash-set>))
+  (let ((h1 (set-hamt s1))
+        (h2 (set-hamt s2))
+        (exit (make-symbol "exit")))
+    (and (= (hamts/hamt-size h1) (hamts/hamt-size h2))
+         (catch exit
+           (lambda ()
+             (hamts/hamt-fold (lambda (k _ result)
+                                (unless (hamts/hamt-contains? h2 k)
+                                  (throw exit #f))
+                                #t)
+                              #t
+                              h1))
+           (lambda args
+             #f)))))
+
+;; FIXME: adapt hamt-fold or move to some other data structure...
+
+(define (some-item hamt not-found)
+  (call/ec
+   (lambda (return)
+     (hamts/hamt-fold (lambda (k _ result) (return k)) #t hamt)
+     not-found)))
+
+(let ((not-found (make-symbol "hash-set-not-found")))
+  (define-method (seq (s <hash-set>))
+    (let ((item (some-item (set-hamt s) not-found)))
+      (if (eq? item not-found)
+          #nil
+          (lazy-seq (cons item (disj s item)))))))
+
+(define-method (rest (s <hash-set>)) (rest (seq s)))
+
+;; FIXME: custom merge?

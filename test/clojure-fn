@@ -1,0 +1,83 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-fn
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+;; FIXME: defn tests (particularly since every?'s recur was broken
+;; with define-syntax).
+
+(testing "single arity fn"
+  (is (= nil ((fn []))))
+  (is (= 1 ((fn [] 1))))
+  (is (= 1 ((fn [x] x) 1)))
+  (is (= nil ((fn foo []))))
+  (is (= 1 ((fn foo [x] x) 1)))
+  (is (= 0 ((fn foo [x] (if (zero? x) x (foo (dec x)))) 3)))
+  (is (= 0 ((fn foo [x] (if (zero? x) x (recur (dec x)))) 3)))
+  (is (= 3 ((fn foo [x y] (+ x y)) 1 2)))
+  (is (= '(1 2 3) ((fn foo [x & y] (apply list x y)) 1 2 3))))
+
+(testing "multiple arity fn with single body"
+  (is (= nil ((fn ([])))))
+  (is (= 1 ((fn ([] 1)))))
+  (is (= 1 ((fn ([x] x)) 1)))
+  (is (= 1 ((fn foo ([x] x)) 1)))
+  (is (= 0 ((fn foo ([x] (if (zero? x) x (foo (dec x))))) 3)))
+  (is (= 0 ((fn foo ([x] (if (zero? x) x (recur (dec x))))) 3)))
+  (is (= 3 ((fn foo ([x y] (+ x y))) 1 2)))
+  (is (= '(1 2 3) ((fn foo ([x & y] (apply list x y))) 1 2 3))))
+
+(testing "multiple arity fn with multiple bodies"
+  (is (= nil ((fn ([]) ([x])))))
+  (is (= nil ((fn ([]) ([x])) 1)))
+  (is (= 1 ((fn ([] 1) ([x] x)))))
+  (is (= 2 ((fn ([] 1) ([x] x)) 2)))
+  (is (= 3 ((fn ([] 1) ([x y] y)) 2 3)))
+  (is (= '(1 2 3) ((fn ([] 1) ([x & y] (apply list x y))) 1 2 3)))
+  ;; named
+  (is (= nil ((fn foo ([]) ([x])))))
+  (is (= nil ((fn foo ([]) ([x])) 1)))
+  (is (= 1 ((fn foo ([] 1) ([x] x)))))
+  (is (= 2 ((fn foo ([] 1) ([x] x)) 2)))
+  (is (= 3 ((fn foo ([] 1) ([x y] y)) 2 3)))
+  (is (= '(1 2 3) ((fn foo ([] 1) ([x & y] (apply list x y))) 1 2 3)))
+  ;; recursions
+  (is (= 0 ((fn ([] 0) ([x] (if (zero? x) (recur) (recur (dec x))))) 3)))
+  (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (foo) (foo (dec x))))) 3)))
+  (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (recur) (recur (dec x))))) 3))))
+
+
+;; recur was initially broken when introduced via defn...
+
+(defn foo [x] (if (zero? x) x (foo (dec x))))
+(is (= 0 (foo 3)))
+(defn foo [x] (if (zero? x) x (recur (dec x))))
+(is (= 0 (foo 3)))
+
+(defn foo ([x] (if (zero? x) x (foo (dec x)))))
+(is (= 0 (foo 3)))
+(defn foo ([x] (if (zero? x) x (recur (dec x)))))
+(is (= 0 (foo 3)))
+
+(defn foo ([] 0) ([x] (if (zero? x) (foo) (foo (dec x)))))
+(is (= 0 (foo 3)))
+(defn foo ([] 0) ([x] (if (zero? x) (recur) (recur (dec x)))))
+(is (= 0 (foo 3)))
+
+(end-tests (ns-name *ns*) :exit? true)

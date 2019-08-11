@@ -1,0 +1,44 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ; srfi-88
+
+(use-modules
+ ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke ns) prefix: t/)
+ ((srfi srfi-64)
+  select: (test-assert
+            test-begin
+            test-end
+            test-equal
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+;; FIXME: no error tests (well nearly no tests at all, really)
+
+(test-equal 'clojure.core (t/ns-name (resolve-module '(lokke ns clojure core))))
+(test-equal 'guile.srfi.srfi-1 (t/ns-name (resolve-module '(srfi srfi-1))))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

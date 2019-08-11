@@ -1,0 +1,76 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ; srfi-88
+
+(use-modules
+ ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke scm vector) prefix: t/)
+ ((srfi srfi-1) select: (iota))
+ ((srfi srfi-64)
+  select: (test-assert
+            test-begin
+            test-end
+            test-equal
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+;; FIXME: no error tests
+
+(test-assert (t/lokke-vector? (t/lokke-vector)))
+(test-assert (not (t/lokke-vector? #f)))
+(test-equal 1 (t/lokke-vector-ref (t/lokke-vector 1) 0))
+(test-equal (t/lokke-vector 1 2 3) (t/list->lokke-vector '(1 2 3)))
+(test-equal '(1 2 3) (t/lokke-vector->list (t/lokke-vector 1 2 3)))
+(test-equal '(1 2 3) (t/lokke-vector->list (t/lokke-vec #(1 2 3))))
+(test-equal '(1 2 3) (t/lokke-vector->list (t/lokke-vec '(1 2 3))))
+(test-equal '(1 2 3) (t/lokke-vector->list (t/lokke-vec (t/lokke-vector 1 2 3))))
+
+(test-equal 0 (t/lokke-vector-length (t/lokke-vector)))
+(test-equal 32 (t/lokke-vector-length (t/lokke-vec (iota 32))))
+(test-equal 33 (t/lokke-vector-length (t/lokke-vec (iota 33))))
+(test-equal 1024 (t/lokke-vector-length (t/lokke-vec (iota 1024))))
+(test-equal 1025 (t/lokke-vector-length (t/lokke-vec (iota 1025))))
+
+(test-equal (t/lokke-vector 1) (t/lokke-vector-conj (t/lokke-vector) 1))
+(test-equal (t/lokke-vector 1 2) (t/lokke-vector-conj (t/lokke-vector) 1 2))
+(test-equal (t/lokke-vector 1 2 3) (t/lokke-vector-conj (t/lokke-vector) 1 2 3))
+
+(test-equal (t/lokke-vector 1) (t/lokke-vector-assoc (t/lokke-vector) 0 1))
+(test-equal (t/lokke-vector 1 3) (t/lokke-vector-assoc (t/lokke-vector) 0 1 1 3))
+
+(test-equal (t/lokke-vector) (t/lokke-vector-append (t/lokke-vector)))
+(test-equal (t/lokke-vector)
+  (t/lokke-vector-append (t/lokke-vector) (t/lokke-vector)))
+(test-equal (t/lokke-vector 1 2 3)
+  (t/lokke-vector-append (t/lokke-vector 1) (t/lokke-vector 2 3)))
+
+;; Give the tree enough depth to exercise the main paths.
+(let ((v (t/lokke-vec (iota 3000))))
+  (do ((i 0 (1+ i)))
+      ((= i (t/lokke-vector-length v)))
+    (test-equal i (t/lokke-vector-ref v i))))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

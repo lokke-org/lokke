@@ -1,0 +1,201 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix) ;; srfi-88
+
+(use-modules
+ ((lokke reader) prefix: t/)
+ ((lokke hash-map) select: (hash-map))
+ ((lokke hash-set) select: (hash-set))
+ ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke scm vector)
+  select: (lokke-vec
+           lokke-vector
+           lokke-vector?
+           lokke-vector-length
+           lokke-vector-ref))
+ ((srfi srfi-64)
+  select: (test-assert
+           test-begin
+           test-end
+           test-equal
+           test-group
+           test-runner-current
+           test-runner-fail-count)))
+
+;; FIXME: test edn and non-edn reads
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(test-equal #t (t/read-string "true"))
+(test-equal #f (t/read-string "false"))
+(test-equal #nil (t/read-string "nil"))
+
+(test-equal 1 (t/read-string "1"))
+(test-equal 0 (t/read-string "0"))
+(test-equal -1 (t/read-string "-1"))
+(test-equal 1.1 (t/read-string "1.1"))
+(test-equal 0.0 (t/read-string "0.0"))
+(test-equal -1.1 (t/read-string "-1.1"))
+(test-equal 3 (t/read-string "2r11"))
+(test-equal 8 (t/read-string "8r10"))
+(test-equal 10 (t/read-string "10r10"))
+(test-equal 16 (t/read-string "16r10"))
+(test-equal -3 (t/read-string "-2r11"))
+(test-equal -8 (t/read-string "-8r10"))
+(test-equal -10 (t/read-string "-10r10"))
+(test-equal -16 (t/read-string "-16r10"))
+(test-equal +inf.0 (t/read-string "##Inf"))
+(test-equal -inf.0 (t/read-string "##-Inf"))
+(test-equal +nan.0 (t/read-string "##NaN"))
+(test-equal 1e3 (t/read-string "1e3"))
+(test-equal -1e3 (t/read-string "-1e3"))
+
+(test-equal #\newline (t/read-string "\\newline"))
+
+(test-equal "foo" (t/read-string "\"foo\""))
+(test-equal '(read-only . #t)
+  (assoc 'read-only (%string-dump (t/read-string "\"foo\""))))
+
+(test-equal 'foo (t/read-string "foo"))
+(test-equal 'foo/bar (t/read-string "foo/bar"))
+
+(test-assert (eof-object? (t/read-string "")))
+
+(test-equal (hash-map) (t/read-string "{}"))
+(test-equal (hash-map 1 2) (t/read-string "{1 2}"))
+
+(test-equal (hash-set) (t/read-string "#{}"))
+(test-equal (hash-set 1) (t/read-string "#{1}"))
+
+(test-equal (lokke-vector) (t/read-string "[]"))
+(test-equal (lokke-vector 1 2 3) (t/read-string "[1 2 3]"))
+
+
+;;; Anonymous functions: #(foo %1)
+
+(let ((anon (t/read-string "#(inc %)")))
+  (test-assert (list? anon))
+  (test-equal 3 (length anon))
+  (test-equal 'fn (car anon))
+  (let ((args (cadr anon))
+        (body (cddr anon)))
+    (test-assert (lokke-vector? args))
+    (test-equal 1 (lokke-vector-length args))
+    (test-assert (list? body))
+    (test-equal 1 (length body))
+    (let ((call (car body))
+          (arg (lokke-vector-ref args 0)))
+      (test-assert (symbol? arg))
+      (test-assert (list? call))
+      (test-equal `(inc ,arg) call))))
+
+(let ((anon (t/read-string "#(+ %1 %2)")))
+  (test-assert (list? anon))
+  (test-equal 3 (length anon))
+  (test-equal 'fn (car anon))
+  (let ((args (cadr anon))
+        (body (cddr anon)))
+    (test-assert (lokke-vector? args))
+    (test-equal 2 (lokke-vector-length args))
+    (test-assert (list? body))
+    (test-equal 1 (length body))
+    (let ((call (car body))
+          (arg1 (lokke-vector-ref args 0))
+          (arg2 (lokke-vector-ref args 1)))
+      (test-assert (symbol? arg1))
+      (test-assert (symbol? arg2))
+      (test-assert (list? call))
+      (test-equal `(+ ,arg1 ,arg2) call))))
+
+(let ((anon (t/read-string "#(apply + %1 %&)")))
+  (test-assert (list? anon))
+  (test-equal 3 (length anon))
+  (test-equal 'fn (car anon))
+  (let ((args (cadr anon))
+        (body (cddr anon)))
+    (test-assert (lokke-vector? args))
+    (test-equal 3 (lokke-vector-length args))
+    (test-assert (list? body))
+    (test-equal 1 (length body))
+    (let ((call (car body))
+          (arg1 (lokke-vector-ref args 0))
+          (arg2 (lokke-vector-ref args 2)))
+      (test-equal '& (lokke-vector-ref args 1))
+      (test-assert (symbol? arg1))
+      (test-assert (symbol? arg2))
+      (test-assert (list? call))
+      (test-equal `(apply + ,arg1 ,arg2) call))))
+
+(let ((anon (t/read-string "#(apply + %1 %&)")))
+  (test-assert (list? anon))
+  (test-equal 3 (length anon))
+  (test-equal 'fn (car anon))
+  (let ((args (cadr anon))
+        (body (cddr anon)))
+    (test-assert (lokke-vector? args))
+    (test-equal 3 (lokke-vector-length args))
+    (test-assert (list? body))
+    (test-equal 1 (length body))
+    (let ((call (car body))
+          (arg1 (lokke-vector-ref args 0))
+          (arg2 (lokke-vector-ref args 2)))
+      (test-equal '& (lokke-vector-ref args 1))
+      (test-assert (symbol? arg1))
+      (test-assert (symbol? arg2))
+      (test-assert (list? call))
+      (test-equal `(apply + ,arg1 ,arg2) call))))
+
+(let ((anon (t/read-string "#(str %1 (dec %2))")))
+  (test-assert (list? anon))
+  (test-equal 3 (length anon))
+  (test-equal 'fn (car anon))
+  (let ((args (cadr anon))
+        (body (cddr anon)))
+    (test-assert (lokke-vector? args))
+    (test-equal 2 (lokke-vector-length args))
+    (test-assert (list? body))
+    (test-equal 1 (length body))
+    (let ((call (car body))
+          (arg1 (lokke-vector-ref args 0))
+          (arg2 (lokke-vector-ref args 1)))
+      (test-assert (symbol? arg1))
+      (test-assert (symbol? arg2))
+      (test-assert (list? call))
+      (test-equal `(str ,arg1 (dec ,arg2)) call))))
+
+
+;;; Syntax quote: `(let [foo# ~(bar)] (baz foo#))
+
+(let ((synquote (t/read-string "`(let [foo# ~x] (inc foo#))")))
+  ;; Dig down to find the symbol for foo# and then check the form
+  (test-assert (list? synquote))
+  (test-equal 2 (length synquote))
+  (test-assert (list? (cadr synquote)))
+  (test-equal 3 (length (cadr synquote)))
+  (test-assert (lokke-vector? (cadadr synquote)))
+  (let* ((foo-sym (lokke-vector-ref (cadadr synquote) 0))
+         (expected (list 'syntax-quote `(let ,(lokke-vector foo-sym '(unquote x))
+                                          (inc ,foo-sym)))))
+    (test-equal expected synquote)))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

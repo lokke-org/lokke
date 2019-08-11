@@ -1,0 +1,98 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ;; srfi-88
+
+(use-modules
+ ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke collection) select: (count counted? first merge reduce second seq))
+ ((lokke hash-map) prefix: t/)
+ ((lokke map-entry) select: (key map-entry? val))
+ ((srfi srfi-1) select: (iota))
+ ((srfi srfi-64)
+  select: (test-assert
+           test-begin
+           test-end
+           test-eq
+           test-equal
+           test-eqv
+           test-group
+           test-runner-current
+           test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(test-assert (t/hash-map? (t/hash-map)))
+(test-assert (not (t/hash-map? 'something)))
+
+(test-assert (counted? (t/hash-map)))
+
+(test-equal (t/hash-map) (t/hash-map))
+(test-equal (t/hash-map 1 2) (t/hash-map 1 2))
+(test-equal (t/hash-map 1 2 3 4) (t/hash-map 1 2 3 4))
+(test-assert (not (equal? (t/hash-map) (t/hash-map 1 2))))
+
+(test-equal (t/hash-map 1 2) (t/conj (t/hash-map) #(1 2)))
+(test-equal (t/hash-map 1 2 3 4) (t/conj (t/hash-map) #(1 2) #(3 4)))
+
+(test-assert (not (equal? (t/hash-map) (t/conj (t/hash-map) #(1 2)))))
+
+(test-equal (t/hash-map 3 4) (t/dissoc (t/hash-map 1 2 3 4) 1))
+(test-equal (t/hash-map) (t/dissoc (t/hash-map 1 2 3 4) 1 3))
+(test-equal (t/hash-map 3 4) (t/dissoc (t/hash-map 1 2 3 4) 1 9))
+(test-equal (t/hash-map) (t/dissoc (t/hash-map 1 2 3 4) 1 3 9))
+
+(test-eqv 0 (t/count (t/hash-map)))
+(test-eqv 1 (t/count (t/hash-map 1 2)))
+(test-eqv 2 (t/count (t/hash-map 1 2 3 4)))
+
+(test-equal (t/hash-map) (t/empty (t/hash-map 1 2)))
+
+(test-assert (not (t/contains? (t/hash-map) 1)))
+(test-assert (t/contains? (t/hash-map 1 2) 1))
+(test-assert (t/contains? (t/hash-map 1 2 3 4 5 6) 3))
+
+(test-eq #nil (t/get (t/hash-map) 1))
+(test-equal 2 (t/get (t/hash-map 1 2) 1))
+(test-equal 4 (t/get (t/hash-map 1 2 3 4) 3))
+(test-eq 'not-found (t/get (t/hash-map) 1 'not-found))
+
+(test-eqv 21 (t/reduce-kv (lambda (result k v) (+ result k v))
+                          0
+                          (t/hash-map 1 2 3 4 5 6)))
+
+(let ((s (seq (t/hash-map 1 2 3 4))))
+  (test-equal 2 (count s))
+  (test-assert (map-entry? (first s)))
+  (test-assert (map-entry? (second s)))
+  (test-equal 1 (key (first s)))
+  (test-equal 2 (val (first s)))
+  (test-equal 3 (key (second s)))
+  (test-equal 4 (val (second s))))
+
+(test-equal (t/hash-map 1 2 3 4)
+  (merge (t/hash-map 1 2) (t/hash-map 3 4)))
+
+(test-equal (t/hash-map 1 2 3 4)
+  (merge (t/hash-map 1 9) (t/hash-map 1 2 3 4)))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))
