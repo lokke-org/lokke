@@ -56,7 +56,8 @@ Ensure that a version of
 
 For Debian:
 
-    # apt-get install guile-2.2
+    # apt-get install guile-2.2 guile-2.2-dev
+    # apt-get install gnulib libunistring-dev
 
 Then
 
