@@ -149,14 +149,6 @@ Currently Lokke intends to follow a similar approach.
 TODO
 ----
 
-- fn does not support destructuring yet.  Perhaps just do the same
-  thing we did for let and define fn in terms of primitive-fn so we
-  can redefine fn without worring about
-  module/variable/etc. visibility for now (c.f. fix-let).
-
-- let is still somewhat flaky, e.g. destructuring let inside a simple
-  fn can't see fn args right now (defn foo [x] (let [[y] x] y))
-
 - Finish ns implementation (:as, etc.).
 
   One relatively simple initial approach for handling :as might be to
@@ -171,15 +163,11 @@ TODO
 
 - Implement dynamic variables, binding, etc. (cf. Guile parameters).
 
-- Incorporate the existing, unfinished atom implementation.
-
 - Add reader conditionals after bikeshedding about the name(s).
 
 - Make sure (comment ...) works.
 
 - Examine (srfi srfi-45) wrt lazy seqs.
-
-- clean UP...
 
 - remove vestigial bits from the reader (syntax, synquote, etc.?)
 
@@ -230,7 +218,7 @@ TODO
   Might also want to consider making pr-to, etc. part of clojure.core
   and just document it as a Lokke addition.
 
-- Use SPDX license identifiers, and can we automate copyright notice
+- Use SPDX license identifiers?  And can we automate copyright notice
   updates (years) via git?
 
 - Settle Scheme side binding vector vs list question and bring code
@@ -256,7 +244,7 @@ TODO
 
 - Fix up source-properties, etc.
 
-- arguement lists like (fn [& xs] ...) are not lazy collections,
+- Arguement lists like (fn [& xs] ...) are not lazy collections,
   they're handled natively as guile (lambda args ...) etc.
 
 - Do we care about `allow-legacy-syntax-objects?`
