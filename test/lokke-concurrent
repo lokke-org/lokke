@@ -1,0 +1,57 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ;; srfi-88
+
+(use-modules
+ ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke concurrent) prefix: t/)
+ ((srfi srfi-64)
+  select: (test-assert
+           test-begin
+           test-end
+           test-eq
+           test-equal
+           test-eqv
+           test-group
+           test-runner-current
+           test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(test-assert (t/atom? (t/atom 1)))
+(test-equal 1 (t/deref (t/atom 1)))
+
+(test-equal 2 (t/reset! (t/atom 1) 2))
+
+(test-equal #t (t/compare-and-set! (t/atom 1) 1 2))
+(test-equal 2 (let ((a (t/atom 1)))
+                (t/compare-and-set! a 1 2)
+                (t/deref a)))
+(test-equal #f (t/compare-and-set! (t/atom 1) 3 2))
+(test-equal 1 (let ((a (t/atom 1)))
+                (t/compare-and-set! a 3 2)
+                (t/deref a)))
+
+(test-equal 2 (t/swap! (t/atom 1) (lambda (v) (1+ v))))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

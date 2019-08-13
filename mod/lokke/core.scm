@@ -49,6 +49,15 @@
                         expand-symbol
                         expand-symbols
                         load-file))
+  use-module: ((lokke concurrent)
+               select: (<atom>
+                        atom?
+                        add-watch
+                        remove-watch
+                        deref
+                        reset!
+                        set-validator!
+                        swap!))
   use-module: ((lokke map) select: (select-keys))
   use-module: (lokke hash-map)
   use-module: (lokke hash-set)
@@ -133,12 +142,15 @@
               -
               ->
               /
+              <atom>
               <coll>
               <map-entry>
               <seq>
               =
+              add-watch
               and
               assoc
+              atom?
               (begin . %scm-begin)
               (begin . do)
               bit-and
@@ -166,6 +178,7 @@
               dec'
               def
               defn
+              deref
               dissoc
               doall
               dorun
@@ -247,9 +260,11 @@
               reduce
               refer
               refer-clojure
+              remove-watch
               repeat
               repeatedly
               require
+              reset!
               rest
               second
               select-keys
@@ -260,10 +275,12 @@
               sequential?
               set!  ;; this is wrong...
               set-meta!
+              set-validator!
               some
               str
               string?
               subs
+              swap!
               symbol
               symbol?
               take
