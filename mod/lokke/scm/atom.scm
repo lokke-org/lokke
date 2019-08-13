@@ -79,7 +79,7 @@
         (yield)
         (loop (atom-state atom))))))
 
-(define (atom-remove-watch atom key f)
+(define (atom-remove-watch atom key)
   ;; Don't worry about garbage generation; assume this rarely races.
   (let loop ((cur-state (atom-state atom)))
     (let ((watchers (state-watchers cur-state)))
