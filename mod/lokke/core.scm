@@ -172,8 +172,6 @@
               contains?
               count
               counted?
-              current-language
-              current-time
               dec
               dec'
               def
@@ -187,7 +185,6 @@
               drop
               empty
               empty?
-              error
               eval-when
               even?
               every?
@@ -201,7 +198,6 @@
               fnext
               format
               gensym
-              get
               get
               ident?
               identical?
@@ -227,9 +223,10 @@
               macroexpand
               map-entry
               map-entry?
+              max
               merge
               meta
-              min max
+              min
               mod
               name
               namespace
@@ -248,7 +245,6 @@
               pos?
               pr
               pr-str
-              print
               print
               print-str
               println
@@ -273,7 +269,6 @@
               seq?
               seqable?
               sequential?
-              set!  ;; this is wrong...
               set-meta!
               set-validator!
               some
