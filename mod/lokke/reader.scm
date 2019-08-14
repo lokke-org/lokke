@@ -14,7 +14,9 @@
 (read-set! keywords 'postfix)  ;; srfi-88
 
 (define-module (lokke reader)
-  use-module: (ice-9 receive)
+  use-module: ((ice-9 pretty-print) select: (pretty-print))
+  use-module: ((ice-9 receive) select: (receive))
+  use-module: ((lokke base util) select: (pairify))
   use-module: ((lokke collection) select: (empty? merge))
   use-module: ((lokke compile)
                select: (expand-symbols
@@ -24,7 +26,7 @@
   use-module: ((lokke hash-set) select: (hash-set))
   use-module: ((lokke metadata) select: (with-meta set-meta!))
   use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (iota fold))
+  use-module: ((srfi srfi-1) select: (concatenate iota fold))
   export: (read read-for-compiler read-string read-string-for-compiler)
   duplicates: (merge-generics replace warn-override-core warn last))
 
@@ -34,6 +36,7 @@
 ;; FIXME: metadata is currently broken.
 
 (define debug-reader? #f)
+(define debug-conditionals? (or debug-reader? #t))
 
 ;; Avoid undefined warnings
 (define read-primitively #f)
@@ -258,8 +261,84 @@
    ((char? expr) expr)
    (else (error "Unexpected expression from primitive reader:" expr))))
 
+(define (expand-reader-conditionals expr)
+  ;; FIXME: suspect we're missing some preserve-metadata calls in here.
+  ;; Returns a list containing the top-level expansion(s), if any.
+  (define (splice selected reader-cond)
+    (cond
+     ((null? selected) selected)
+     ((list? selected)
+      (case (car selected)
+        ;; Clojure/JVM only allows implementers of List interface
+        ((/lokke/reader-vector) (cdr selected))
+        (else selected)))
+     (else
+      (error (format #f "Improper splice in #?@~s" reader-cond)))))
+  (define (select-for-dialect reader-cond splice?)
+    ;; Returns a list of expressions (if any) to be spliced into the
+    ;; parent.
+    (unless (even? (length reader-cond))
+      (error (format #f "Improper reader conditional: #?~a~s"
+                     (if splice? "@" "") reader-cond)))
+    (let* ((cases (pairify reader-cond))
+           (code (or (assq-ref cases cljl:)
+                     (assq-ref cases default:))))
+      (if code
+          (if splice?
+              (splice (car code) reader-cond)
+              (list (car code)))
+          '())))
+  (define (expand expr)
+    ;; Expand all reader conditionals, and return the result wrapped
+    ;; in a list unless it's an unsplicing, so that the caller can
+    ;; build the correct result via unconditional concatenation.
+    (preserve-meta-if-new!
+     expr
+     (cond
+      ((null? expr) (list expr))
+      ((list? expr)
+       (case (car expr)
+         ((/lokke/reader-cond)
+          (select-for-dialect (concatenate (expand (cdr expr))) #f))
+         ((/lokke/reader-cond-splice)
+          (select-for-dialect (concatenate (expand (cdr expr))) #t))
+         (else
+          (list (concatenate (map expand expr))))))
+      (else (list expr)))))
+  (when debug-conditionals?
+    (format (current-error-port) "expand reader conditional:\n")
+    (pretty-print expr (current-error-port)))
+  (let* ((result (expand expr)))
+    (when debug-conditionals?
+      (format (current-error-port) "reader conditional expanded:\n")
+      (pretty-print expr (current-error-port))
+      (format (current-error-port) "  =>\n")
+      (pretty-print result (current-error-port)))
+    result))
+
+(define (read-conditionally port)
+  (let ((expr (read-primitively port)))
+    (if (eof-object? expr)
+        expr
+        (let ((result (expand-reader-conditionals expr)))
+          (cond
+           ((null? result) (read-conditionally port))  ;; #?() #?(foo 1) etc.
+           ;; FIXME: arrange for read-string to return multiple values
+           ;; and for read to return multuple top level values one at a
+           ;; time so we can remove this error.
+           ((not (null? (cdr result)))
+            (when (eq? '/lokke/reader-cond (car expr))
+              (error (format #f "#?(...) produced multiple top level values (BUG): #?~s"
+                             (cdr expr))))
+            (unless (eq? '/lokke/reader-cond-splice (car expr))
+              (error "Unexpected reader conditional marker:" expr))
+            (error
+             (format #f "#?@(...) cannot unsplice multiple top level values yet: #?@~s"
+                     (cdr expr))))
+           (else (car result)))))))
+
 (define (uninstantiated-read port)
-  (let loop ((expr (read-primitively port))
+  (let loop ((expr (read-conditionally port))
              (pending-meta (hash-map)))
     (cond
      ((eof-object? expr)
@@ -273,13 +352,13 @@
       (let ((m (cadr expr)))
         (cond
          ((keyword? m)
-          (loop (read-primitively port)
+          (loop (read-conditionally port)
                 (merge (hash-map m #t) pending-meta)))
          ((or (symbol? m) (string? m))
-          (loop (read-primitively port)
+          (loop (read-conditionally port)
                 (merge (hash-map #:tag m) pending-meta)))
          ((and (pair? m) (eq? '/lokke/reader-hash-map (car m)))
-          (loop (read-primitively port)
+          (loop (read-conditionally port)
                 (merge (apply hash-map (cdr m)) pending-meta)))
          (else
           (error (format #f "Unexpected metadata type ~s for:" (class-of m))

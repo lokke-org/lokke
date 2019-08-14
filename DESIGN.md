@@ -156,14 +156,15 @@ TODO
   and possibly hidden name, i.e. /lokke/ns-aliases.  Then /lokke/@
   might just need to be adjusted to consult that too.
 
+- File and line numbers are not handled properly everywhere in the
+  reader, errors, etc.
+
 - Investigate GOOPS read-only slots -- daviid mentioned that GNOME
   uses them, e.g. <read-only-slot> in gobject/gtype.scm.
 
 - Fix metadata at least enough for now.
 
 - Implement dynamic variables, binding, etc. (cf. Guile parameters).
-
-- Add reader conditionals after bikeshedding about the name(s).
 
 - Make sure (comment ...) works.
 

@@ -118,6 +118,11 @@ Differences from Clojure/JVM (an incomplete list)
   want to alter or agument that, i.e. perhaps we'll want a formatter
   specifying print or pr format output, though for now pr(int)-str works
   `(format "... ~a ..." (pr-str x))`.
+* The reader functions, `read`, `read-string`, etc. return the rnrs
+  end-of-file object rather than throwing an exception.
+* Lokke's reader conditional identifier is `:cljl`, e.g. `#?(:cljl x)`.
+* At the moment reader conditionals are always supported by the reader
+  functions and are not restricted to `.cljc` files.
 * Uses Scheme's `quotient`, `remainder`, and `modulus` for `quot`,
   `rem`, and `mod`.
 * Number is taken to mean <number> (i.e. objects satisfying number?).

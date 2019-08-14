@@ -27,6 +27,7 @@
            lokke-vector?
            lokke-vector-length
            lokke-vector-ref))
+ ((rnrs io ports) select: (eof-object))
  ((srfi srfi-64)
   select: (test-assert
            test-begin
@@ -76,7 +77,7 @@
 (test-equal 'foo (t/read-string "foo"))
 (test-equal 'foo/bar (t/read-string "foo/bar"))
 
-(test-assert (eof-object? (t/read-string "")))
+(test-equal (eof-object) (t/read-string ""))
 
 (test-equal (hash-map) (t/read-string "{}"))
 (test-equal (hash-map 1 2) (t/read-string "{1 2}"))
@@ -194,6 +195,27 @@
          (expected (list 'syntax-quote `(let ,(lokke-vector foo-sym '(unquote x))
                                           (inc ,foo-sym)))))
     (test-equal expected synquote)))
+
+(test-group
+ "reader conditionals #?(...)"
+ (test-equal (eof-object) (t/read-string "#?()"))
+ (test-equal (eof-object) (t/read-string "#?(#?())"))
+ (test-equal (eof-object) (t/read-string "#?(:clj 1)"))
+ (test-equal 1 (t/read-string "#?(:cljl 1)"))
+ (test-equal 1 (t/read-string "#?(:default 1)"))
+ (test-equal '(1 2 3) (t/read-string "#?(:default (1 2 3))"))
+ (test-equal (lokke-vector 1 2 3) (t/read-string "#?(:default [1 2 3])")))
+
+(test-group
+ "splicing reader conditionals #?@(...)"
+ (test-equal (eof-object) (t/read-string "#?@()"))
+ (test-equal (eof-object) (t/read-string "#?@(#?@())"))
+ (test-equal (eof-object) (t/read-string "#?@(:clj 1)"))
+ (test-equal 1 (t/read-string "#?(#?@(:default [:cljl 1]))"))
+ (test-equal 1 (t/read-string "#?@(:default (1))"))
+ (test-equal '(1 2 3) (t/read-string "(#?@(:default (1 2 3)))"))
+ (test-equal 1 (t/read-string "#?@(:default [1])"))
+ (test-equal '(1 2 3) (t/read-string "(#?@(:default [1 2 3]))")))
 
 (test-end)
 

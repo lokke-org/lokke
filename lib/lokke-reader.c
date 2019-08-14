@@ -33,6 +33,8 @@
 #include <libguile.h>
 
 SCM_SYMBOL (lokke_sym_reader_anon_fn, "/lokke/reader-anon-fn");
+SCM_SYMBOL (lokke_sym_reader_cond, "/lokke/reader-cond");
+SCM_SYMBOL (lokke_sym_reader_cond_splice, "/lokke/reader-cond-splice");
 SCM_SYMBOL (lokke_sym_reader_meta, "/lokke/reader-meta");
 SCM_SYMBOL (lokke_sym_reader_hash_map, "/lokke/reader-hash-map");
 SCM_SYMBOL (lokke_sym_reader_hash_set, "/lokke/reader-hash-set");
@@ -1252,6 +1254,35 @@ scm_read_sharp_sharp(SCM port, scm_t_read_opts *opts)
   scm_i_input_error (FUNC_NAME, port, "unknown ##NAME ~a",
 		     scm_list_1(scm_from_locale_string(buffer)));
 }
+
+static SCM
+scm_read_reader_conditional(SCM port, scm_t_read_opts *opts)
+#define FUNC_NAME "read"
+{
+  // We've already read the initial #?
+  const scm_t_wchar c = scm_getc (port);
+  if (c == EOF)
+    scm_i_input_error (FUNC_NAME, port, "end of file in reader conditional",
+                       SCM_EOL);
+  int splice = 0;
+  if (c == '@')
+    {
+      splice = 1;
+      const scm_t_wchar c = scm_getc(port);
+      if (c == EOF)
+        scm_i_input_error (FUNC_NAME, port,
+                           "end of file in splicing reader conditional",
+                           SCM_EOL);
+      if (c != '(')
+        scm_i_input_error (FUNC_NAME, port,
+                           "reader conditional @ not followed by \"(\": ~a",
+                           scm_list_1 (SCM_MAKE_CHAR(c)));
+    }
+  SCM exp = scm_read_sexp ('(', 1, port, opts);
+  return scm_cons(splice ? lokke_sym_reader_cond_splice : lokke_sym_reader_cond,
+                  exp);
+}
+
 #undef FUNC_NAME
 
 
@@ -1289,6 +1320,8 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
       return (scm_read_commented_expression (chr, port, opts));
     case '#':
       return scm_read_sharp_sharp(port, opts);
+    case '?':
+      return scm_read_reader_conditional(port, opts);
     default:
       scm_i_input_error (FUNC_NAME, port, "Unknown # object: ~S",
                          scm_list_1 (SCM_MAKE_CHAR (chr)));
