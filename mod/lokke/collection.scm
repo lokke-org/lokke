@@ -42,6 +42,7 @@
                         first
                         fnext
                         get
+                        get-in
                         lazy-seq
                         next
                         nfirst
@@ -86,6 +87,7 @@
               first
               fnext
               get
+              get-in
               invoke
               lazy-seq
               next

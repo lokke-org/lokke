@@ -46,6 +46,7 @@
            first
            fnext
            get
+           get-in
            lazy-seq
            make-pair-seq
            next
@@ -334,3 +335,10 @@
          (if (nil? s)
              s
              (drop (1- n) (next s)))))))
+
+(define* (get-in associative keys optional: (not-found #nil))
+  (let loop ((src associative) (keys keys))
+    (let ((keys (seq keys)))
+      (if (not keys)
+          src
+          (loop (get src (first keys) not-found) (next keys))))))

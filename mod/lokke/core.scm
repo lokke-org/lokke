@@ -199,6 +199,7 @@
               format
               gensym
               get
+              get-in
               ident?
               identical?
               identity
