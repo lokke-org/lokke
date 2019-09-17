@@ -119,12 +119,11 @@
 (define-method (print (x <class>)) (display (class-name x) (*out*)))
 
 (define (boolean->string x)
-  (display (case x
-           ((#t) "true")
-           ((#f) "false")
-           ((#nil) "nil")
-           (else (error "impossible boolean" x)))
-         (*out*)))
+  (case x
+    ((#t) "true")
+    ((#f) "false")
+    ((#nil) "nil")
+    (else (error "impossible boolean" x))))
 
 (define-method (pr-str (x <null>)) "()")
 (define-method (print-str (x <null>)) "()")
