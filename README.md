@@ -209,6 +209,8 @@ Known Issues
 
 - atom semantics may not be completely right yet (see code).
 
+- quote is quoting /lokke/reader-vector too, e.g. (prn '[42])
+
 - See DESIGN for additional issues.
 
 

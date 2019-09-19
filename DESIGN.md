@@ -127,13 +127,13 @@ Metadata
   side.  The former because symbols could no longer be simple unique
   pointers (because immutability requires a new object every time the
   metadat changes), and the latter because Clojure and Scheme symbols
-  wouldn't have the same representation anymore, affecting all kinsds
+  wouldn't have the same representation anymore, affecting all kinds
   of things, likely including the compler.
 
 Concurrency
 -----------
 
-Guile's intends to avoid crashes or corruption when executing code in
+Guile intends to avoid crashes or corruption when executing code in
 parallel, but it does not make any guarantees about outcomes without
 appropriate synchronization.  From the Guile Reference Manual:
 
@@ -165,8 +165,6 @@ TODO
 - Fix metadata at least enough for now.
 
 - Implement dynamic variables, binding, etc. (cf. Guile parameters).
-
-- Make sure (comment ...) works.
 
 - Examine (srfi srfi-45) wrt lazy seqs.
 
@@ -245,15 +243,15 @@ TODO
 
 - Fix up source-properties, etc.
 
-- Arguement lists like (fn [& xs] ...) are not lazy collections,
+- Argument lists like (fn [& xs] ...) are not lazy collections,
   they're handled natively as guile (lambda args ...) etc.
 
-- Do we care about `allow-legacy-syntax-objects?`
+- Do we care about `allow-legacy-syntax-objects?`:
 
-  A parameter that indicates whether the expander should support
-  legacy syntax objects, as described above.  For ABI stability
-  reasons, the default is ‘#t’.  Use ‘parameterize’ to bind it to
-  ‘#f’.  *Note Parameters::.
+    A parameter that indicates whether the expander should support
+    legacy syntax objects, as described above.  For ABI stability
+    reasons, the default is ‘#t’.  Use ‘parameterize’ to bind it to
+    ‘#f’.  *Note Parameters::.
 
 
 Hacking
