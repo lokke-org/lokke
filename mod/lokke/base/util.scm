@@ -15,7 +15,7 @@
 
 (define-module (lokke base util)
   use-module: ((srfi srfi-1) select: (take))
-  export: (pairify vec-tag?))
+  export: (pairify require-nil vec-tag?))
 
 ;; We use this as a syntax-pattern fender to detect reader-vectors.
 (define (vec-tag? x) (eq? '/lokke/reader-vector (syntax->datum x)))
@@ -27,3 +27,12 @@
      ((null? rest) '())
      ((null? (cdr rest)) (error "Can't pairify odd length list" lst))
      (else (cons (take rest 2) (loop (cddr rest)))))))
+
+;; Need this because #nil is a <boolean> too...
+(define-syntax require-nil
+  (syntax-rules ()
+    ((_ fn-name arg)
+     (unless (nil? arg)
+       (scm-error 'wrong-type-arg fn-name
+                  "Wrong type argument in position 1: ~A"
+                  (list arg) (list arg))))))

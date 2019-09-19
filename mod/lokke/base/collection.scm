@@ -26,6 +26,7 @@
 (define-module (lokke base collection)
   version: (0 0 0)
   use-module: ((guile) :select ((cons . %scm-cons)))
+  use-module: ((lokke base util) select: (require-nil))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (proper-list?))
   use-module: ((srfi srfi-43) select: (vector-append))
@@ -175,15 +176,6 @@
 
 (define-method (first (s <pair-seq>)) (pair-seq-first s))
 (define-method (rest (s <pair-seq>)) (pair-seq-rest s))
-
-;; Need this because #nil is a <boolean> too...
-(define-syntax require-nil
-  (syntax-rules ()
-    ((_ fn-name arg)
-     (unless (nil? arg)
-       (scm-error 'wrong-type-arg fn-name
-                  "Wrong type argument in position 1: ~A"
-                  (list arg) (list arg))))))
 
 (define-method (conj (b <boolean>) x) (require-nil 'conj b) (cons x b))
 (define-method (cons x (b <boolean>)) (require-nil 'cons b) (make-pair-seq x '()))
