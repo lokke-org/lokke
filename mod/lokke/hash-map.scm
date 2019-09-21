@@ -38,6 +38,7 @@
                         update))
   use-module: ((lokke base map) select: (<map> select-keys))
   use-module: ((lokke base map-entry) select: (key map-entry val))
+  use-module: ((lokke compare) select: (clj=))
   use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
   use-module: (oop goops)
   use-module: ((pfds hamts) prefix: hamts/)
@@ -53,6 +54,7 @@
            reduce-kv
            vals)
   re-export: (assoc
+              clj=
               conj
               cons
               contains?
@@ -168,7 +170,7 @@
 (define-method (get (m <hash-map>) x not-found)
   (hamts/hamt-ref (map-hamt m) x not-found))
 
-(define-method (equal? (m1 <hash-map>) (m2 <hash-map>))
+(define (hash-map-equal? m1 m2)
   (let ((h1 (map-hamt m1))
         (h2 (map-hamt m2))
         (exit (make-symbol "exit")))
@@ -184,6 +186,11 @@
                               #t
                               h1))
            (lambda args #f)))))
+
+(define-method (equal? (m1 <hash-map>) (m2 <hash-map>)) (hash-map-equal? m1 m2))
+
+;; specialize this so that we'll bypass the generic <sequential> flavor
+(define-method (clj= (m1 <hash-map>) (m2 <hash-map>)) (hash-map-equal? m1 m2))
 
 ;; FIXME: we might need to augment the data structure, but we should
 ;; be able to do better with respect to seq traversal.  Need similar

@@ -28,6 +28,7 @@
            lokke-vector-append
            lokke-vector-assoc
            lokke-vector-conj
+           lokke-vector-equal?
            lokke-vector-length
            lokke-vector-ref
            lokke-vector?
@@ -51,7 +52,7 @@
 
 (define (lokke-vector? x) (is-a? x <lokke-vector>))
 
-(define-method (equal? (v1 <lokke-vector>) (v2 <lokke-vector>))
+(define-method (lokke-vector-equal? v1 v2)
   (let ((n1 (lokke-vector-length v1))
         (n2 (lokke-vector-length v2)))
     (and (= n1 n2)
@@ -61,6 +62,9 @@
             ((equal? (lokke-vector-ref v1 i) (lokke-vector-ref v2 i))
              (loop (1+ i)))
             (else #f))))))
+
+(define-method (equal? (v1 <lokke-vector>) (v2 <lokke-vector>))
+  (lokke-vector-equal? v1 v2))
 
 (define (lokke-vector-conj v x . xs)
   (fold (lambda (x result) (lokke-vector-conj-1 result x))

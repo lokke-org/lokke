@@ -44,6 +44,7 @@
                         when-let
                         when-not))
   use-module: (lokke collection)
+  use-module: ((lokke compare) select: (== clj=))
   use-module: ((lokke compile)
                select: (clj-defmacro
                         expand-symbol
@@ -119,7 +120,6 @@
   export: (*command-line-args*  ;; this is wrong...
            *err*
            *out*
-           ==
            byte
            compare
            (do . %scm-do)
@@ -134,7 +134,7 @@
            num
            short
            some?)
-  replace: (apply instance? nil? do)
+  replace: (= apply instance? nil? do)
   re-export: (*
               *ns*
               *print-meta*
@@ -142,13 +142,13 @@
               -
               ->
               /
+              ==
               <atom>
               <coll>
               <map>
               <map-entry>
               <seq>
               <set>
-              =
               add-watch
               and
               assoc
@@ -298,6 +298,9 @@
               zero?)
   duplicates: (merge-generics replace warn-override-core warn last))
 
+(define = clj=)
+(define (not= . args) (not (apply = args)))
+
 (define (apply f . args)
   ;; FIXME: tolerable?
   (if (null? args)
@@ -310,9 +313,6 @@
                                   (seq->scm-list final)))))))
 
 ;; FIXME: docstrings
-
-(define-generic =)
-(define-method (= x y) (equal? x y))
 
 ;; (define-syntax *err*
 ;;   (make-variable-transformer
@@ -335,12 +335,8 @@
 (define-method (map? x) #f)
 (define-method (map? (x <hash-map>)) #t)
 
-(define == =)
-
 (define (nil? x) (eq? #nil x))
 (define some? (complement nil?))
-
-(define not= (comp not =))
 
 (define (instance? c x) (is-a? x c))
 

@@ -22,6 +22,7 @@
   use-module: ((srfi srfi-1) select: (circular-list? proper-list?))
   use-module: ((srfi srfi-43) select: (vector-unfold))
   use-module: ((lokke base syntax) select: (if-let when when-let when-not))
+  use-module: ((lokke base util) select: (require-nil))
   use-module: ((lokke base collection)
                select: (<coll>
                         <lazy-seq>
@@ -59,6 +60,7 @@
                         take
                         update))
   use-module: ((lokke base map) select: (<map> select-keys))
+  use-module: ((lokke compare) select: (clj=))
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr) select: (*out*  pr print))
   export: (doall
@@ -78,6 +80,7 @@
               <seq>
               <sequential>
               assoc
+              clj=
               coll?
               conj
               cons
@@ -117,20 +120,31 @@
 
 (define-method (reversible? x) #f)
 
+;; FIXME: match https://clojure.org/guides/equality#_summary as appropriate
+
+(define-method (clj= (s1 <seq>) (s2 <seq>))
+  ;; Could also be implemented via list-compare...
+  (if-let [s1 (seq s1)]
+    (if-let [s2 (seq s2)]
+      (and (clj= (first s1) (first s2))
+           (clj= (rest s1) (rest s2)))
+      #f)
+    (not (seq s2))))
+
+;; We have to special case anything that's sequable?, but not <sequential>.
+;; FIXME: improper lists?
+(define-method (clj= (x <pair>) (y <pair>)) (equal? x y))
+(define-method (clj= (s <pair>) x) (if (seqable? x) (clj= x (seq x))))
+(define-method (clj= (x <vector>) (y <vector>)) (equal? x y))
+(define-method (clj= (s <vector>) x) (if (seqable? x) (clj= x (seq x))))
+(define-method (clj= (s <sequential>) x) (if (seqable? x) (clj= x (seq x))))
+
 (define (seq->scm-list s)
   (let loop ((s s)
              (result '()))
     (if-let [s (seq s)]
             (loop (next s) (%scm-cons (first s) result))
             (reverse! result))))
-
-(define-method (equal? (s1 <seq>) (s2 <seq>))
-  (if-let [s1 (seq s1)]
-    (if-let [s2 (seq s2)]
-      (and (equal? (first s1) (first s2))
-           (equal? (rest s1) (rest s2)))
-      #f)
-    (not (seq s2))))
 
 (define (show coll emit open close)
   (display open (*out*))
@@ -177,9 +191,6 @@
       (if n
           (loop (cons (first n) result) (next rst))
           result))))
-
-(define-method (equal? (c1 <coll>) (c2 <coll>))
-  (equal? (seq c1) (seq c2)))
 
 (define-method (empty? (coll <coll>))
   (if (counted? coll)

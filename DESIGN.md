@@ -146,6 +146,28 @@ appropriate synchronization.  From the Guile Reference Manual:
 
 Currently Lokke intends to follow a similar approach.
 
+Value comparisons
+-----------------
+
+It appears that you cannot specialize `equal?` (and perhaps the
+underlying concern applies to all primtive-generics) for existing
+types/arities, i.e. you cannot define a new specialization for say
+`(equal? x)` and you cannot define a new specialization for `(equal?
+(x <string>) (y <new-type))`.
+
+Currently Lokke handles equality by:
+
+  - defining `(equal? x y)` for new types, e.g. hash-map, etc.,
+  - defining a `clj=` that falls back to `equal?`,
+  - defining `clj=` methods to handle Clojure-specific cases, like `(=
+    [1] '(1))`, including fallback definitions for `<sequential>`,
+    `<map>`, etc.,
+  - defining `clj=` overrides to avoid the fallbacks for comparisons
+    of instances of the same concrete type, i.e. `(clj= hash-map-1
+    hash-map-2)`,
+  - and defining `=` as `clj=` in `(lokke core)` and then exporting it
+    (with replacement).
+
 TODO
 ----
 

@@ -161,6 +161,13 @@ On the Scheme side
 * Strings are Guile strings.
 * `.indexOf` is `index-of`
 * `.lastIndexOf` is `last-index-of`
+* As with Clojure and `:refer`, explicit symbol imports are
+  recommended, e.g. `#:use-module ((foo) #:select (x))` rather than
+  just `#:use-module (foo)`, and Lokke modules assume this is the norm.
+* Currently `equal?` is only augmented to handle new types like
+  hash-map, hash-set, etc.
+* Currently Clojure `=` is only available as an export from `(lokke
+  core)`, and for now, it is implemented via `clj=`.
 * Bindings starting with /lokke/ are reserved (but they're illegal in
   Clojure anyway).  We use them for internal compiler-communication,
   among other things.  See the DESIGN document for more information.

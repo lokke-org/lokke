@@ -21,6 +21,8 @@ lib_lokke_vector_la_LDFLAGS = -module @GUILE_LDFLAGS@ @GUILE_LIBS@
 export LOKKE_TEST_PROTOCOL = tap
 
 TESTS = \
+  test/equality \
+  test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \
   test/lokke-hash-map \

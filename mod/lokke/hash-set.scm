@@ -28,6 +28,7 @@
                         reduce
                         rest seq))
   use-module: ((lokke invoke) select: (invoke))
+  use-module: ((lokke compare) select: (clj=))
   use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
   use-module: ((lokke set) select: (<set>))
   use-module: (oop goops)
@@ -41,7 +42,18 @@
            hash-set
            hash-set?
            set)
-  re-export: (conj contains? count empty get into invoke pr pr-str print print-str)
+  re-export: (clj=
+              conj
+              contains?
+              count
+              empty
+              get
+              into
+              invoke
+              pr
+              pr-str
+              print
+              print-str)
   duplicates: (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: implement (lokke set) operations, here, or more generically
@@ -130,7 +142,7 @@
 (define-method (invoke (s <hash-set>) item)
   (get s item))
 
-(define-method (equal? (s1 <hash-set>) (s2 <hash-set>))
+(define (hash-set-equal? s1 s2)
   (let ((h1 (set-hamt s1))
         (h2 (set-hamt s2))
         (exit (make-symbol "exit")))
@@ -145,6 +157,11 @@
                               h1))
            (lambda args
              #f)))))
+
+(define-method (equal? (s1 <hash-set>) (s2 <hash-set>)) (hash-set-equal? s1 s2))
+
+;; specialize this so that we'll bypass the generic <sequential> flavor
+(define-method (clj= (s1 <hash-set>) (s2 <hash-set>)) (hash-set-equal? s1 s2))
 
 ;; FIXME: adapt hamt-fold or move to some other data structure...
 
