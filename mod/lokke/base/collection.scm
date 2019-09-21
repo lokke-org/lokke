@@ -34,6 +34,7 @@
            <lazy-seq>
            <pair-seq>
            <seq>
+           <sequential>
            <vector-seq>
            coll?
            conj
@@ -100,6 +101,7 @@
      ((not (seq remaining)) sum)
      (else (loop (next remaining) (1+ sum))))))
 
+;; Default behaviors
 (define-method (counted? x) #f)
 (define-method (empty x) #nil)
 (define-method (first x) (first (seq x)))
@@ -150,14 +152,29 @@
           not-found))))
 
 
-(define-class <seq> (<coll>))
+(define-class <sequential> (<coll>))
+
+(define-method (sequential? (s <sequential>)) #t)
+
+(define-method (equal? (x <sequential>) (y <sequential>))
+  (and (or (not (and (counted? x) (counted? y)))
+           (= (count x) (count y)))
+       (let loop ((x x)
+                  (y y))
+         (if (seq x)
+             (and (seq y)
+                  (equal? (first x) (first y))
+                  (loop (next x) (next y)))
+             (not (seq y))))))
+
+
+(define-class <seq> (<sequential>))
 (define-method (conj (s <seq>) x) (make-pair-seq x s))
 (define-method (cons x (s <seq>)) (make-pair-seq x s))
 (define-method (empty x (s <seq>)) #nil)
 (define-method (seq (s <seq>)) s)
 (define-method (seq? (s <seq>)) #t)
 (define-method (seqable? (s <seq>)) #t)
-(define-method (sequential? (s <seq>)) #t)
 
 ;;; <pair-seq>
 

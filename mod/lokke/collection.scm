@@ -27,6 +27,7 @@
                         <lazy-seq>
                         <pair-seq>
                         <seq>
+                        <sequential>
                         <vector-seq>
                         assoc
                         coll?
@@ -73,6 +74,7 @@
   replace: (merge)
   re-export: (<coll>
               <seq>
+              <sequential>
               assoc
               coll?
               conj

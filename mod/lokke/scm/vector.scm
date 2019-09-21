@@ -15,7 +15,7 @@
 
 (define-module (lokke scm vector)
   use-module: ((ice-9 match) select: (match))
-  use-module: ((lokke collection) select: (<coll>))
+  use-module: ((lokke collection) select: (<sequential>))
   use-module: ((lokke scm foreign-object) select: (make-foreign-object-type*))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (fold))
@@ -41,7 +41,7 @@
 ;; FIXME: make-foreign-object-type* is an ugly potentially fragile hack.
 (define <lokke-vector>
   ;; NOTE: this cannot be redefined since it's cached in the C code.
-  (make-foreign-object-type* 'lokke-vector '(data) supers: (list <coll>)))
+  (make-foreign-object-type* 'lokke-vector '(data) supers: (list <sequential>)))
 
 ;; Avoid undefined warnings
 (define lokke-empty-vector #f)

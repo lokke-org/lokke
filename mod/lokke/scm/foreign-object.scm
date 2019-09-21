@@ -17,10 +17,12 @@
 
 ;;; This is an ugly hack of Guile's make-foreign-object-type to
 ;;; support the specification of superclasses, so that we can just
-;;; make <lokke-vector> a <coll> from the start.  In the long run, we
-;;; should either change our approach, or see if the change might be
-;;; acceptable upstream.  The current code was taken from and
+;;; make <lokke-vector> a <sequential> from the start.  In the long
+;;; run, we should either change our approach, or see if the change
+;;; might be acceptable upstream.  The current code was taken from and
 ;;; so is compabitle with at least Guile 2.2.6.
+
+;; FIXME: badger upstream?  ^
 
 (read-set! keywords 'postfix)  ;; srfi-88
 
