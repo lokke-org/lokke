@@ -76,7 +76,8 @@
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr)
                select: (format pr pr-str print print-str println prn str))
-  use-module: (lokke vector)
+  use-module: ((lokke set) select: (<set>))
+  use-module: (lokke vector)  ;; FIXME: select
   use-module: ((lokke metadata)
                select: (*print-meta* meta set-meta! vary-meta with-meta))
   use-module: ((lokke scm core)
@@ -146,6 +147,7 @@
               <coll>
               <map-entry>
               <seq>
+              <set>
               =
               add-watch
               and

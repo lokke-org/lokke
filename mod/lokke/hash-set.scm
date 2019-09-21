@@ -16,8 +16,7 @@
 (define-module (lokke hash-set)
   use-module: ((ice-9 control) select: (call/ec))
   use-module: ((lokke collection)
-               select: (<coll>
-                        conj
+               select: (conj
                         cons
                         contains?
                         count
@@ -30,6 +29,7 @@
                         rest seq))
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
+  use-module: ((lokke set) select: (<set>))
   use-module: (oop goops)
   use-module: ((pfds hamts) prefix: hamts/)
   use-module: ((srfi srfi-41) select: (stream-lambda))
@@ -44,7 +44,10 @@
   re-export: (conj contains? count empty get into invoke pr pr-str print print-str)
   duplicates: (merge-generics replace warn-override-core warn last))
 
-(define-class <hash-set> (<coll>)
+;; FIXME: implement (lokke set) operations, here, or more generically
+;; when appropriate, there.
+
+(define-class <hash-set> (<set>)
   (internals init-keyword: internals:))
 
 (define-syntax-rule (set-hamt s) (slot-ref s 'internals))
