@@ -34,7 +34,7 @@
                         rest
                         seq
                         update))
-  use-module: ((lokke map-entry) select: (map-entry))
+  use-module: ((lokke base map-entry) select: (map-entry))
   use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
   use-module: ((lokke scm vector)
                 select: (<lokke-vector>

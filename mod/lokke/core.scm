@@ -58,10 +58,9 @@
                         reset!
                         set-validator!
                         swap!))
-  use-module: ((lokke map) select: (select-keys))
   use-module: (lokke hash-map)
   use-module: (lokke hash-set)
-  use-module: ((lokke map-entry)
+  use-module: ((lokke base map-entry)
                select: (<map-entry> key map-entry map-entry? val))
   use-module: ((lokke ns)
                select: (*ns*
@@ -145,6 +144,7 @@
               /
               <atom>
               <coll>
+              <map>
               <map-entry>
               <seq>
               <set>

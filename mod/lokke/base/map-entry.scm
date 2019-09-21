@@ -11,13 +11,13 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-;; This module must not depend on (lokke collection) because because
-;; it depends on (lokke base syntax) which depends on (lokke base
+;; This module must not depend on (lokke collection) because it
+;; depends on (lokke base syntax) which depends on (lokke base
 ;; destructure) which depends on hash-map which depends on this.
 
 (read-set! keywords 'postfix)  ;; srfi-88
 
-(define-module (lokke map-entry)
+(define-module (lokke base map-entry)
   use-module: (oop goops)
   use-module: ((lokke base collection)
                select: (<sequential> cons first nth rest second seq))

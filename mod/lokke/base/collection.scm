@@ -43,6 +43,7 @@
            counted?
            drop
            empty
+           every?
            ffirst
            find
            first
@@ -100,6 +101,13 @@
      ((counted? remaining) (+ sum (count remaining)))
      ((not (seq remaining)) sum)
      (else (loop (next remaining) (1+ sum))))))
+
+(define (every? pred coll)
+  (let ((s (seq coll)))
+    (if s
+        (and (pred (first s))
+             (every? pred (next coll)))
+        #t)))
 
 ;; Default behaviors
 (define-method (counted? x) #f)

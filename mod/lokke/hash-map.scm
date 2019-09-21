@@ -13,8 +13,8 @@
 
 (read-set! keywords 'postfix)  ;; srfi-88
 
-;; This module must not depend on (lokke collection) because because
-;; it depends on (lokke base syntax) which depends on (lokke base
+;; This module must not depend on (lokke collection) because it
+;; depends on (lokke base syntax) which depends on (lokke base
 ;; destructure) which depends on hash-map.
 
 (define-module (lokke hash-map)
@@ -36,8 +36,8 @@
                         second
                         seq
                         update))
-    use-module: ((lokke map) select: (select-keys))
-  use-module: ((lokke map-entry) select: (key map-entry val))
+  use-module: ((lokke base map) select: (<map> select-keys))
+  use-module: ((lokke base map-entry) select: (key map-entry val))
   use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
   use-module: (oop goops)
   use-module: ((pfds hamts) prefix: hamts/)
@@ -77,7 +77,7 @@
 
 (define not-found (make-symbol "not-found"))
 
-(define-class <hash-map> (<coll>)
+(define-class <hash-map> (<map>)
   (internals init-keyword: internals:))
 
 (define-syntax-rule (make-map hamt) (make <hash-map> internals: hamt))

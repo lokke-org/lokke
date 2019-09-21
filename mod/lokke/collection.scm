@@ -38,6 +38,7 @@
                         counted?
                         drop
                         empty
+                        every?
                         ffirst
                         find
                         first
@@ -57,12 +58,12 @@
                         sequential?
                         take
                         update))
+  use-module: ((lokke base map) select: (<map> select-keys))
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr) select: (*out*  pr print))
   export: (doall
            dorun
            empty?
-           every?
            into
            not-any?
            not-every?
@@ -73,6 +74,7 @@
            some)
   replace: (merge)
   re-export: (<coll>
+              <map>
               <seq>
               <sequential>
               assoc
@@ -84,6 +86,7 @@
               counted?
               drop
               empty
+              every?
               ffirst
               find
               first
@@ -100,6 +103,7 @@
               print
               rest
               second
+              select-keys
               seq
               seq?
               seqable?
@@ -253,12 +257,6 @@
        (lazy-seq
         (when-not (zero? n)
           (cons (f) (loop (1- n)))))))))
-
-(define (every? pred coll)
-  (if-let (s (seq coll))
-    (and (pred (first s))
-         (every? pred (next coll)))
-    #t))
 
 (define (not-every? pred coll)
   (not (every? pred coll)))
