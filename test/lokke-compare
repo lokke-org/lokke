@@ -19,15 +19,16 @@
 (use-modules
  ((lokke scm test-anything) select: (tap-test-runner))
  ((lokke compare) prefix: t/)
+ ((lokke vector) select: (vector))
  ((srfi srfi-1) select: (iota))
  ((srfi srfi-64)
   select: (test-assert
-            test-begin
-            test-end
-            test-equal
-            test-group
-            test-runner-current
-            test-runner-fail-count)))
+           test-begin
+           test-end
+           test-equal
+           test-group
+           test-runner-current
+           test-runner-fail-count)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -42,6 +43,74 @@
  (test-assert (not (t/clj= 'x 'x 'y)))
  (test-assert (t/clj= "x" "x"))
  (test-assert (not (t/clj= "x" "y"))))
+
+(test-group
+ "compare"
+ (test-equal -1 (t/compare #nil #t))
+ (test-equal -1 (t/compare #nil #f))
+ (test-equal 0 (t/compare #nil #nil))
+ (test-equal 1 (t/compare #f #nil))
+ (test-equal 1 (t/compare #t #nil))
+
+ (test-equal -1 (t/compare #f #t))
+ (test-equal 0 (t/compare #f #f))
+ (test-equal 0 (t/compare #t #t))
+ (test-equal 1 (t/compare #t #f))
+ (test-equal 1 (t/compare #t #nil))
+
+ (test-equal 1 (t/compare 1 0))
+ (test-equal 1 (t/compare 1.0 0))
+ (test-equal 1 (t/compare (/ 1 3) 0))
+
+ (test-equal 1 (t/compare +inf.0 -inf.0))
+ (test-equal 1 (t/compare +inf.0 0))
+ (test-equal 1 (t/compare 0 -inf.0))
+ (test-equal 0 (t/compare +inf.0 +inf.0))
+ (test-equal 0 (t/compare -inf.0 -inf.0))
+ (test-equal -1 (t/compare -inf.0 0))
+ (test-equal -1 (t/compare 0 +inf.0))
+ (test-equal -1 (t/compare -inf.0 +inf.0))
+
+ (test-equal 0 (t/compare +inf.0 +nan.0))
+ (test-equal 0 (t/compare +nan.0 +nan.0))
+ (test-equal 0 (t/compare +nan.0 0))
+ (test-equal 0 (t/compare +nan.0 +nan.0))
+
+ (test-equal 1 (t/compare "xy" "x"))
+ (test-equal 1 (t/compare "y" "x"))
+ (test-equal 0 (t/compare "" ""))
+ (test-equal 0 (t/compare "x" "x"))
+ (test-equal -1 (t/compare "" "x"))
+ (test-equal -1 (t/compare "x" "y"))
+ (test-equal -1 (t/compare "x" "xy"))
+
+ (test-equal 1 (t/compare 'xy 'x))
+ (test-equal 1 (t/compare 'y 'x))
+ (test-equal 0 (t/compare 'x 'x))
+ (test-equal -1 (t/compare 'x 'y))
+ (test-equal -1 (t/compare 'x 'xy))
+
+ (test-equal 1 (t/compare xy: x:))
+ (test-equal 1 (t/compare y: x:))
+ (test-equal 0 (t/compare x: x:))
+ (test-equal -1 (t/compare x: y:))
+ (test-equal -1 (t/compare x: xy:))
+
+ (test-equal 1 (t/compare #(1 2) #(1)))
+ (test-equal 1 (t/compare #(2) #(1)))
+ (test-equal 0 (t/compare #() #()))
+ (test-equal 0 (t/compare #(1) #(1)))
+ (test-equal -1 (t/compare #() #(1)))
+ (test-equal -1 (t/compare #(1) #(2)))
+ (test-equal -1 (t/compare #(1) #(1 2)))
+
+ (test-equal 1 (t/compare (vector 1 2) (vector 1)))
+ (test-equal 1 (t/compare (vector 2) (vector 1)))
+ (test-equal 0 (t/compare (vector ) (vector )))
+ (test-equal 0 (t/compare (vector 1) (vector 1)))
+ (test-equal -1 (t/compare (vector ) (vector 1)))
+ (test-equal -1 (t/compare (vector 1) (vector 2)))
+ (test-equal -1 (t/compare (vector 1) (vector 1 2))))
 
 (test-end)
 

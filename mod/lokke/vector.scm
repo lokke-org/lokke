@@ -35,7 +35,7 @@
                         seq
                         update))
   use-module: ((lokke base map-entry) select: (map-entry))
-  use-module: ((lokke compare) select: (clj=))
+  use-module: ((lokke compare) select: (clj= compare))
   use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
   use-module: ((lokke scm vector)
                 select: (<lokke-vector>
@@ -50,9 +50,12 @@
                          lokke-vector-ref
                          lokke-vector?
                          vector->lokke-vector))
-  replace: (vector vector?)  export: (vec)
+  use-module: ((srfi srfi-67) select: (vector-compare))
+  replace: (vector vector?)
+  export: (vec)
   re-export: (assoc
               clj=
+              compare
               conj
               contains?
               count
@@ -75,6 +78,9 @@
 ;; specialize this so that we'll bypass the generic <sequential> flavor
 (define-method (clj= (v1 <lokke-vector>) (v2 <lokke-vector>))
   (lokke-vector-equal? v1 v2))
+
+(define-method (compare (v1 <lokke-vector>) (v2 <lokke-vector>))
+  (vector-compare compare v1 v2 lokke-vector-length lokke-vector-ref))
 
 (define-method (conj (v <lokke-vector>) . xs)
   (reduce (lambda (result x)

@@ -16,8 +16,18 @@
 (define-module (lokke compare)
   version: (0 0 0)
   use-module: (oop goops)
-  export: (== clj=)
+  use-module: ((srfi srfi-67) select: (boolean-compare
+                                       char-compare
+                                       number-compare
+                                       (string-compare . string-compare-67)
+                                       symbol-compare
+                                       vector-compare))
+  use-module: ((srfi srfi-88) select: (keyword->string))
+  export: (== clj= compare)
   duplicates: (merge-generics replace warn-override-core warn last))
+
+;; FIXME: what do we want with respect to improper lists?
+;; FIXME: do we want equal? for vector vs pair that are more efficient?
 
 (define == =)
 
@@ -32,3 +42,29 @@
          (or (null? rest)
              (and (clj= x (car rest))
                   (loop (car rest) (cdr rest)))))))
+
+;; compare results are compatible with SRFI-67 #{-1 0 1}, stricter
+;; than Clojure's.
+
+(define-generic compare)
+
+(define-method (compare (x <boolean>) (y <boolean>))
+  (if (eq? x #nil)
+      (if (eq? y #nil) 0 -1)
+      (if (eq? y #nil)
+          1
+          (boolean-compare x y))))
+
+(define-method (compare (x <number>) (y <number>))
+  (if (or (nan? x) (nan? y))
+      0
+      (number-compare x y)))
+
+;; FIXME: namespaces, or maybe only on the clojure side
+(define-method (compare (x <symbol>) (y <symbol>)) (symbol-compare x y))
+(define-method (compare (x <keyword>) (y <keyword>))
+  (string-compare-67 (keyword->string x) (keyword->string y)))
+
+(define-method (compare (x <char>) (y <char>)) (char-compare x y))
+(define-method (compare (x <string>) (y <string>)) (string-compare-67 x y))
+(define-method (compare (x <vector>) (y <vector>)) (vector-compare compare x y))

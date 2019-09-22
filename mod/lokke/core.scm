@@ -21,11 +21,6 @@
   use-module: ((ice-9 match) select: (match-lambda*))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (drop-right iota last))
-  use-module: ((srfi srfi-67) select: (boolean-compare
-                                       char-compare
-                                       number-compare
-                                       (string-compare . string-compare-67)
-                                       symbol-compare))
   use-module: ((lokke base syntax)
                select: (and
                         (cond . clj-cond)
@@ -44,7 +39,7 @@
                         when-let
                         when-not))
   use-module: (lokke collection)
-  use-module: ((lokke compare) select: (== clj=))
+  use-module: ((lokke compare) select: (== clj= compare))
   use-module: ((lokke compile)
                select: (clj-defmacro
                         expand-symbol
@@ -122,7 +117,6 @@
            *err*
            *out*
            byte
-           compare
            (do . %scm-do)
            doc
            distinct?
@@ -169,6 +163,7 @@
               coll?
               comment
               comp
+              compare
               complement
               conj
               cons
@@ -341,84 +336,6 @@
 (define some? (complement nil?))
 
 (define (instance? c x) (is-a? x c))
-
-;; compare mostly follows srfi-67, except for '(), pair, and vector,
-;; which are treated as sequences.  Also currently more flexible than
-;; clojure/jvm with respect to collections.  i.e. (compare [1 2 3] '(1
-;; 2 3)) works.
-
-;; compare results are compatible with SRFI-67 #{-1 0 1}, stricter
-;; than Clojure's
-
-(define (seq-compare x y)
-  (if (identical? x y)
-      0
-      (let (x (seq x)
-            y (seq y))
-        (cond
-         ((and (not x) (not y)) 0)
-         ((not x) -1)
-         ((not y) 1)
-         (else (let (c (compare (first x) (first y)))
-                 (if (zero? c)
-                     (seq-compare (next x) (next y))
-                     c)))))))
-
-(define-method (compare (x <boolean>) y) -1)
-(define-method (compare (x <char>) y) -1)
-(define-method (compare (x <string>) y) -1)
-(define-method (compare (x <symbol>) y) -1)
-(define-method (compare (x <number>) y) -1)
-(define-method (compare (x <null>) y) -1)
-(define-method (compare (x <pair>) y) -1)
-(define-method (compare (x <vector>) y) -1)
-
-(define-method (compare (x <boolean>) (y <boolean>)) (boolean-compare x y))
-
-(define-method (compare (x <char>) (y <boolean>)) 1)
-(define-method (compare (x <char>) (y <char>)) (char-compare x y))
-
-(define-method (compare (x <string>) (y <boolean>)) 1)
-(define-method (compare (x <string>) (y <char>)) 1)
-(define-method (compare (x <string>) (y <string>)) (string-compare-67 x y))
-
-(define-method (compare (x <symbol>) (y <boolean>)) 1)
-(define-method (compare (x <symbol>) (y <char>)) 1)
-(define-method (compare (x <symbol>) (y <string>)) 1)
-(define-method (compare (x <symbol>) (y <symbol>)) (symbol-compare x y))
-
-(define-method (compare (x <number>) (y <boolean>)) 1)
-(define-method (compare (x <number>) (y <char>)) 1)
-(define-method (compare (x <number>) (y <string>)) 1)
-(define-method (compare (x <number>) (y <symbol>)) 1)
-(define-method (compare (x <number>) (y <number>)) (number-compare x y))
-
-(define-method (compare (x <null>) (y <boolean>)) 1)
-(define-method (compare (x <null>) (y <char>)) 1)
-(define-method (compare (x <null>) (y <string>)) 1)
-(define-method (compare (x <null>) (y <symbol>)) 1)
-(define-method (compare (x <null>) (y <number>)) 1)
-(define-method (compare (x <null>) (y <null>)) 0)
-(define-method (compare (x <null>) (y <pair>)) (seq-compare x y))
-(define-method (compare (x <null>) (y <vector>)) (seq-compare x y))
-
-(define-method (compare (x <pair>) (y <boolean>)) 1)
-(define-method (compare (x <pair>) (y <char>)) 1)
-(define-method (compare (x <pair>) (y <string>)) 1)
-(define-method (compare (x <pair>) (y <symbol>)) 1)
-(define-method (compare (x <pair>) (y <number>)) 1)
-(define-method (compare (x <pair>) (y <null>)) (seq-compare x y))
-(define-method (compare (x <pair>) (y <pair>)) (seq-compare x y))
-(define-method (compare (x <pair>) (y <vector>)) (seq-compare x y))
-
-(define-method (compare (x <vector>) (y <boolean>)) 1)
-(define-method (compare (x <vector>) (y <char>)) 1)
-(define-method (compare (x <vector>) (y <string>)) 1)
-(define-method (compare (x <vector>) (y <symbol>)) 1)
-(define-method (compare (x <vector>) (y <number>)) 1)
-(define-method (compare (x <vector>) (y <null>)) (seq-compare x y))
-(define-method (compare (x <vector>) (y <pair>)) (seq-compare x y))
-(define-method (compare (x <vector>) (y <vector>)) (seq-compare x y))
 
 (define (as-num-type x name min max)
   (let (x (inexact->exact (truncate x)))
