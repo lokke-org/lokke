@@ -17,7 +17,7 @@
   use-module: ((lokke base collection) select: (<coll> count every? get seq))
   use-module: ((lokke base map-entry) select: (key val))
   use-module: (oop goops)
-  export: (<map> select-keys)
+  export: (<map> map? select-keys)
   duplicates: (merge-generics replace warn-override-core warn last))
 
 ;; Define the <map> basics here.  They can't go in anything that
@@ -28,6 +28,7 @@
 (define sentinel (cons #f #f))  ;; Globally eq?/equal? unique token
 
 (define-class <map> (<coll>))
+(define (map? x) (is-a? x <map>))
 (define-generic select-keys)
 
 (define-method (equal? (x <map>) (y <map>))

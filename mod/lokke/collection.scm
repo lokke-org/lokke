@@ -59,7 +59,9 @@
                         sequential?
                         take
                         update))
-  use-module: ((lokke base map) select: (<map> select-keys))
+  use-module: ((lokke base map) select: (<map> map? select-keys))
+  use-module: ((lokke base map-entry)
+               select: (<map-entry> key map-entry map-entry? val))
   use-module: ((lokke compare) select: (clj=))
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr) select: (*out*  pr print))
@@ -77,6 +79,7 @@
   replace: (merge)
   re-export: (<coll>
               <map>
+              <map-entry>
               <seq>
               <sequential>
               assoc
@@ -97,7 +100,11 @@
               get
               get-in
               invoke
+              key
               lazy-seq
+              map?
+              map-entry
+              map-entry?
               next
               nfirst
               nnext
@@ -112,7 +119,8 @@
               seqable?
               sequential?
               take
-              update)
+              update
+              val)
   duplicates: (merge-generics replace warn-override-core warn last))
 
 (define-method (invoke (key <keyword>) map) (get map key))

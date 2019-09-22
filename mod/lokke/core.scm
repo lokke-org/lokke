@@ -57,8 +57,6 @@
                         swap!))
   use-module: (lokke hash-map)
   use-module: (lokke hash-set)
-  use-module: ((lokke base map-entry)
-               select: (<map-entry> key map-entry map-entry? val))
   use-module: ((lokke ns)
                select: (*ns*
                         find-ns
@@ -124,7 +122,6 @@
            int
            integer
            long
-           map?
            not=
            num
            short
@@ -221,6 +218,7 @@
               load-file
               loop
               macroexpand
+              map?
               map-entry
               map-entry?
               max
@@ -328,9 +326,6 @@
 (define *out* (current-output-port))
 
 (define *command-line-args* (cdr (program-arguments)))
-
-(define-method (map? x) #f)
-(define-method (map? (x <hash-map>)) #t)
 
 (define (nil? x) (eq? #nil x))
 (define some? (complement nil?))
