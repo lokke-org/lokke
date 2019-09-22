@@ -202,19 +202,31 @@ TODO
   throw either way we only have a token - for prompts it's unique
   "tag" (currently a pair), and for throw it's a symbol.
 
-  We might want some "imposter" bindings/whatever to handle at least
-  the common cases, i.e. (throw (Exception. "no way")).  Suposse
-  we might be able to get away with some (define-imposter Exception
-  ...) that would among other things, create an Exception. function
-  that would do something plausible.  It might also say bind Exception
-  to a GOOPS class, and record a corresponding catch/prompt key/tag
-  somwhere we can find later when catching.
+  Right now we have a very simplistic try/catch that can only (catch
+  ExceptionInfo ex ...), based on Guile's built-in `catch/throw` (i.e
+  the "symbol" approach).  That might well not be where we're
+  eventually headed.  There's also no support for `finally` clauses.
+  Before we support `finally` we may want to settle on some semantics
+  regarding any exceptions thrown from within the `finally` clause.
 
-  Upstream debate over exceptions in the context of cljs suggested
-  that they may really want to head toward just being able to throw a
-  data-carrying-object and then do something with it -- didn't sound
-  like they were in favor of keeping much of the JVM class/hierarchy
-  matching business as the non-platform-specific method.
+  It's possible we might want some "imposter" bindings/whatever to
+  handle at least the common cases, i.e. (throw (Exception. "no
+  way")).  Suposse we might be able to get away with some
+  (define-imposter Exception ...) that would among other things,
+  create an Exception. function that would do something plausible.  It
+  might also say bind Exception to a GOOPS class, and record a
+  corresponding catch/prompt key/tag somwhere we can find later when
+  catching.
+
+  On the other hand, upstream debate over exceptions in the context of
+  cljs suggested that they may really want to head toward just being
+  able to throw a data-carrying-object and then do something with it
+  -- didn't sound like they were in favor of keeping much of the JVM
+  class/hierarchy matching business as the non-platform-specific
+  method: https://github.com/clojure/clojurescript/wiki/Exception-Handling
+
+  What we have at the moment is more along those lines, in spirit at
+  least.
 
 - I'm still not sure whether the way we're handling the compilation
   environment, via default-environment, bootstrap, (lokke user), etc.,

@@ -55,6 +55,7 @@
                         reset!
                         set-validator!
                         swap!))
+  use-module: ((lokke exception) select: (ex-data ex-info throw try))
   use-module: (lokke hash-map)
   use-module: (lokke hash-set)
   use-module: ((lokke ns)
@@ -184,6 +185,8 @@
               eval-when
               even?
               every?
+              ex-data
+              ex-info
               false?
               ffirst
               find
@@ -277,7 +280,9 @@
               symbol
               symbol?
               take
+              throw
               true?
+              try
               update
               use
               val

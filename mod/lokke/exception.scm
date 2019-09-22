@@ -15,10 +15,14 @@
 
 (define-module (lokke exception)
   version: (0 0 0)
+  use-module: ((guile) hide: (catch))  ;; to work as literal, can't be defined
+  use-module: ((guile) select: ((throw . %scm-throw)))
   use-module: ((lokke base map) select: (map?))
   use-module: (oop goops)
-  export: (ex-data ex-info str)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  replace: (throw)
+  export: (ex-data ex-info try)
+  duplicates: (merge-generics replace warn-override-core warn last)
+  pure:)
 
 (define-syntax-rule (validate-arg fn-name pred expected val)
   (unless (pred val)
@@ -43,3 +47,26 @@
   (validate-arg 'ex-info (lambda (x) (is-a? x <exception-info>))
                 "ExceptionInfo" ex)
   (slot-ref ex 'map))
+
+(define ex-info-tag (make-symbol "exception-catch-tag"))
+
+(define (throw ex)
+  (validate-arg 'ex-info (lambda (x) (is-a? x <exception-info>))
+                "ExceptionInfo" ex)
+  (%scm-throw ex-info-tag ex))
+
+(define-syntax try
+  (syntax-rules (ExceptionInfo catch finally)
+    ;; Until we decide the semantics, e.g. for exceptions thrown from
+    ;; within finally expressions, reject them.
+    ((_ expr ... (finally finally-expr ...))
+     (syntax-error "finally clauses are not supported yet"))
+    ((_ expr ... (catch anything ...) (finally finally-expr ...))
+     (syntax-error "finally clauses are not supported yet"))
+    ((_ expr ... (catch ExceptionInfo ex catch-expr ...))
+     ((@ (guile) catch)
+       ex-info-tag
+       (lambda () #nil expr ...)
+       (lambda (key ex) #nil catch-expr ...)))
+    ((_ expr ...)
+     (begin #nil expr ...))))

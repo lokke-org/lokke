@@ -195,8 +195,9 @@ Known Issues
 
 - *Many* things are still broken or incomplete.
 
-- There's no plan yet with respect to error handling (exceptions,
-  etc.), but see DESIGN for almost a plan to have a plan.
+- Right now there is experimental support for try/catch which can only
+  catch an `ex-info` exception as `ExceptionInfo`.  This may or may
+  not stick around.  See DESIGN for further ruminations.
 
 - No `rseq` yet.
 
