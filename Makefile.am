@@ -22,6 +22,7 @@ export LOKKE_TEST_PROTOCOL = tap
 
 TESTS = \
   test/equality \
+  test/clojure-defmacro \
   test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \

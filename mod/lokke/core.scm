@@ -52,6 +52,7 @@
                         load-file))
   use-module: ((lokke concurrent)
                select: (<atom>
+                        atom
                         atom?
                         add-watch
                         remove-watch
@@ -152,6 +153,7 @@
               add-watch
               and
               assoc
+              atom
               atom?
               (begin . %scm-begin)
               (begin . do)
