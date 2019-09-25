@@ -15,7 +15,7 @@
 
 (define-module (lokke scm vector)
   use-module: ((ice-9 match) select: (match))
-  use-module: ((lokke collection) select: (<sequential>))
+  use-module: ((lokke base collection) select: (<sequential>))
   use-module: ((lokke scm foreign-object) select: (make-foreign-object-type*))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (fold))

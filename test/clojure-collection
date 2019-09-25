@@ -1,0 +1,57 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-collection
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "rest behavior"
+  (is (= '(2) (rest (list 1 2))))
+  (is (= '() (rest (list 1))))
+  (is (= [2] (rest [1 2])))
+  (is (= (list 2) (rest [1 2])))
+  (is (= '(2) (rest [1 2])))
+  (is (= [2] (rest (list 1 2))))
+  (is (= (list 2) (rest (list 1 2))))
+  (is (= '(2) (rest (list 1 2))))
+  (is (empty? (rest [1])))
+  (is (= (list)  (rest [1])))
+  (is (= '()  (rest [1]))))
+
+(testing "empty list/vector tests"
+  (is (= '() '()))
+  (is (= [] []))
+  (is (= '() []))
+  (is (empty? '()))
+  (is (empty? (seq '())))
+  (is (empty? []))
+  (is (empty? (seq [])))
+  (is (not= '() false))
+  (is (not= '(1) true))
+  (is (not= '() nil))
+
+  (is (not (empty? '(1))))
+  (is (not (empty? [1]))))
+
+(testing "vector tests"
+  (is (not (= [1 2 3] #{4 5})))
+  (is (not (= [1 2 3] (list 4 5))))
+  (is (not (= [1 2 3] '(4 5)))))
+
+(testing "full sequential equals"
+  (is (not (= '(1 2 3) '(4 5 6))))
+  (is (not (= (seq [1 2 3]) [4 5 6]))))
