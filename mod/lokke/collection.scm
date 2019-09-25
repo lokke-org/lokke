@@ -62,6 +62,7 @@
   use-module: ((lokke base map) select: (<map> map? select-keys))
   use-module: ((lokke base map-entry)
                select: (<map-entry> key map-entry map-entry? val))
+  use-module: ((lokke scm vector) select: (<lokke-vector>))
   use-module: ((lokke compare) select: (clj=))
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr) select: (*out*  pr print))
@@ -142,10 +143,27 @@
 ;; We have to special case anything that's sequable?, but not <sequential>.
 ;; FIXME: improper lists?
 (define-method (clj= (x <pair>) (y <pair>)) (equal? x y))
-(define-method (clj= (s <pair>) x) (if (seqable? x) (clj= x (seq x))))
+
+(define (clj-sequential= x y)
+  (clj= (seq x) (seq y)))
+
+(define-method (clj= (s <pair>) x)
+  (when (sequential? x)
+    (clj-sequential= s x)))
+
+;; Empty list is <null> in goops
+(define-method (clj= (s <null>) x)
+  (when (sequential? x)
+   (eq? #nil (seq x))))
+
 (define-method (clj= (x <vector>) (y <vector>)) (equal? x y))
-(define-method (clj= (s <vector>) x) (if (seqable? x) (clj= x (seq x))))
-(define-method (clj= (s <sequential>) x) (if (seqable? x) (clj= x (seq x))))
+(define-method (clj= (s <vector>) x)
+  (when (sequential? x)
+    (clj-sequential= s x)))
+
+(define-method (clj= (s <sequential>) x)
+  (when (sequential? x)
+    (clj-sequential= s x)))
 
 (define (seq->scm-list s)
   (let loop ((s s)
@@ -210,6 +228,18 @@
 
 (define-method (empty? (v <list>))
   (null? v))
+
+(define-method (empty? (v <sequential>))
+  (eq? #nil (seq v)))
+
+(define-method (empty? (v <null>))
+  #t)
+
+(define-method (empty? (v <pair>))
+  #f)
+
+(define-method (empty? n)
+  (eq? #nil n))
 
 ;; Generic implementation -- may be able to do better for any given
 ;; class.

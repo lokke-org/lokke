@@ -52,7 +52,7 @@
 
  (test-assert (clj= '(1) #(1)))
  (test-assert (clj= #(1) '(1)))
- (test-assert (clj= #(1) (vector 1 2 3)))
+ (test-assert (not (clj= #(1) (vector 1 2 3))))
 
  (test-assert (clj= (vector 1 2 3) (vector 1 2 3)))
  (test-assert (not (clj= (vector 1 2) (vector 1 2 3)))))
