@@ -150,6 +150,8 @@ Differences from Clojure/JVM (an incomplete list)
   immutable GOOPS classes in Guile, but of course you can modify
   anything on the JVM too if you really set your mind to it.
 * atoms don't yet support watchers or metadata.
+* In addition to nil, the `lokke` command's `-e` option doesn't print
+  unspecified values (Guile's `*unspecified*`).
 
 On the Scheme side
 ------------------

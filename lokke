@@ -48,7 +48,8 @@ exec ./guile "$0" "$@"
    "  lokke OPTS -- CLOJURE_PROGRAM_ARG...\n"
    "OPTS:\n"
    "  -i, --init PATH    load path\n"
-   "  -e, --eval CODE    evaluate code, printing non-nil values\n"))
+   "  -e, --eval CODE    evaluate code, printing any values that are\n"
+   "                     not nil or unspecified\n"))
 
 (define (quit msg status)
   (display msg (err))
@@ -74,7 +75,7 @@ exec ./guile "$0" "$@"
     (lambda (actions)
       (cons (lambda ()
               (let ((result (eval-string code lang: 'lokke compile?: #t)))
-                (unless (nil? result)
+                (unless (or (nil? result) (eq? *unspecified* result))
                   (println result))))
             actions)))
   (let loop ((args (cdr args))

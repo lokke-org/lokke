@@ -58,17 +58,21 @@
 (define (read-only-str s) (substring/read-only s 0))
 
 (define (str-somehow x details)
-  (read-only-str
-   (string-append
-    "#object["
-    (if (tree-il? x)
-        (%scm-format #f "~s" x)
-        ;; This may not be the preferred rep for structs/records/etc.
-        (apply %scm-format #f "~s 0x~x~a~a" (class-name (class-of x)) (object-address x)
-               (if details
-                   (list " " details)
-                   '("" ""))))
-    "]")))
+  (if (eq? x *unspecified*)
+      ""
+      (read-only-str
+       (string-append
+        "#object["
+        (if (tree-il? x)
+            (%scm-format #f "~s" x)
+            ;; This may not be the preferred rep for structs/records/etc.
+            (apply %scm-format #f "~s 0x~x~a~a"
+                   (class-name (class-of x))
+                   (object-address x)
+                   (if details
+                       (list " " details)
+                       '("" ""))))
+        "]"))))
 
 ;; No args
 (define-method (pr-str) "")
