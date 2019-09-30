@@ -238,8 +238,9 @@
 (define-method (empty? (v <pair>))
   #f)
 
-(define-method (empty? n)
-  (eq? #nil n))
+(define-method (empty? (b <boolean>))
+  (require-nil 'empty? b)
+  #t)
 
 ;; Generic implementation -- may be able to do better for any given
 ;; class.
