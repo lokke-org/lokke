@@ -21,37 +21,42 @@ compilation or execution via the lower levels of language tower.
 
 The compilation process uses some symbols starting with /lokke/ as a
 side channel for communication (discussed further below), which is
-fine since symbols staring with "/" are illegal in Clojure itself.
+fine since symbols staring with "/" are illegal in Clojure itself (and
+at least unreadable in Clojure on the JVM).
 
 Clojure's "compound" (namespaced) symbols like clojure.string/join
-present another wrinkle.  The current (incomplete) handling just
-rewrites those in the reader as (/lokke/scoped-sym clojure.string/join
-(clojure string) join).  Before passing a form to a Clojure syntax
-expander (created with the Clojure side defmacro), all of the
-scoped-sym references are transformed back to their corresponding
-compound symbols (e.g. clojure.string/join), and then, once the
-expander has returned the expansion, any compound symbols are
-rewritten as scoped-syms.
+present another wrinkle.  Currently these symbols are left alone at
+the Clojure and Scheme levels, and then a final pass over the tree-il
+code rewrites any remaining, namespaced, top-level references as Guile
+module references, e.g. `clojure.string/join` effectively becomes `(@
+(lokke ns clojure string) join)`.
 
-The compilation module (namespace) also includes a definition of
-/lokke/scoped-sym as a syntax that expands into a normal guile module
-lookup, i.e. (@ (clojure string) join) so that any compound symbols
-that still exist after all of the macros have been expanded will be
-rewritten as references to the correct module variable.
+Since the core of the compiler is the macroexpander, it must be able
+to traverse and expand all of the appropriate literal structures.  For
+Scheme that primarily means being able to traverse lists, but Clojure
+requires that we also traverse literal hash-maps, hash-sets, and
+vectors, i.e. `[(some-macro x)]` must expand `some-macro` at compile
+time.
 
-There is a similar "domain shift" with respect to Clojure hash-map and
-hash-set literals, i.e. {...} and #{...}.  Those are always presented
-to the Clojure defmacro transformers as actual instances of hash-map
-and hash-set, but the compiler itself always sees them as
-psuedo-function invocations like (/lokke/reader-hash-map ...) and
-(/lokke/reader-hash-set ...) since the Scheme syntax expander wouldn't
-know what to do with a hash-map or hash-set instance.
+To support that, those literals are always represented to the compiler
+as pseudo-function invocations like `(/lokke/reader-hash-map ...)` and
+`(/lokke/reader-hash-set ...)`, which the macroexpander can traverse.
+The reader creates this representation when invoked via
+`read-for-compiler`.
 
-That is, #{foo} is an actual hash-map instance containing the symbol
-foo whenever it is encountered by Clojure code during compilation, for
-example whenever a Clojure defmacro expander sees it, but it will be
-(/lokke/reader-hash-set foo) whenever it is encountered by the Scheme
-syntax expander.
+These pseudo-functions present a problem for Clojure syntax expanders
+(created with the Clojure side defmacro) since the expanders expect to
+see actual hash-maps and hash-sets, so before a form is passed to one
+of them, all of the pseudo-function calls are transformed into the
+instances they represent, and then, once the expander has returned its
+expansion, any instances in the result are transformed back to the
+corresponding pseudo-function calls.
+
+That is, `#{foo}` will be an actual hash-set instance containing the
+symbol `foo` whenever it is encountered by Clojure code during
+compilation, for example whenever a Clojure defmacro expander sees it,
+but it will be `(/lokke/reader-hash-set foo)` whenever it is
+encountered by the Scheme syntax expander.
 
 In part, we've started with this approach because we wanted to try
 relying on the normal Scheme macroexpander (the way Guile's Scheme

@@ -40,11 +40,7 @@
                         when-not))
   use-module: (lokke collection)
   use-module: ((lokke compare) select: (== clj= compare))
-  use-module: ((lokke compile)
-               select: (clj-defmacro
-                        expand-symbol
-                        expand-symbols
-                        load-file))
+  use-module: ((lokke compile) select: (clj-defmacro load-file))
   use-module: ((lokke concurrent)
                select: (<atom>
                         atom

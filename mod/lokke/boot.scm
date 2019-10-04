@@ -20,31 +20,21 @@
 
 (define-module (lokke boot)
   use-module: ((lokke ns) select: (ns))
-  export: (/lokke/@
-           /lokke/reader-hash-map
+  export: (/lokke/reader-hash-map
            /lokke/reader-hash-set
            /lokke/reader-vector
-           /lokke/scoped-sym
-           /lokke/scoped-ref
            syntax-quote)
   re-export: (ns quasiquote quote unquote unquote-splicing)
   duplicates: (merge-generics replace warn-override-core warn last))
 
-(define-syntax-rule (/lokke/@ ns ref)
-  (@ ns ref))
-
 (define-syntax-rule (syntax-quote form)
   (quasiquote form))
 
-(define-syntax /lokke/scoped-sym
-  (syntax-rules (quote guile)
-    ((_ sym (quote (guile)) (quote ref)) (syntax-error "No guile domain module specified by" sym))
-    ((_ sym (quote (guile name ...)) (quote ref)) (/lokke/@ (name ...) ref))
-    ((_ sym (quote (name ...)) (quote ref)) (/lokke/@ (lokke ns name ...) ref))))
+(define-syntax-rule (/lokke/reader-hash-map x ...)
+  ((@ (lokke hash-map) hash-map) x ...))
 
-;; FIXME: any reason these three aren't all functions or all syntax?
-(define /lokke/reader-hash-map (@ (lokke hash-map) hash-map))
-(define /lokke/reader-hash-set (@ (lokke hash-set) hash-set))
+(define-syntax-rule (/lokke/reader-hash-set x ...)
+  ((@ (lokke hash-set) hash-set) x ...))
 
 (define-syntax-rule (/lokke/reader-vector x ...)
   ((@ (lokke vector) vector) x ...))

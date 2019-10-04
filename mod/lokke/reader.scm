@@ -19,9 +19,7 @@
   use-module: ((lokke base util) select: (pairify))
   use-module: ((lokke collection) select: (empty? merge))
   use-module: ((lokke compile)
-               select: (expand-symbols
-                        literals->clj-instances
-                        preserve-meta-if-new!))
+               select: (literals->clj-instances preserve-meta-if-new!))
   use-module: ((lokke hash-map) select: (assoc get hash-map hash-map?))
   use-module: ((lokke hash-set) select: (hash-set))
   use-module: ((lokke metadata) select: (with-meta set-meta!))
@@ -383,10 +381,7 @@
         result)))))
 
 (define (read-for-compiler port)
-  (let ((expr (uninstantiated-read port)))
-    (if (eof-object? expr)
-        expr
-        (expand-symbols expr))))
+  (uninstantiated-read port))
 
 (define (read-string-for-compiler s)
   (call-with-input-string s

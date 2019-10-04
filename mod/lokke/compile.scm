@@ -31,7 +31,11 @@
   use-module: ((lokke scm vector)
                select: (lokke-vec lokke-vector? lokke-vector->list))
   use-module: ((lokke symbol)
-               select: (parse-symbol scoped-sym? scoped-sym-symbol simple-symbol?))
+               select: (ns-sym->mod-name
+                        parse-symbol
+                        parsed-sym-ns
+                        parsed-sym-ref
+                        simple-symbol?))
   use-module: (oop goops)
   use-module: ((srfi srfi-1)
                select: (any
@@ -47,15 +51,12 @@
                         compile-file
                         compiled-file-name))
   export: (clj-defmacro
-           expand-symbol
-           expand-symbols
            literals->clj-instances
            literals->scm-instances
            load-file
            make-lokke-language
            preserve-meta-if-new!
-           tree->tree-il
-           unexpand-symbols)
+           tree->tree-il)
   duplicates: (merge-generics replace warn-override-core warn last))
 
 ;; Right now the tree walkers in this code tend to be prescriptive,
@@ -155,100 +156,13 @@
       (pretty-print result (current-error-port)))
     result))
 
-
-(define (expand-symbol sym)
-  (unless (symbol? sym)
-    (error "Asked to expand non-symbol:" sym))
-  (case sym
-    ;; Pass these through as-is
-    ((/
-      /lokke/reader-anon-fn
-      /lokke/reader-meta
-      /lokke/reader-vector
-      /lokke/reader-hash-map
-      /lokke/reader-hash-set
-      /lokke/scoped-sym)
-     sym)
-    (else (if (simple-symbol? sym) sym (parse-symbol sym)))))
-
-(define (expand-symbols expr)
-  ;; This does not have to deal with hash-maps, etc. because we always
-  ;; uninstantiate those before calling this.  Also assumes we'll
-  ;; never see scheme vector here.
-  (define (pass-synquoted-region expr)
-    (preserve-meta-if-new!
-     expr
-     (if (pair? expr)
-         (if (eq? 'unquote (car expr))
-             (convert expr)
-             (map pass-synquoted-region expr))
-         expr)))
-  (define (convert expr)
-    (preserve-meta-if-new!
-     expr
-     (cond
-      ((symbol? expr) (expand-symbol expr))
-      ((null? expr) expr)
-      ((list? expr)
-       (case (car expr)
-         ((quote) expr)
-         ((syntax-quote) (pass-synquoted-region expr))
-         (else (map convert expr))))
-      ;;((list? expr) (map convert expr))
-      ((string? expr) expr)
-      ((number? expr) expr)
-      ((keyword? expr) expr)
-      ((boolean? expr) expr)
-      ((char? expr) expr)
-      (else (error "Unexpected expression while desugaring symbols:" expr)))))
-  (when debug-compile?
-    (format (current-error-port) "expand-symbols:\n")
-    (pretty-print expr (current-error-port)))
-  (let ((result (convert expr)))
-    (when debug-compile?
-      (format (current-error-port) "expanded-symbols:\n")
-      (pretty-print expr (current-error-port))
-      (format (current-error-port) "  =>\n")
-      (pretty-print result (current-error-port)))
-    result))
-
-(define (unexpand-symbols expr)
-  ;; This does not have to deal with hash-maps, etc. because we always
-  ;; call this before instantiating those.  Also assumes we'll never
-  ;; see scheme vector here.
-  (define (convert expr)
-    (preserve-meta-if-new!
-     expr
-     (cond
-      ((symbol? expr) expr)
-      ((null? expr) expr)
-      ((list? expr)
-       (if (scoped-sym? expr)
-           (scoped-sym-symbol expr)
-           (map convert expr)))
-      ((string? expr) expr)
-      ((number? expr) expr)
-      ((keyword? expr) expr)
-      ((boolean? expr) expr)
-      (else (error "Unexpected expression while sugaring symbols:" expr)))))
-  (when debug-compile?
-    (format (current-error-port) "unexpand:\n")
-    (pretty-print expr (current-error-port)))
-  (let ((result (convert expr)))
-    (when debug-compile?
-      (format (current-error-port) "unexpanded:\n")
-      (pretty-print expr (current-error-port))
-      (format (current-error-port) "  =>\n")
-      (pretty-print result (current-error-port)))
-    result))
-
 (eval-when (expand load eval)
   (define (/lokke/prep-form-for-clj-macro form)
-    (literals->clj-instances (unexpand-symbols form))))
+    (literals->clj-instances form)))
 
 (eval-when (expand load eval)
   (define (/lokke/convert-form-from-clj-macro form)
-    (expand-symbols (clj-instances->literals form))))
+    (clj-instances->literals form)))
 
 (define (make-invoke-ref src)
   (tree-il/make-module-ref src '(lokke invoke) 'invoke #t))
@@ -264,6 +178,23 @@
                              (tree-il/call-args call))))
   (if enable-invoke? (add-invoke call) call))
 
+(define (rewrite-il-toplevel top)
+  "Rewrites any <toplevel-ref> tree-il nodes containing a namespaced
+Clojure reference like clojure.string/join to the corresponding Guile
+<modulle-ref>."
+  (let ((name (tree-il/toplevel-ref-name top)))
+    (if (simple-symbol? name)
+        top
+        (let* ((parsed (parse-symbol name))
+               (ns-sym (parsed-sym-ns parsed)))
+          (unless ns-sym
+            ;; FIXME: appropriate?  They're class references for Clojure/JVM
+            (error "Top-level x.y references are currently not allowed" name))
+          (tree-il/make-module-ref (tree-il/toplevel-ref-src top)
+                                   (ns-sym->mod-name ns-sym)
+                                   (parsed-sym-ref parsed)
+                                   #t)))))
+
 (define il-count 0)
 
 (define (rewrite-il-calls il)
@@ -271,15 +202,21 @@
   (define (up tree)
     (let* ((count (begin (set! il-count (1+ il-count)) il-count))
            (_ (when debug-il? (format (current-error-port) "il[~a]: ~s\n" count tree)))
-           (result (if (not (tree-il/call? tree))
-                       (begin
-                         (when debug-il?
-                           (format (current-error-port) "il[~a]: <<unchanged>>\n" count))
-                         tree)
-                       (let ((result (rewrite-il-call tree)))
-                         (when debug-il?
-                           (format (current-error-port) "il[~a]: ~s\n" count result))
-                         result))))
+           (result (cond
+                    ((tree-il/call? tree)
+                     (let ((result (rewrite-il-call tree)))
+                       (when debug-il?
+                         (format (current-error-port) "il[~a]: ~s\n" count result))
+                       result))
+                    ((tree-il/toplevel-ref? tree)
+                     (let ((result (rewrite-il-toplevel tree)))
+                       (when debug-il?
+                         (format (current-error-port) "il[~a]: ~s\n" count result))
+                       result))
+                    (else
+                     (when debug-il?
+                       (format (current-error-port) "il[~a]: <<unchanged>>\n" count))
+                     tree))))
       result))
   (let ((result (tree-il/post-order up il)))
     (when debug-il?

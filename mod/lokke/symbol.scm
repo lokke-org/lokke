@@ -24,12 +24,11 @@
            keyword
            name
            namespace
+           ns-sym->mod-name
            parse-symbol
-           scoped-sym?
-           scoped-sym-symbol
-           scoped-sym-ns
-           scoped-sym-ref
-           scoped-sym->validated-ns-ref
+           parsed-sym-ns
+           parsed-sym-ref
+           require-ns-sym
            simple-symbol?)
   replace: (gensym symbol))
 
@@ -53,17 +52,31 @@
       (and (symbol? s)
            (not (regexp-exec rx (symbol->string s)))))))
 
-;; At the moment, scoped syms are used as both a representation for
-;; parsed symbols, and by the compiler during expansion, so they need
-;; to be something that the macroexpander can match/traverse.  Below
-;; "ref" means the reference within a namespace, i.e. the foo in
-;; bar/foo.
+(define (make-parsed-sym ns ref) (cons ns ref))
 
-(define (make-scoped-sym sym ns ref) (list '/lokke/scoped-sym `',sym `',ns `',ref))
-(define (scoped-sym? s) (and (pair? s) (eq? '/lokke/scoped-sym (car s))))
-(define (scoped-sym-symbol s) (cadr (list-ref s 1)))
-(define (scoped-sym-ns s) (cadr (list-ref s 2)))
-(define (scoped-sym-ref s) (cadr (list-ref s 3)))
+(define (parsed-sym-ns s)
+  "Returns the namespace symbol for s, if any, otherwise a false value.
+Note that like (namespace sym), this will be false for any symbol that
+doesn't contain a slash like, for example, clojure.string."
+  (car s))
+
+(define (parsed-sym-ref s)
+  "Returns the reference component of s, if any, otherwise a false
+value, 'join for example, for the symbol clojure.string/join.
+Similar to (name sym), except that it returns a symbol."
+  (cdr s))
+
+(define (ns-sym->mod-name ref) ;; -> (lokke ns foo)
+  "Returns the Guile module name for the given ref, e.g. (lokke ns
+clojure string) for clojure.string."
+  (let* ((split (string-split (symbol->string ref) #\.))
+         (ns (if (= 1 (length split))
+                 (list ref)
+                 (map string->symbol split))))
+    (if (eq? 'guile (car ns))
+        (cdr ns)
+        (apply list 'lokke 'ns ns))))
+
 
 ;; Looks like multiple interior slashes are legal in a quoted symbol,
 ;; regardless of what the reader docs say, and there are some extra
@@ -82,27 +95,15 @@
                          regexp/icase)))
     (lambda (s) (regexp-exec rx s))))
 
-(define maybe-valid-symbol-name?
-  (let* ((others (string-append sym-component-first-chars "0-9./"))
-         (rx (make-regexp (format #f "^[~a][~a]*$"
-                                  sym-component-first-chars
-                                  others)
-                          regexp/icase)))
-    ;; Apparently the symbol can't start or end with a slash unless it
-    ;; *is* slash.
-    (lambda (s)
-      (and (regexp-exec rx s)
-           (let ((len (string-length s)))
-             (or (= 1 len)
-                 (not (char=? #\/ (string-ref s (1- len))))))))))
-
+;; FIXME: TESTS!
 (define (parse-symbol sym)
   ;; Ensures valid clojure symbol syntax and then returns a
-  ;; scoped-sym.
+  ;; parsed-sym.
   ;; FIXME: unicode?
+  ;; FIXME: we allow anything if no "/"?
   (let ((s (symbol->string sym)))
     (if (not (string-index s #\/))
-        (make-scoped-sym sym #f sym)
+        (make-parsed-sym #f sym)
         ;; Otherwise, must be a valid clojure symbol
         (let ((ns-and-ref (string-split s #\/)))
           (when (any (lambda (x) (zero? (string-length x))) ns-and-ref)
@@ -131,10 +132,25 @@
                          sym)
                   (error "Invalid symbol syntax:" sym)))
             (if (pair? ns)
-                (make-scoped-sym sym
-                                 (map string->symbol ns)
+                (make-parsed-sym (string->symbol (string-join ns "."))
                                  (and ref (string->symbol ref)))
-                (make-scoped-sym sym (list sym) #f)))))))
+                ;; FIXME: how could this ever be reached, given the
+                ;; check for "/" in the top-level "if" above?
+                (make-parsed-sym (string->symbol sym) #f)))))))
+
+(define (require-ns-sym ref)
+  ;; FIXME: doesn't need full complexity of parse-symbol
+  (unless (symbol? ref)
+    (error "Namespace reference is not a symbol:" ref))
+  (let* ((parsed (parse-symbol ref))
+         (n (parsed-sym-ns parsed))
+         (r (parsed-sym-ref parsed)))
+    (when (and n r)
+      (error "Symbol is not just a namespace reference:" ref))
+    (let ((ns (or n r)))
+      (unless ns
+        (error "Unable to find namespace or name in symbol:" ref))
+      ns)))
 
 (define (validate-ns-str s)
   (let* ((ns (string-split s #\.)))
@@ -159,6 +175,9 @@
                   ((symbol? ns-or-name) ns-or-name)
                   ((keyword? ns-or-name) (keyword->symbol ns-or-name))
                   (else (error "Unexpected symbol argument" ns-or-name)))))
+        ;; FIXME: clojure/jvm actually allows "invalid" symbols like
+        ;; (symbol "@#$@#$%///"); they just can't be read.  What do we
+        ;; want?
         (parse-symbol sym)
         sym)
       (let ((ns ns-or-name))
@@ -171,7 +190,7 @@
           (if (eq? #nil ns)
               sym
               (begin
-                (when (scoped-sym-ns parsed)
+                (when (parsed-sym-ns parsed)
                   (error (format #f
                                  "Can't construct symbol with ns ~s; name already has one: ~s" ns name)))
                 (validate-ns-str ns)
@@ -180,7 +199,7 @@
 ;; FIXME: method?
 (define (name x)
   (if (symbol? x)
-      (symbol->string (scoped-sym-ref (parse-symbol x)))
+      (symbol->string (parsed-sym-ref (parse-symbol x)))
       (name (symbol x))))
 
 ;; FIXME: may not be quite right yet.
@@ -188,10 +207,10 @@
 (define (namespace x)
   (if (symbol? x)
       (let* ((parsed (parse-symbol x))
-             (ns (scoped-sym-ns parsed)))
+             (ns (parsed-sym-ns parsed)))
         (if (not ns)
             #nil
-            (string-join (map symbol->string ns) ".")))
+            (symbol->string ns)))
       (namespace (symbol x))))
 
 (define* (keyword name-or-ns optional: (name #nil))

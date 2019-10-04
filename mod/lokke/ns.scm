@@ -17,15 +17,15 @@
 
 (define-module (lokke ns)
   use-module: ((lokke compile)
-               select: (literals->scm-instances unexpand-symbols))
+               select: (literals->scm-instances))
   use-module: ((lokke symbol)
-               select: (parse-symbol
-                        scoped-sym-ns
-                        scoped-sym-ref
-                        scoped-sym-symbol))
+               select: (ns-sym->mod-name
+                        parsed-sym-ns
+                        parsed-sym-ref
+                        require-ns-sym))
   use-module: ((lokke scm vector)
                select: (lokke-vector? lokke-vector->list))
-  use-module: ((lokke symbol) select: (scoped-sym? simple-symbol?))
+  use-module: ((lokke symbol) select: (simple-symbol?))
   use-module: ((srfi srfi-1) select: (every find proper-list? take drop))
   use-module: ((srfi srfi-9 gnu) select: (define-immutable-record-type))
   use-module: ((system base compile) select: (compile-file compiled-file-name))
@@ -64,18 +64,6 @@
         (newline (current-error-port)))
       (lambda args #t)))
 
-;; FIXME: doesn't seem like quite the right abstraction/name...
-(define (scoped-sym-module s)
-  (when (scoped-sym-ns s)
-    (error "qualified symbol cannot be an ns reference" (scoped-sym-symbol s)))
-  (let ((ns-sym (scoped-sym-ref s)))
-    (unless ns-sym
-      (error "invalid ns reference symbol" (scoped-sym-symbol s)))
-    (let* ((ns (map string->symbol (string-split (symbol->string ns-sym) #\.))))
-      (if (eq? 'guile (car ns))
-          (cdr ns)
-          (apply list 'lokke 'ns ns)))))
-
 (define (re-export-all! module-name)
   (module-re-export! (current-module)
                      (module-map (lambda (name var) name)
@@ -92,13 +80,6 @@
 
 (define (ns-name n)
   (module-name->ns-name (module-name n)))
-
-(define (parse-ns-ref ref)
-  (dbgf "parse-ns-ref: ~s\n" ref)
-  (dbgf "parse-ns-ref: ~s\n" (parse-symbol ref))
-  (cond
-   ((symbol? ref) (parse-symbol ref))
-   (else (error "Not a namespace reference:" ref))))
 
 (define-syntax *ns*
   (identifier-syntax
@@ -162,8 +143,6 @@
       result))
 
   (dbgf "resolving: ~s\n" name)
-  (when (scoped-sym? name)
-    (error "Scoped sym?" name))
   (unless (pair? name)
     (error "Name must be a list, e.g. (lokke ns clojure core), not" name))
   (let ((env #f))
@@ -227,7 +206,8 @@
     m))
 
 (define (find-ns ns-sym)
-  (let ((ns (maybe-resolve-ns-module (scoped-sym-module (parse-ns-ref ns-sym)))))
+  (require-ns-sym ns-sym)
+  (let ((ns (maybe-resolve-ns-module (ns-sym->mod-name ns-sym))))
     (if ns ns #nil)))
 
 
@@ -296,9 +276,8 @@
       (dbgf "loop: ~s ~s ~s ~s ~s\n" specs alias select-src select hide)
       (if (null? specs)
           (let ((name (car it)))
-            (unless (symbol? name)
-              (error "Unexpected namespace name:" item))
-            (make-ns-dep-spec (scoped-sym-module (parse-ns-ref name)) alias select hide))
+            (require-ns-sym name)
+            (make-ns-dep-spec (ns-sym->mod-name name) alias select hide))
           (let ((kind (car specs)))
             (case kind
               ((#:as)
@@ -435,10 +414,11 @@
     cmds))
 
 (define (clj-syntax->scm syn)
-  (literals->scm-instances (unexpand-symbols (syntax->datum syn))))
+  (literals->scm-instances (syntax->datum syn)))
 
 (define (create-ns name)
-  (let* ((mod (scoped-sym-module (parse-ns-ref name)))
+  (require-ns-sym name)
+  (let* ((mod (ns-sym->mod-name name))
          (existing (resolve-ns-module mod)))
     (if existing
         existing
@@ -472,7 +452,7 @@
   (lambda (x)
     (syntax-case x ()
       ((_ name specs ...)
-       (let* ((mod (scoped-sym-module (parse-symbol (clj-syntax->scm #'name))))
+       (let* ((mod (ns-sym->mod-name (require-ns-sym (syntax->datum #'name))))
               (core? (core-module? mod))
               (specs (clj-syntax->scm #'(specs ...)))
               (ref-cmds (datum->syntax x (incorporate-refs-syntax specs core?))))
