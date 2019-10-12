@@ -34,7 +34,8 @@ TESTS = \
   test/lokke-scm-vector \
   test/metadata-handling \
   test/reader-basics \
-  test/clojure-fn
+  test/clojure-fn \
+  test/clojure-collection
 
 # FIXME...
 clean-local:
