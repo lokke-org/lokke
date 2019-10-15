@@ -308,7 +308,9 @@
 (define-method (rest (x <vector-seq>))
   (let ((v (slot-ref x 'v))
         (i (slot-ref x 'i)))
-    (make <vector-seq> v: v i: (1+ i))))
+    (if (= i (vector-length v))
+        '()
+        (make <vector-seq> v: v i: (1+ i)))))
 
 (define-method (seq (s <vector-seq>))
   (let* ((i (slot-ref s 'i))
