@@ -32,7 +32,7 @@
 (define-syntax require-nil
   (syntax-rules ()
     ((_ fn-name arg)
-     (unless (nil? arg)
+     (unless (eq? #nil arg)
        (scm-error 'wrong-type-arg fn-name
                   "Wrong type argument in position 1: ~A"
                   (list arg) (list arg))))))
