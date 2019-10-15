@@ -58,6 +58,7 @@
            not-empty
            nth
            rest
+           rseq
            second
            seq
            seq?
@@ -81,6 +82,7 @@
 (define-generic next)
 (define-generic not-empty)
 (define-generic rest)
+(define-generic rseq)
 (define-generic second)
 (define-generic seq)
 (define-generic sequential?)
@@ -280,11 +282,6 @@
    ((>= i (vector-length v)) not-found)
    (else (vector-ref v i))))
 
-(define-method (seq (v <vector>))
-  (if (zero? (vector-length v))
-      #nil
-      (make <vector-seq> v: v)))
-
 ;;; <vector-seq>
 
 (define-class <vector-seq> (<seq>)
@@ -292,11 +289,10 @@
   (i init-keyword: i: init-value: 0))
 
 (define-method (count (x <vector-seq>))
-  (let ((v (slot-ref x 'v))
-        (i (slot-ref x 'i)))
-    (- (vector-length v) i)))
+  (- (vector-length (slot-ref x 'v))
+     (slot-ref x 'i)))
 
-(define-method (counted? (vs <vector-seq>)) #t)
+(define-method (counted? (x <vector-seq>)) #t)
 
 (define-method (first (x <vector-seq>))
   (let* ((i (slot-ref x 'i))
@@ -318,6 +314,40 @@
     (if (< i (vector-length v))
         s
         #nil)))
+
+(define-method (seq (v <vector>))
+  (if (zero? (vector-length v))
+      #nil
+      (make <vector-seq> v: v)))
+
+;;; <vector-rseq>
+
+(define-class <vector-rseq> (<seq>)
+  (v init-keyword: v:)
+  (i init-keyword: i:))
+
+(define-method (count (x <vector-rseq>)) (1+ (slot-ref x 'i)))
+(define-method (counted? (x <vector-rseq>)) #t)
+
+(define-method (first (x <vector-rseq>))
+  (let ((i (slot-ref x 'i)))
+    (if (negative? i)
+        #nil
+        (vector-ref (slot-ref x 'v) i))))
+
+(define-method (rest (x <vector-rseq>))
+  (let ((i (slot-ref x 'i)))
+    (if (negative? i)
+        '()
+        (make <vector-seq> v: (slot-ref x 'v) i: (1- i)))))
+
+(define-method (seq (s <vector-rseq>)) (if (negative? (slot-ref s 'i)) #nil s))
+
+(define-method (rseq (v <vector>))
+  (if (zero? (vector-length v))
+      #nil
+      (make <vector-rseq> v: v i: (vector-length v))))
+
 
 ;;; <lazy-seq>
 
