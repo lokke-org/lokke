@@ -1,0 +1,119 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-string
+  (:require
+   [clojure.string
+    :refer [blank?
+            capitalize
+            ends-with?
+            includes?
+            join
+            lower-case
+            starts-with?
+            trim
+            trim-newline
+            triml
+            trimr
+            upper-case]])
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "blank?"
+  (is (blank? ""))
+  (is (blank? " "))
+  (is (blank? "\t"))
+  (is (blank? "\n"))
+  (is (blank? "\r"))
+  (is (blank? "\f"))
+  (is (not (blank? "x")))
+  (is (not (blank? " x")))
+  (is (not (blank? "x ")))
+  (is (not (blank? " x "))))
+
+(testing "capitalize"
+ (is (= "X" (capitalize "X")))
+ (is (= "X" (capitalize "x")))
+ (is (= "Xy" (capitalize "Xy")))
+ (is (= "Xy" (capitalize "XY")))
+ (is (= "Xy" (capitalize "xy"))))
+
+(testing "lower-case"
+ (is (= "xyz" (lower-case "xyz")))
+ (is (= "xyz" (lower-case "XYZ")))
+ (is (= "xyz" (lower-case "xYz"))))
+
+(testing "upper-case"
+ (is (= "XYZ" (upper-case "xyz")))
+ (is (= "XYZ" (upper-case "XYZ")))
+ (is (= "XYZ" (upper-case "xYz"))))
+
+(testing "starts-with?"
+  (is (starts-with? "xyz" "xy"))
+  (is (not (starts-with? "xyz" "z"))))
+
+(testing "ends-with?"
+  (is (ends-with? "xyz" "z"))
+  (is (not (ends-with? "xyz" "xy"))))
+
+(testing "includes?"
+  (is (includes? "x" "x"))
+  (is (includes? "xyz" "y"))
+  (is (includes? "xyz" "z"))
+  (is (not (includes? "x" "xy"))))
+
+(testing "join"
+  (is (= "" (join "-" [])))
+  (is (= "x" (join "-" ["x"])))
+  (is (= "x-y" (join "-" ["x" "y"])))
+  (is (= "x-y" (join \- ["x" "y"])))
+  (is (= "1-2" (join \- [1 2]))))
+
+(testing "trim"
+  (is (= "" (trim "")))
+  (is (= "x" (trim "x")))
+  (is (= "x" (trim " x")))
+  (is (= "x" (trim " x ")))
+  (is (= "x" (trim "  x  "))))
+
+(testing "triml"
+  (is (= "" (triml "")))
+  (is (= "x" (triml "x")))
+  (is (= "x" (triml " x")))
+  (is (= "x " (triml " x ")))
+  (is (= "x  " (triml "  x  "))))
+
+(testing "trimr"
+  (is (= "" (trimr "")))
+  (is (= "x" (trimr "x")))
+  (is (= " x" (trimr " x")))
+  (is (= " x" (trimr " x ")))
+  (is (= "  x" (trimr "  x  "))))
+
+(testing "trim-newline"
+  (is (= "" (trim-newline "")))
+  (is (= "x" (trim-newline "x")))
+  (is (= "" (trim-newline "\n")))
+  (is (= "" (trim-newline "\r")))
+  (is (= "\nx" (trim-newline "\nx")))
+  (is (= "\rx" (trim-newline "\rx")))
+  (is (= "x" (trim-newline "x\n")))
+  (is (= "x" (trim-newline "x\r")))
+  (is (= "\r\nx" (trim-newline "\r\nx\r\n")))
+  (is (= " \nx\r " (trim-newline " \nx\r "))))
+
+(end-tests (ns-name *ns*) :exit? true)

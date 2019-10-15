@@ -24,6 +24,7 @@ TESTS = \
   test/equality \
   test/clojure-defmacro \
   test/clojure-exceptions \
+  test/clojure-string \
   test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \
