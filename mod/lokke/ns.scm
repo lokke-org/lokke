@@ -16,7 +16,6 @@
 (read-set! keywords 'postfix)  ;; srfi-88
 
 (define-module (lokke ns)
-  use-module: ((ice-9 sandbox) select: (make-sandbox-module))
   use-module: ((lokke compile)
                select: (literals->scm-instances unexpand-symbols))
   use-module: ((lokke symbol)
@@ -443,10 +442,9 @@
          (existing (resolve-ns-module mod)))
     (if existing
         existing
-        (let ((m (make-sandbox-module '())))
-          (set-module-name! m mod)
-          (set-module-name! (module-public-interface m) mod)
-          m))))
+        (define-module* mod
+          #:duplicates '(merge-generics replace warn-override-core warn last)
+          #:pure))))
 
 (define (in-ns name)
   (dbgf "in-ns: ~s\n" (create-ns name))
