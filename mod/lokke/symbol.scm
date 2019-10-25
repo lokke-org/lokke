@@ -95,10 +95,10 @@ clojure string) for clojure.string."
                          regexp/icase)))
     (lambda (s) (regexp-exec rx s))))
 
-;; FIXME: TESTS!
-(define (parse-symbol sym)
+(define* (parse-symbol sym)
   ;; Ensures valid clojure symbol syntax and then returns a
   ;; parsed-sym.
+  ;; FIXME: more tests
   ;; FIXME: unicode?
   ;; FIXME: we allow anything if no "/"?
   (let ((s (symbol->string sym)))

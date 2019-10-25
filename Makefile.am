@@ -33,6 +33,7 @@ TESTS = \
   test/lokke-ns \
   test/lokke-scm-atom \
   test/lokke-scm-vector \
+  test/lokke-symbol \
   test/metadata-handling \
   test/reader-basics \
   test/clojure-fn \
