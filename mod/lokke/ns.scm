@@ -16,6 +16,7 @@
 (read-set! keywords 'postfix)  ;; srfi-88
 
 (define-module (lokke ns)
+  use-module: ((lokke pr) select: (module-name->ns-sym))
   use-module: ((lokke symbol)
                select: (ns-sym->mod-name
                         parsed-sym-ns
@@ -69,17 +70,8 @@
                      (module-map (lambda (name var) name)
                                  (resolve-interface module-name))))
 
-(define (module-name->ns-name m)
-  (string->symbol
-   (string-join (map symbol->string
-                     (if (and (> (length m) 2)
-                              (equal? '(lokke ns) (take m 2)))
-                         (drop m 2)
-                         (cons 'guile m)))
-                ".")))
-
 (define (ns-name n)
-  (module-name->ns-name (module-name n)))
+  (module-name->ns-sym (module-name n)))
 
 (define-syntax *ns*
   (identifier-syntax
@@ -192,7 +184,7 @@
                   (let ((mod (resolve-module name #f #:ensure #f)))
                     (unless mod
                       (error (format #f "Namespace ~s not defined by ~s"
-                                     (module-name->ns-name name)
+                                     (module-name->ns-sym name)
                                      compiled)))
                     (dbgf "resolved: ~s -> ~s\n" name mod)
                     mod))))))))
@@ -202,7 +194,7 @@
     (unless m
       (error (format #f "Unable to find module ~s for namespace ~s"
                      name
-                     (module-name->ns-name name))))
+                     (module-name->ns-sym name))))
     m))
 
 (define (find-ns ns-sym)

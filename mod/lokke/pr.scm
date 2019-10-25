@@ -24,11 +24,15 @@
   use-module: ((ice-9 format) select: ((format . %scm-format)))
   use-module: ((language tree-il) prefix: tree-il/)
   use-module: (oop goops)
+  use-module: ((srfi srfi-1) select: (drop take))
   use-module: ((srfi srfi-88) select: (keyword->string))
   replace: (format)
-  export: (*out* pr pr-str print print-str prn println str))
+  export: (*out*
+           module-name->ns-str
+           module-name->ns-sym
+           pr pr-str print print-str prn println str))
 
-;; FIXME: just using (*out*) to it'll be easy to find/fix later.
+;; FIXME: just using (*out*) so it'll be easy to find/fix later.
 (define (*out*) (current-error-port))
 
 ;; For now, guile doesn't have one...
@@ -175,11 +179,22 @@
 (define-method (pr (x <string>)) (write x (*out*)))
 (define-method (print (x <string>)) (display x (*out*)))
 
-
 (define-method (pr-str (x <syntax>)) (with-output-to-string (lambda () (write x))))
 (define-method (print-str (x <syntax>)) (with-output-to-string (lambda () (write x))))
 (define-method (pr (x <syntax>)) (write x (*out*)))
 (define-method (print (x <syntax>)) (display x (*out*)))
 
-(define-method (pr-str (x <module>)) (str-somehow x (module-name x)))
-(define-method (print-str (x <module>)) (str-somehow x (module-name x)))
+(define (module-name->ns-str m)
+  (string-join (map symbol->string
+                    (if (and (> (length m) 2)
+                             (equal? '(lokke ns) (take m 2)))
+                        (drop m 2)
+                        (cons 'guile m)))
+               "."))
+
+(define (module-name->ns-sym m) (string->symbol (module-name->ns-str m)))
+
+(define-method (pr-str (x <module>))
+  (str-somehow x (pr-str (module-name->ns-str (module-name x)))))
+(define-method (print-str (x <module>))
+  (str-somehow x (pr-str (module-name->ns-str (module-name x)))))
