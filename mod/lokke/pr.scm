@@ -165,6 +165,11 @@
   (display #\: (*out*))
   (display (keyword->string x) (*out*)))
 
+(define-method (pr-str (x <char>)) (string #\\ x))
+(define-method (print-str (x <char>)) (string x))
+(define-method (pr (x <char>)) (display (pr-str x) (*out*)))
+(define-method (print (x <char>)) (display x (*out*)))
+
 (define-method (pr-str (x <string>)) (with-output-to-string (lambda () (write x))))
 (define-method (print-str (x <string>)) x)
 (define-method (pr (x <string>)) (write x (*out*)))
