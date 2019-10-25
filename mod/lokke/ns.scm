@@ -16,8 +16,6 @@
 (read-set! keywords 'postfix)  ;; srfi-88
 
 (define-module (lokke ns)
-  use-module: ((lokke compile)
-               select: (literals->scm-instances))
   use-module: ((lokke symbol)
                select: (ns-sym->mod-name
                         parsed-sym-ns
@@ -26,6 +24,7 @@
   use-module: ((lokke scm vector)
                select: (lokke-vector? lokke-vector->list))
   use-module: ((lokke symbol) select: (simple-symbol?))
+  use-module: ((lokke transmogrify) select: (literals->scm-instances))
   use-module: ((srfi srfi-1) select: (every find proper-list? take drop))
   use-module: ((srfi srfi-9 gnu) select: (define-immutable-record-type))
   use-module: ((system base compile) select: (compile-file compiled-file-name))
@@ -36,6 +35,7 @@
            fix-let
            in-ns
            ns
+           ns-aliases
            ns-name
            re-export-all!
            refer
