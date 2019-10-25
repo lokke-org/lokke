@@ -191,6 +191,9 @@ On the Scheme side
 * No support for BASErNUM bases over 16.
 * No explicit bigints, e.g. 7N
 * no BigDecimal, e.g. 4.2M
+* `(alias ...)` calls only take full effect at the end of the
+  enclosing top level form (because at the moment, the compiler works
+  from a snapshot of the alias map, cf. `rewrite-il-calls`).
 
 Known Issues
 ------------
@@ -210,9 +213,6 @@ Known Issues
     hex 0xff
     oct 017
     negative exponents -1.2e-5
-
-- Namespace aliases (i.e. :as) don't work, and we haven't decided how
-  we want to handle them yet.
 
 - The code has not been evaluated with respect to the need for
   continuation barriers yet.

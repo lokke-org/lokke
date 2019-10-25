@@ -95,7 +95,15 @@
                              (tree-il/call-args call))))
   (if enable-invoke? (add-invoke call) call))
 
-(define (rewrite-il-toplevel top)
+(define (resolved-ns-sym->mod-name ns-sym aliases)
+  (if (not aliases)
+      (ns-sym->mod-name ns-sym)
+      (let ((mod (get aliases ns-sym)))
+        (if mod
+            (module-name mod)
+            (ns-sym->mod-name ns-sym)))))
+
+(define (rewrite-il-toplevel top ns-aliases)
   "Rewrites any <toplevel-ref> tree-il nodes containing a namespaced
 Clojure reference like clojure.string/join to the corresponding Guile
 <modulle-ref>."
@@ -108,13 +116,16 @@ Clojure reference like clojure.string/join to the corresponding Guile
             ;; FIXME: appropriate?  They're class references for Clojure/JVM
             (error "Top-level x.y references are currently not allowed" name))
           (tree-il/make-module-ref (tree-il/toplevel-ref-src top)
-                                   (ns-sym->mod-name ns-sym)
+                                   (resolved-ns-sym->mod-name ns-sym ns-aliases)
                                    (parsed-sym-ref parsed)
                                    #t)))))
 
 (define il-count 0)
 
-(define (rewrite-il-calls il)
+;; FIXME: do we want/need to look for and reject <lexical-ref>s that
+;; are (not (simple-symbol? name))?
+
+(define (rewrite-il-calls il ns-aliases)
   ;; FIXME: source-properties...
   (define (up tree)
     (let* ((count (begin (set! il-count (1+ il-count)) il-count))
@@ -126,7 +137,7 @@ Clojure reference like clojure.string/join to the corresponding Guile
                          (format (current-error-port) "il[~a]: ~s\n" count result))
                        result))
                     ((tree-il/toplevel-ref? tree)
-                     (let ((result (rewrite-il-toplevel tree)))
+                     (let ((result (rewrite-il-toplevel tree ns-aliases)))
                        (when debug-il?
                          (format (current-error-port) "il[~a]: ~s\n" count result))
                        result))
@@ -151,7 +162,7 @@ Clojure reference like clojure.string/join to the corresponding Guile
       (scheme/compile-tree-il expr env opts)
     (when debug-compile?
       (format (current-error-port) "initial-tree-il: ~s\n" result))
-    (let ((result (rewrite-il-calls result)))
+    (let ((result (rewrite-il-calls result (ns-aliases env))))
       (when debug-compile? (format (current-error-port) "final-tree-il: ~s\n" result))
       (values result env env))))
 

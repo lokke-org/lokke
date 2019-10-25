@@ -56,9 +56,11 @@
   use-module: (lokke hash-set)
   use-module: ((lokke ns)
                select: (*ns*
+                        alias
                         find-ns
                         in-ns
                         ns
+                        ns-aliases
                         ns-name
                         refer
                         refer-clojure
@@ -139,6 +141,7 @@
               <seq>
               <set>
               add-watch
+              alias
               and
               assoc
               atom
@@ -235,6 +238,7 @@
               not-any?
               not-every?
               ns
+              ns-aliases
               ns-name
               nth
               or

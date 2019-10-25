@@ -16,7 +16,9 @@
 (read-set! keywords 'postfix)  ;; srfi-88
 
 (define-module (lokke ns)
+  use-module: ((lokke hash-map) select: (assoc get hash-map pr-str))
   use-module: ((lokke pr) select: (module-name->ns-sym))
+  use-module: ((lokke scm atom) select: (atom atom-deref atom-swap!))
   use-module: ((lokke symbol)
                select: (ns-sym->mod-name
                         parsed-sym-ns
@@ -30,6 +32,7 @@
   use-module: ((srfi srfi-9 gnu) select: (define-immutable-record-type))
   use-module: ((system base compile) select: (compile-file compiled-file-name))
   export: (*ns*
+           alias
            create-ns
            default-environment
            find-ns
@@ -42,6 +45,7 @@
            refer
            refer-clojure
            require
+           resolve-sym-aliases
            use))
 
 ;; FIXME: assuming we need to, does guile handle locking/blocking wrt
@@ -272,14 +276,10 @@
             (make-ns-dep-spec (ns-sym->mod-name name) alias select hide))
           (let ((kind (car specs)))
             (case kind
-              ((#:as)
+              ((as:)
                (when (null? (cdr specs))
                  (error "No name for :as in" item))
-               (let ((alias (cadr specs)))
-                 (unless (simple-symbol? alias)
-                   (error ":as alias is not a simple symbol:" alias))
-                 (when alias
-                   (error "require :as aliases are not yet supported"))
+               (let ((alias (require-ns-sym (cadr specs))))
                  (loop (cddr specs) alias select-src select hide)))
 
               ((#:refer #:only)
@@ -347,11 +347,32 @@
               mod)
   *unspecified*)
 
+(define (alias name aliased-ns)
+  (require-ns-sym name)
+  (require-ns-sym aliased-ns)
+  (let* ((mod (current-module)))
+    (define (set-alias-if-unset aliases)
+      (let ((existing-target (get aliases name)))
+        (if existing-target
+            (unless (eq? (find-ns aliased-ns) existing-target)
+              (error (format #f "Alias ~s already exists in namespace ~s, aliasing ~s"
+                             name (ns-name mod) aliased-ns)))
+            (assoc aliases name (find-ns aliased-ns)))))
+    (atom-swap! (module-ref mod '/lokke/ns-aliases) set-alias-if-unset)))
+
+(define (ns-aliases ns)
+  (let ((aliases (module-ref ns '/lokke/ns-aliases #f)))
+    (if aliases
+        (atom-deref aliases)
+        (hash-map))))
 
 (define (incorporate-deps dep-specs)
   (define (use-spec-mod spec)
     (dbgf "mod-use: ~s ~s\n" (current-module) spec)
     (dbgf "mod-use: ~s\n" (ns-dep-spec-module spec))
+    (let ((a (ns-dep-spec-alias spec)))
+      (when a
+        (alias a (module-name->ns-sym (ns-dep-spec-module spec)))))
     (let ((interface (resolve-interface (ns-dep-spec-module spec))))
       (dbgf "mod-use: ~s\n" interface)
       (dbgf "mod-use: ~s\n" (module-public-interface interface)))
@@ -414,9 +435,13 @@
          (existing (resolve-ns-module mod)))
     (if existing
         existing
-        (define-module* mod
-          #:duplicates '(merge-generics replace warn-override-core warn last)
-          #:pure))))
+        ;; FIXME: duplication with ns
+        (let ((m (define-module* mod
+                   #:duplicates '(merge-generics replace warn-override-core warn
+                                                 last)
+                   #:pure)))
+          (module-define! m '/lokke/ns-aliases (atom (hash-map)))
+          m))))
 
 (define (in-ns name)
   (let ((ns (create-ns name)))
@@ -453,9 +478,11 @@
              ;; and language will be lokke, so we don't want to let it
              ;; autocompile.  Rely on require/use instead which
              ;; autodetects.
+             ;; FIXME: duplication with create-ns
              (define-module #,(datum->syntax x mod)
                #:duplicates (merge-generics replace warn-override-core warn last)
                #:pure)
+             (module-define! (current-module) '/lokke/ns-aliases (atom (hash-map)))
              ;; FIXME: minimze this set
              (require 'guile.language.lokke.spec)  ;; FIXME: may not be needed
              (use 'guile.lokke.boot)
