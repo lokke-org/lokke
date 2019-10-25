@@ -136,9 +136,6 @@
 (define-method (contains? (v <lokke-vector>) i)
   (valid-index? v i))
 
-(define (valid-index? v i)
-  (and (integer? i) (>= i 0) (< i (lokke-vector-length v))))
-
 (define-method (contains? (v <lokke-vector>) i)
   (valid-index? v i))
 
