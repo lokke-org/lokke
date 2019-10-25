@@ -16,7 +16,7 @@
 (define-module (lokke set)
   version: (0 0 0)
   use-module: ((lokke base collection) select: (<coll>))
-  use-module: ((lokke collection) select: (count every?))
+  use-module: ((lokke collection) select: (contains? count every? seq))
   use-module: (oop goops)
   export: (<set>
            difference
