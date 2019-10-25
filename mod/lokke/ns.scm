@@ -419,9 +419,9 @@
           #:pure))))
 
 (define (in-ns name)
-  (dbgf "in-ns: ~s\n" (create-ns name))
-  (set-current-module (create-ns name)))
-
+  (let ((ns (create-ns name)))
+    (dbgf "in-ns: ~s\n" ns)
+    (set-current-module ns)))
 
 (define default-environment
   (let ((augmented? #f))
