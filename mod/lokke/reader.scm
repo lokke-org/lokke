@@ -36,7 +36,7 @@
 ;; FIXME: metadata is currently broken.
 
 (define debug-reader? #f)
-(define debug-conditionals? (or debug-reader? #t))
+(define debug-conditionals? (or debug-reader? #f))
 
 ;; Avoid undefined warnings
 (define read-primitively #f)
