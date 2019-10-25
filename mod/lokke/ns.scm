@@ -392,7 +392,6 @@
   (call-with-deferred-observers
    (lambda ()
      (for-each (lambda (s)
-                 (dbgf "rrr: ~s\n" s)
                  (resolve-ns-module (ns-dep-spec-module s)))
                dep-specs)
      ;; This *must* come after the resolve above so that the .clj
