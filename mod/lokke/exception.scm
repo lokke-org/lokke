@@ -43,10 +43,20 @@
                 "ExceptionInfo" cause)
   (make <exception-info> msg: msg map: map cause: cause))
 
+(define (ex-message ex)
+  (validate-arg 'ex-info (lambda (x) (is-a? x <exception-info>))
+                "ExceptionInfo" ex)
+  (slot-ref ex 'msg))
+
 (define (ex-data ex)
   (validate-arg 'ex-info (lambda (x) (is-a? x <exception-info>))
                 "ExceptionInfo" ex)
   (slot-ref ex 'map))
+
+(define (ex-cause ex)
+  (validate-arg 'ex-info (lambda (x) (is-a? x <exception-info>))
+                "ExceptionInfo" ex)
+  (slot-ref ex 'cause))
 
 (define ex-info-tag (make-symbol "exception-catch-tag"))
 
