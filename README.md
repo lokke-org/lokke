@@ -95,6 +95,14 @@ As you can see, seqs are not written like lists.  Currently the Scheme
 distinct.  Of course `prn` from `(lokke core)` prints the Clojure
 representation.
 
+From `./guile`, you can switch to a Lokke REPL manually like this:
+
+    scheme@(guile-user)> ,module (lokke user)
+    scheme@(lokke user)> ,language lokke
+    Happy hacking with Lokke, a Clojure dialect!  To switch back, type `,L scheme'.
+    lokke@(lokke user)> (inc 1)
+    $1 = 2
+
 See the DESIGN document for an overview of the implementation.
 
 

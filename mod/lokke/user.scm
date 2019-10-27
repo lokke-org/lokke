@@ -13,18 +13,9 @@
 
 (read-set! keywords 'postfix)  ;; srfi-88
 
-(define-module (lokke user)
-  ;; Loading the spec may not be necessary, but shouldn't hurt either.
-  use-module: ((language lokke spec) select: ())
-  use-module: (lokke boot)
-  use-module: (lokke base syntax)
-  ;; FIXME: so we still need/want this?
-  use-module: ((guile) select: (@@))
-  pure:)
+;; This is the default module, i.e. the normal enviornment for the
+;; REPL and command-line -e/-i evaluation.  We define it in Scheme so
+;; that you can more easily switch to lokke from the guile repl.  See
+;; the README for details.
 
-;; This module is used by top-level evaluation, compilation,
-;; bootstrapping, etc.  The bindings above are the bootstrap set, and
-;; after bootstrapping, this module will include all of 'clojure.core
-;; (does it?).
-
-;; FIXME: not sure this is really how we want to handle the environment.
+((@@ (lokke ns) ns) guile.lokke.user)
