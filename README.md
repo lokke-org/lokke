@@ -79,6 +79,28 @@ wrapper:
     ...
     hello
 
+or run the REPL:
+
+    $ ./lokke
+    ...
+    lokke@(lokke user)>
+
+Currently the Lokke repl *is* the Guile repl, with the initial
+language and environment set for Lokke, and so all of the Guile
+features should be available.  Though for now, `lokke` loads
+`~/.lokke_guile` (which must be Scheme code) rather than `~/.guile`.
+
+Assuming your guile was compiled with readline support, it's likely
+you'll want to add something like this to `~/.lokke_guile`:
+
+    ;;; -*-scheme-*-
+    (use-modules (ice-9 readline))
+    (activate-readline)
+
+The REPL history will be stored in the file indicated by the
+environment variable `LOKKE_HISTORY` if set, otherwise
+`~/.lokke_history`.
+
 There is also a `./guile` wrapper which just runs Guile with the
 correct environment for Lokke (and which `./lokke` relies on).  It can
 be useful during developement, or if you would like to try out the

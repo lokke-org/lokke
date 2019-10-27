@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export GUILE_HISTORY="${LOKKE_HISTORY:-$HOME/.lokke_history}"
 exec ./guile "$0" "$@"
 !#
 
@@ -103,17 +104,35 @@ exec ./guile "$0" "$@"
             (format (err) "Unrecognized argument: ~s\n" arg)
             (quit usage not-even-started)))))))
 
+;; load-user-init adapted from the version in Guile 2.2.6 (LGPL 3)
+;; FIXME: propose accommodations upstream
+(define (load-user-init)
+  (let* ((home (or (getenv "HOME")
+                   (false-if-exception (passwd:dir (getpwuid (getuid))))
+                   file-name-separator-string))  ;; fallback for cygwin etc.
+         (init-file (in-vicinity home ".lokke_guile")))
+    ;; FIXME: add support for suppressing the init file (e.g. Guile's -q)
+    ;; FIXME: either add support for loading a clj ~/.lokke after
+    ;; this, or if feasible, drop .lokke_guile entirely in favor of
+    ;; that.  We'll need a primitive_load equivalent, etc.
+    (if (file-exists? init-file)
+        (primitive-load init-file))))
+
 (define (main args)
-  (let ((opts (parse-args args)))
-    ;; FIXME: is this what we want or should *command-line-args* just
-    ;; be a subset?  This is also a fluid...
-    (set-program-arguments (cons (car (program-arguments))
-                                 (hash-table-ref opts 'args)))
-    ;; FIXME: ...and this?
-    (set-current-module (default-environment))
-    (for-each (lambda (action) (action))
-              (hash-table-ref opts 'actions))
-    0))
+  ;; FIXME: which args does clj (or should we) allow you to use with the repl?
+  (if (= 1 (length args))
+      (begin
+        (load-user-init)
+        ((@ (lokke repl) repl)))
+      (let ((opts (parse-args args)))
+        ;; FIXME: is this what we want or should *command-line-args* just
+        ;; be a subset?  This is also a fluid...
+        (set-program-arguments (cons (car (program-arguments))
+                                     (hash-table-ref opts 'args)))
+        (set-current-module (default-environment))
+        (for-each (lambda (action) (action))
+                  (hash-table-ref opts 'actions))
+        0)))
 
 (exit (main (program-arguments)))
 
