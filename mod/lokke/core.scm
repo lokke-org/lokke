@@ -173,6 +173,7 @@
               def
               defn
               deref
+              disj
               dissoc
               doall
               dorun
@@ -198,6 +199,8 @@
               gensym
               get
               get-in
+              hash-map
+              hash-set
               ident?
               identical?
               identity
@@ -255,6 +258,7 @@
               rand
               rand-int
               reduce
+              reduce-kv
               refer
               refer-clojure
               remove-watch
