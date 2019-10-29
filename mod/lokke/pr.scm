@@ -197,4 +197,4 @@
 (define-method (pr-str (x <module>))
   (str-somehow x (pr-str (module-name->ns-str (module-name x)))))
 (define-method (print-str (x <module>))
-  (str-somehow x (pr-str (module-name->ns-str (module-name x)))))
+  (module-name->ns-str (module-name x)))
