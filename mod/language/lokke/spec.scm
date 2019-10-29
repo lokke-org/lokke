@@ -28,7 +28,7 @@
 (define debug-lang? #f)
 
 (define (debug-read port env)
-  (let ((result (read-for-compiler port)))
+  (let ((result (read-for-compiler port env)))
     (when debug-lang?
       (write (list #:read result) (current-error-port))
       (newline (current-error-port)))

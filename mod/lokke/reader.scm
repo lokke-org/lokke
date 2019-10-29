@@ -21,10 +21,15 @@
   use-module: ((lokke hash-map) select: (assoc get hash-map hash-map?))
   use-module: ((lokke hash-set) select: (hash-set))
   use-module: ((lokke metadata) select: (with-meta set-meta!))
+  use-module: ((lokke ns) select: (ns-aliases))
+  use-module: ((lokke pr) select: (str))
+  use-module: ((lokke symbol)
+               select: (parse-symbol parsed-sym-ns parsed-sym-ref))
   use-module: ((lokke transmogrify)
                select: (literals->clj-instances preserve-meta-if-new!))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (concatenate iota fold))
+  use-module: ((srfi srfi-88) select: (keyword->string string->keyword))
   export: (read read-for-compiler read-string read-string-for-compiler)
   duplicates: (merge-generics replace warn-override-core warn last))
 
@@ -39,6 +44,70 @@
 ;; Avoid undefined warnings
 (define read-primitively #f)
 (load-extension "lokke-reader.so" "init_lokke_reader")
+
+(define (expand-ref sym ns-str aliases)
+  ;; foo -> some.where/foo
+  ;; str/join -> clojure.string/join
+  ;; FIXME: too permissive?
+  ;; FIXME: efficiency
+  (let* ((parsed (parse-symbol sym)))
+    (if (not (parsed-sym-ns parsed))
+        (string-append ns-str "/" (symbol->string sym))
+        (let ((mod (and aliases (get aliases (parsed-sym-ns parsed))))
+              (ref (symbol->string (parsed-sym-ref parsed))))
+          (unless mod
+            (error "Unknown namespace alias in" sym))
+          (string-append (str mod) "/" ref)))))
+
+(define (expand-keyword-aliases kw ns-str aliases)
+  ;; Always expand a keyword with a double-colon prefix
+  (let* ((s (keyword->string kw)))
+    (if (or (< (string-length s) 2)
+            (not (char=? #\: (string-ref s 0))))
+        kw
+        (let* ((name (substring/read-only s 1))
+               (expanded (expand-ref (string->symbol name) ns-str aliases)))
+          (string->keyword expanded)))))
+
+(define (expand-sym/key-aliases expr ns-str aliases)
+  ;; We don't have to handle literal collections here because we
+  ;; expand them later.  It appears that on the JVM, keywords always
+  ;; expand, and symbols expand inside syntax-quote forms, but not
+  ;; inside quote forms, unless the quote form itself is inside
+  ;; syntax-quote form.  Once there's an enclosing syntax-quoted
+  ;; region, everything expands.
+
+  (define (maybe-expand-symbol-aliases sym syntax-quoted?)
+    (if syntax-quoted?
+        (let ((s (symbol->string sym)))
+          (cond
+           ((string-prefix? "/lokke/" s) sym)
+           ((string-suffix? "#" s) sym)
+           (else (string->symbol (expand-ref sym ns-str aliases)))))
+        sym))
+
+  (define (expand expr syntax-quoted?)
+    (cond
+     ((symbol? expr) (maybe-expand-symbol-aliases expr syntax-quoted?))
+     ((keyword? expr) (expand-keyword-aliases expr ns-str aliases))
+     ((null? expr) expr)
+     ((list? expr)
+      (case (car expr)
+        ((syntax-quote)
+         (cons 'syntax-quote (map (lambda (x) (expand x #t)) (cdr expr))))
+        ((unquote)
+         (cons 'unquote (map (lambda (x) (expand x #f)) (cdr expr))))
+        (else
+         (map (lambda (x) (expand x syntax-quoted?)) expr))))
+     ((string? expr) expr)
+     ((number? expr) expr)
+     ((boolean? expr) expr)
+     ((char? expr) expr)
+     (else
+      (error
+       (format #f "Unexpected expression while expanding symbols and keywords ~s:"
+               (class-of expr)) expr))))
+  (expand expr #f))
 
 (define (rewrite-anon-fns expr)
   ;; We don't have to handle literal collections here because we
@@ -335,7 +404,7 @@
                      (cdr expr))))
            (else (car result)))))))
 
-(define (uninstantiated-read port)
+(define (uninstantiated-read port ns-str aliases)
   (let loop ((expr (read-conditionally port))
              (pending-meta (hash-map)))
     (cond
@@ -362,9 +431,12 @@
           (error (format #f "Unexpected metadata type ~s for:" (class-of m))
                  m)))))
      (else  ;; Not (/lokke/reader-meta ...)
-      (when debug-reader?
-        (format (current-error-port) "reader rewriting #(): ~s\n" expr))
-      (let* ((result (rewrite-anon-fns expr))
+      (let* ((_ (when debug-reader?
+                  (format (current-error-port) "reader expanding syms/keys: ~s\n" expr)))
+             (result (expand-sym/key-aliases expr ns-str aliases))
+             (_ (when debug-reader?
+                  (format (current-error-port) "reader rewriting #(): ~s\n" expr)))
+             (result (rewrite-anon-fns result))
              (_ (when debug-reader?
                   (format (current-error-port) "reader expanding syntax-quote: ~s\n" result)))
              (result (expand-synquote-gensyms result))
@@ -380,15 +452,16 @@
           (format (current-error-port) "reader returning: ~s\n" result))
         result)))))
 
-(define (read-for-compiler port)
-  (uninstantiated-read port))
+(define (read-for-compiler port env)
+  (uninstantiated-read port (str env) (ns-aliases env)))
 
-(define (read-string-for-compiler s)
+(define (read-string-for-compiler s env)
   (call-with-input-string s
-    (lambda (port) (read-for-compiler port))))
+    (lambda (port) (read-for-compiler port env))))
 
+;; FIXME: read always just grabs current-module?
 (define (read port)
-  (let ((expr (uninstantiated-read port)))
+  (let ((expr (uninstantiated-read port (str (current-module)) #f)))
     (if (eof-object? expr)
         expr
         (literals->clj-instances expr))))

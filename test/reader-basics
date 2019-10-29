@@ -192,8 +192,10 @@
   (test-equal 3 (length (cadr synquote)))
   (test-assert (lokke-vector? (cadadr synquote)))
   (let* ((foo-sym (lokke-vector-ref (cadadr synquote) 0))
-         (expected (list 'syntax-quote `(let ,(lokke-vector foo-sym '(unquote x))
-                                          (inc ,foo-sym)))))
+         (expected (list 'syntax-quote
+                         `(guile.guile-user/let
+                           ,(lokke-vector foo-sym '(unquote x))
+                                          (guile.guile-user/inc ,foo-sym)))))
     (test-equal expected synquote)))
 
 (test-group
