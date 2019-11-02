@@ -51,7 +51,14 @@
                         reset!
                         set-validator!
                         swap!))
-  use-module: ((lokke exception) select: (ex-data ex-info throw try))
+  use-module: ((lokke exception)
+               select: (ExceptionInfo
+                        ex-cause
+                        ex-data
+                        ex-info
+                        ex-message
+                        throw
+                        try))
   use-module: (lokke hash-map)
   use-module: (lokke hash-set)
   use-module: ((lokke ns)
@@ -140,6 +147,7 @@
               <map-entry>
               <seq>
               <set>
+              ExceptionInfo
               add-watch
               alias
               and
@@ -185,8 +193,10 @@
               eval-when
               even?
               every?
+              ex-cause
               ex-data
               ex-info
+              ex-message
               false?
               ffirst
               find

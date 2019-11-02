@@ -203,35 +203,38 @@ TODO
 - Contemplate eval-when -- do we have it where we need it, does it,
   and/or can it work reasonably from the Clojure side?
 
-- Contemplate exceptions - most likely candidates are prompts or guile
-  throw either way we only have a token - for prompts it's unique
-  "tag" (currently a pair), and for throw it's a symbol.
+- Right now Lokke's `try/catch/finally` very closely follows Guile's
+  `catch/throw`, which is Guile's more efficient exception handling
+  mechanism, and is based on throwing and catching simple tags
+  (symbols) along with arbitrary additional arguments.
 
-  Right now we have a very simplistic try/catch that can only (catch
-  ExceptionInfo ex ...), based on Guile's built-in `catch/throw` (i.e
-  the "symbol" approach).  That might well not be where we're
-  eventually headed.  There's also no support for `finally` clauses.
-  Before we support `finally` we may want to settle on some semantics
-  regarding any exceptions thrown from within the `finally` clause.
+  Our `ExceptionInfo` is actually just bound to an uninterned symbol
+  (i.e. guaranteed unique) in `(lokke exception)`, and that symbol is
+  what our `catch` clause is looking for via Guile's catch.
 
-  It's possible we might want some "imposter" bindings/whatever to
-  handle at least the common cases, i.e. (throw (Exception. "no
-  way")).  Suposse we might be able to get away with some
-  (define-imposter Exception ...) that would among other things,
-  create an Exception. function that would do something plausible.  It
-  might also say bind Exception to a GOOPS class, and record a
-  corresponding catch/prompt key/tag somwhere we can find later when
-  catching.
+  In fact, `ex-info` just creates and returns a list containing
+  exactly the arguments we need to pass to Guile's `throw`.  So at the
+  moment Lokke exceptions aren't objects/records/classes, they're
+  `throw` argument lists, and correspondingly, the first element is
+  the `catch` tag.
 
-  On the other hand, upstream debate over exceptions in the context of
-  cljs suggested that they may really want to head toward just being
-  able to throw a data-carrying-object and then do something with it
-  -- didn't sound like they were in favor of keeping much of the JVM
-  class/hierarchy matching business as the non-platform-specific
-  method: https://github.com/clojure/clojurescript/wiki/Exception-Handling
+  This may or may not be what we'll eventually want, but it's better
+  than what we had, allows some interaction with Guile exceptions (you
+  can catch Guile exceptions if you know the tag), and is very
+  lightweight.
+
+  With respect to Clojure more generally, upstream debate over
+  exceptions in the context of cljs suggested that they may really
+  want to head toward just being able to throw a data-carrying-object
+  and then do something with it -- didn't sound like they were in
+  favor of keeping much of the JVM class/hierarchy matching business
+  as the non-platform-specific method:
+  https://github.com/clojure/clojurescript/wiki/Exception-Handling
 
   What we have at the moment is more along those lines, in spirit at
   least.
+
+  See the README for some additional information.
 
 - I'm still not sure whether the way we're handling the compilation
   environment, via default-environment, bootstrap, (lokke user), etc.,

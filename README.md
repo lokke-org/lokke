@@ -182,6 +182,59 @@ Differences from Clojure/JVM (an incomplete list)
 * atoms don't yet support watchers or metadata.
 * In addition to nil, the `lokke` command's `-e` option doesn't print
   unspecified values (Guile's `*unspecified*`).
+* There is experimental support for `try/catch/finally` which maps
+  very closely to Guile's underlying `catch/throw`, meaning that in
+  addition to catching an `ex-info` exception via `(catch
+  ExceptionInfo ex ...)`, you can also catch Guile exceptions if you
+  know the appropriate tag (symbol) with `(catch 'something ex ...)`.
+
+  When an exception is caught, `ex` will be bound a Scheme list of
+  exactly the arguments that were passed to Guile's throw.  For
+  `ex-info` exceptions, it will currently be a list starting with the
+  (uninterned) tag that is bound to `ExceptionInfo`, which is why
+  `(catch ExceptionInfo ex ...)` (no quote) works.  Access the
+  elements of `ex-info` exceptions via the normal accessors:
+  `ex-message`, `ex-data`, etc.  The `lokke.exception` namespace
+  also provides an `ex-info?` predicate.
+* Lokke's `ex-info` exceptions have experimental support for
+  suppressing exceptions, a concept also found on the JVM and in
+  Python, though the details vary.  If an exception is thrown from
+  within a `finally` block, and there was a pending `ex-info`
+  exception, the exception that was thrown from the `finally` block
+  will be added to the `ex-info` as a suppressed exception, and the
+  `ex-info` exception will be rethrown.  The collection of suppressed
+  exceptions can be retrieved with the `ex-suppressed` function
+  provided by `lokke.exception`.  A suppressed exception can be added
+  to an `ex-info` exception using the `add-suppressed` function in
+  that same namespace.  Note that `add-suppressed` is persistent,
+  returning a new `ex-info` exception that may or may not share
+  structure with the original, rather than mutating the original.
+
+  As an example:
+
+    (try
+      (print-masterpiece)  ; Throws lp0-on-fire
+      (finally
+        (turn-off-light)))  ; Throws switch-broken
+
+  At this point, without suppression you'd know that you need to fix
+  your light switch, but have no idea that your printer is on fire.
+  But with suppression, that information is preserved:
+
+    (try
+      (print-masterpiece)  ; Throws lp0-on-fire
+      (finally
+        (turn-off-light)))  ; Throws lp0-on-fire, with switch-broken
+                            ; available via (ex-suppressed lp0-on-fire).
+
+  At least for now, if the pending exception is not an `ex-info`
+  exception, then there will be no suppression, and the original
+  exception will be lost (as is the case for Java and Clojure/JVM).
+
+  The JVM provides a [related precedent](https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#addSuppressed-java.lang.Throwable-]),
+  though it only applies to `try-with-resources` constructs.
+
+  See DESIGN for further details.
 
 On the Scheme side
 ------------------
@@ -229,10 +282,6 @@ Known Issues
 ------------
 
 - *Many* things are still broken or incomplete.
-
-- Right now there is experimental support for try/catch which can only
-  catch an `ex-info` exception as `ExceptionInfo`.  This may or may
-  not stick around.  See DESIGN for further ruminations.
 
 - No `rseq` yet.
 

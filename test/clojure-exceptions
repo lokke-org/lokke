@@ -13,9 +13,10 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(ns test.clojure-fn
+(ns test.clojure-exceptions
   (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [lokke.exception :refer [ex-suppressed ex-tag]]))
 
 ;; FIXME: everything...
 
@@ -27,5 +28,62 @@
 
 (is (= :nope (try (throw (ex-info "yep" {:kind 1}))
                   (catch ExceptionInfo ex :nope))))
+
+(is (= nil (try)))
+(is (= 1 (try 1)))
+(is (= 3 (try 1 2 3)))
+
+(defn same-ex-excepting-suppressed? [ex1 ex2]
+  ;; Are they the same excepting the suppressed vector?
+  (when (and (seq ex1) (seq ex2))
+    (if (and (= ExceptionInfo (ex-tag ex1)) (= ExceptionInfo (ex-tag ex2)))
+      (and (= (ex-message ex1) (ex-message ex2))
+           (= (ex-data ex1) (ex-data ex2))
+           (= (ex-cause ex1) (ex-cause ex2)))
+      (= (seq ex1) (seq ex2)))))
+
+(testing "finally behavior"
+  (is (= nil (try (finally))))
+  (is (= 1 (try 1 (finally))))
+  (let [fin (atom [])]
+    (is (= nil (try
+                 (finally
+                   (swap! fin conj 1)))))
+    (is (= [1] (deref fin))))
+  (let [fin (atom [])]
+    (is (= nil (try
+                 (finally
+                   (swap! fin conj 1)
+                   (swap! fin conj 2)))))
+    (is (= [1 2] (deref fin))))
+  (let [fin (atom [])]
+    (is (= 1 (try
+               (inc 0)
+               (finally
+                 (swap! fin conj 1)))))
+    (is (= [1] (deref fin))))
+  (let [fin (atom [])
+        ex-1 (ex-info "one" {})]
+    (try
+      (try
+        (throw ex-1)
+        (finally
+          (swap! fin conj 1)))
+      (catch ExceptionInfo ex
+        (is (same-ex-excepting-suppressed? ex-1 ex))))
+    (is (= [1] (deref fin))))
+  (let [fin (atom [])
+        ex-1 (ex-info "one" {})
+        ex-2 (ex-info "two" {})]
+    (try
+      (try
+        (throw ex-1)
+        (finally
+          (swap! fin conj 1)
+          (throw ex-2)))
+      (catch ExceptionInfo ex
+        (is (same-ex-excepting-suppressed? ex-1 ex))
+        (is (= [ex-2] (seq (ex-suppressed ex))))))
+    (is (= [1] (deref fin)))))
 
 (end-tests (ns-name *ns*) :exit? true)
