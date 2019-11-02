@@ -211,22 +211,22 @@ Differences from Clojure/JVM (an incomplete list)
   structure with the original, rather than mutating the original.
 
   As an example:
-
+  ```clojure
     (try
       (print-masterpiece)  ; Throws lp0-on-fire
       (finally
         (turn-off-light)))  ; Throws switch-broken
-
+  ```
   At this point, without suppression you'd know that you need to fix
   your light switch, but have no idea that your printer is on fire.
   But with suppression, that information is preserved:
-
+  ```clojure
     (try
       (print-masterpiece)  ; Throws lp0-on-fire
       (finally
         (turn-off-light)))  ; Throws lp0-on-fire, with switch-broken
                             ; available via (ex-suppressed lp0-on-fire).
-
+  ```
   At least for now, if the pending exception is not an `ex-info`
   exception, then there will be no suppression, and the original
   exception will be lost (as is the case for Java and Clojure/JVM).
