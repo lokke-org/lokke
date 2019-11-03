@@ -1,0 +1,38 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.lokke-io
+  (:require
+   [guile.ice-9.ports :refer [port-filename]])
+  (:require
+   [lokke.exception :refer [with-final]])
+  (:require
+   [lokke.io :refer [delete-file mkstemp reader slurp spit writer]])
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "slurp and spit"
+  (let [message "Open the pod bay doors, please, HAL."
+        out (mkstemp "test-ns-lokke-io-XXXXXX")
+        outname (port-filename out)]
+    (with-final [_  outname :always delete-file]
+      (spit out message)
+      (is (= message (slurp outname))))
+    (is (not (guile.guile/file-exists? outname))))
+  (is (= "Danish" (subs (slurp "LOKKE") 0 6))))
+
+(end-tests (ns-name *ns*) :exit? true)

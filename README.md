@@ -182,6 +182,7 @@ Differences from Clojure/JVM (an incomplete list)
 * atoms don't yet support watchers or metadata.
 * In addition to nil, the `lokke` command's `-e` option doesn't print
   unspecified values (Guile's `*unspecified*`).
+* `lokke.io` is the parallel of `clojure.java.io`.
 * There is experimental support for `try/catch/finally` which maps
   very closely to Guile's underlying `catch/throw`, meaning that in
   addition to catching an `ex-info` exception via `(catch
