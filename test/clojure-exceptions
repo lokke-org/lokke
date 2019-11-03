@@ -18,7 +18,8 @@
    [clojure.test :refer [begin-tests end-tests is testing]]
    [lokke.exception :refer [ex-suppressed ex-tag]]))
 
-;; FIXME: everything...
+;; The tests for this namespace are split between here and
+;; test/lokke-exception.
 
 (begin-tests (ns-name *ns*))
 
@@ -85,5 +86,8 @@
         (is (same-ex-excepting-suppressed? ex-1 ex))
         (is (= [ex-2] (seq (ex-suppressed ex))))))
     (is (= [1] (deref fin)))))
+
+;; We can't easily test with-open here until we have some way to
+;; create custom close methods.  See test/lokke-exception instead.
 
 (end-tests (ns-name *ns*) :exit? true)

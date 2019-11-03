@@ -53,12 +53,14 @@
                         swap!))
   use-module: ((lokke exception)
                select: (ExceptionInfo
+                        close
                         ex-cause
                         ex-data
                         ex-info
                         ex-message
                         throw
-                        try))
+                        try
+                        with-open))
   use-module: (lokke hash-map)
   use-module: (lokke hash-set)
   use-module: ((lokke ns)
@@ -165,6 +167,7 @@
               (class-of . class)
               (clj-cond . cond)
               (clj-defmacro . defmacro)
+              close
               coll?
               comment
               comp
@@ -308,6 +311,7 @@
               when
               when-let
               when-not
+              with-open
               with-meta
               zero?)
   duplicates: (merge-generics replace warn-override-core warn last))

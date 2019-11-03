@@ -1,0 +1,58 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(read-set! keywords 'postfix)  ; srfi-88
+
+(define-module (test lokke-exception)
+  use-module: ((lokke scm test-anything) select: (tap-test-runner))
+  use-module: ((lokke exception) select: (close with-open))
+  use-module: (oop goops)
+  use-module: ((srfi srfi-64)
+               select: (test-assert
+                        test-begin
+                        test-end
+                        test-equal
+                        test-group
+                        test-runner-current
+                        test-runner-fail-count))
+  duplicates: (merge-generics replace warn-override-core warn last))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(define-class <close-observer> ()
+  (closes init-value: 0))
+
+(define-method (close (x <close-observer>))
+  (slot-set! x 'closes (1+ (slot-ref x 'closes))))
+
+(test-group
+ "with-open"
+ (let ((obs (make <close-observer>)))
+   (test-equal 0 (slot-ref obs 'closes))
+   (with-open (obs obs) #t)
+   (test-equal 1 (slot-ref obs 'closes))
+   (catch 'foo
+     (lambda () (with-open (obs obs) (throw 'foo)))
+     (lambda args #t))
+   (test-equal 2 (slot-ref obs 'closes))))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

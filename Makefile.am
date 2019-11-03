@@ -29,6 +29,7 @@ TESTS = \
   test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \
+  test/lokke-exception \
   test/lokke-hash-map \
   test/lokke-hash-set \
   test/lokke-ns \

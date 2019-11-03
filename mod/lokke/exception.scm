@@ -23,6 +23,7 @@
   use-module: ((guile) hide: (catch))  ;; to work as literal, can't be defined
   use-module: ((guile) select: ((catch . %scm-catch) (throw . %scm-throw)))
   use-module: ((lokke base map) select: (map?))
+  use-module: ((lokke base util) select: (vec-tag?))
   use-module: ((lokke scm vector)
                select: (lokke-vector?
                         lokke-vector
@@ -31,7 +32,7 @@
                         lokke-vector-ref))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) :select (find first second))
-  replace: (throw)
+  replace: (close throw)
   export: (ExceptionInfo
            ex-cause
            ex-data
@@ -41,7 +42,8 @@
            ex-suppressed
            ex-tag
            throw
-           try)
+           try
+           with-open)
   duplicates: (merge-generics replace warn-override-core warn last)
   pure:)
 
@@ -174,3 +176,21 @@
 
       ((_ expr ...)
        #'(begin #nil expr ...)))))
+
+;; Must import this close if you want to adjust it.
+;; FIXME: do it and/or with-open belong in this module?
+(define-generic close)
+
+(define-syntax with-open
+  ;; Accepts either a list or lokke-vector of bindings.
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
+       #'(with-open (binding ...) body ...))
+      ((_ (resource value binding ...) body ...)
+       #'(let ((resource value))
+           (try
+             (with-open (binding ...) body ...)
+             (finally (close resource)))))
+      ((_ () body ...)
+       #'(begin body ...)))))
