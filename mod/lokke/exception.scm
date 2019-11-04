@@ -24,6 +24,7 @@
   use-module: ((guile) select: ((catch . %scm-catch) (throw . %scm-throw)))
   use-module: ((lokke base map) select: (map?))
   use-module: ((lokke base util) select: (vec-tag?))
+  use-module: ((lokke base syntax) select: (let))
   use-module: ((lokke scm vector)
                select: (lokke-vector?
                         lokke-vector
@@ -82,10 +83,10 @@
                 "ex-info" cause)
   (when suppressed
     (validate-arg 'ex-info (lambda (x) (lokke-vector? x)) "vector" suppressed)
-    (let ((n (lokke-vector-length suppressed)))
+    (let (n (lokke-vector-length suppressed))
       (do ((i 0 (1+ i)))
           ((= i n))
-        (let ((x (lokke-vector-ref suppressed i)))
+        (let (x (lokke-vector-ref suppressed i))
           (unless (maybe-exception? x)
             (scm-error 'wrong-type-arg 'ex-info
                        "suppressed item is not an exception: ~A"
@@ -147,7 +148,7 @@
        #'(%scm-catch
           #t
           (lambda ()
-            (let ((result (try expr ...)))
+            (let (result (try expr ...))
               finally-expr ...
               result))
           (lambda ex
@@ -188,7 +189,7 @@
       ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
        #'(with-open (binding ...) body ...))
       ((_ (resource value binding ...) body ...)
-       #'(let ((resource value))
+       #'(let (resource value)
            (try
              (with-open (binding ...) body ...)
              (finally (close resource)))))
