@@ -134,6 +134,13 @@
 ;; be added to the original exception as a suppressed exception.
 
 (define-syntax try
+  ;; Arranges to catch any exceptions thrown by the body if the
+  ;; exception's tag (as per Guile's catch/throw) matches the catch
+  ;; clause's tag.  Suppresses any exceptions thrown by code in a
+  ;; finally expression by calling add-suppressed on the pending
+  ;; exception.  At the moment, only ex-info exceptions can carry
+  ;; suppressed exceptions, so suppressed exceptions will be lost if
+  ;; the pending exception isn't an ex-info exception.
   (lambda (x)
     (define (has-finally-clauses? expr)
       (find (lambda (x) (and (pair? x) (eq? 'finally (car x))))
@@ -183,7 +190,16 @@
 (define-generic close)
 
 (define-syntax with-open
-  ;; Accepts either a list or lokke-vector of bindings.
+  ;; Bindings must be a vector of [name init ...] pairs.  Binds each
+  ;; name to the value of the corresponding init, and behaves exactly
+  ;; as if each subsequent name were guarded by a nested try form that
+  ;; calls (close name) in its finally clause.  Suppresses any
+  ;; exceptions thrown by the close calls by calling add-suppressed on
+  ;; the pending exception.  At the moment, only ex-info exceptions
+  ;; can carry suppressed exceptions, so suppressed exceptions will be
+  ;; lost if the pending exception isn't an ex-info exception.
+  ;;
+  ;; Actually accepts either a list or lokke-vector of bindings.
   (lambda (x)
     (syntax-case x ()
       ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
