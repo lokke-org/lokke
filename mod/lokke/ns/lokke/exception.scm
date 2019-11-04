@@ -18,7 +18,8 @@
 
 (define-module (lokke ns lokke exception)
   version: (0 0 0)
-  use-module: ((lokke exception) select: (ex-info? ex-suppressed ex-tag))
-  re-export: (ex-info? ex-suppressed ex-tag)
+  use-module: ((lokke exception)
+               select: (ex-info? ex-suppressed ex-tag with-final))
+  re-export: (ex-info? ex-suppressed ex-tag with-final)
   duplicates: (merge-generics replace warn-override-core warn last)
   pure:)

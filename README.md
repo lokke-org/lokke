@@ -235,6 +235,22 @@ Differences from Clojure/JVM (an incomplete list)
   though it only applies to `try-with-resources` constructs.
 
   See DESIGN for further details.
+- `with-final` is available in `lokke.exception` for more flexible
+  resource management.  For example:
+  ```clojure
+    (defn start-server [...]
+      (with-final [foo (open-foo ...) :error close
+                   bar (connect-bar ...) :error disconnect
+                   ...]
+        ...do many things...
+        {:foo foo :bar bar ...}))
+
+    (defn stop-server [info]
+      (with-final [_ (:foo info) :always close
+                   _ (:bar info) :always disconnect
+                   ...]
+        true)
+  ```
 
 On the Scheme side
 ------------------

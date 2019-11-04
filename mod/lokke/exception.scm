@@ -44,6 +44,7 @@
            ex-tag
            throw
            try
+           with-final
            with-open)
   duplicates: (merge-generics replace warn-override-core warn last)
   pure:)
@@ -127,6 +128,18 @@
   (validate-arg 'throw (lambda (x) (maybe-exception? ex)) "exception" ex)
   (apply %scm-throw ex))
 
+(define (call-with-exception-suppression ex thunk)
+  (%scm-catch
+   #t
+   thunk
+   (lambda suppressed
+     ;; FIXME: can only add suppressed to ex-info exceptions...
+     (if (ex-info? ex)
+         (apply %scm-throw (add-suppressed ex suppressed))
+         ;; Match the JVM for now -- until/unless we figure out
+         ;; a way to handle suppressed exceptions universally.
+         (apply %scm-throw suppressed)))))
+
 ;; Wonder about allowing an exception arg for a custom finally clause,
 ;; say (finally* ex ...), which would be nil unless an exception was
 ;; pending, so that it's possible to know when an exception is
@@ -159,18 +172,11 @@
               finally-expr ...
               result))
           (lambda ex
-            (%scm-catch
-             #t
+            (call-with-exception-suppression
+             ex
              (lambda ()
                finally-expr ...
-               (apply %scm-throw ex))
-             (lambda ex2
-               ;; FIXME: can only add suppressed to ex-info exceptions...
-               (if (ex-info? ex)
-                   (apply %scm-throw (add-suppressed ex ex2))
-                   ;; Match the JVM for now -- until/unless we figure out
-                   ;; a way to handle suppressed exceptions universally.
-                   (apply %scm-throw ex2)))))))
+               (apply %scm-throw ex))))))
 
       ;; Reverse the nesting so that tags are caught in code order
       ((_ expr ... (catch tag ex catch-expr ...))
@@ -213,5 +219,40 @@
            (try
              (with-open (binding ...) body ...)
              (finally (close resource)))))
+      ((_ () body ...)
+       #'(begin body ...)))))
+
+(define-syntax with-final
+  ;; The bindings must be a vector of elements, each of which is
+  ;; either "name init", "name init :always action", or "name init
+  ;; :error action".  Binds each name to the value of the
+  ;; corresponding init, and behaves exactly as if each subsequent
+  ;; name were guarded by a nested try form that calls (action name)
+  ;; in its finally clause when :always is specified, or (action name)
+  ;; only on exception when :error is specified.  Suppresses any
+  ;; exceptions thrown by the action calls by calling add-suppressed
+  ;; on the pending exception.  At the moment, only ex-info exceptions
+  ;; can carry suppressed exceptions, so suppressed exceptions will be
+  ;; lost if the pending exception isn't an ex-info exception.
+  ;;
+  ;; Actually accepts either a list or lokke-vector of bindings.
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
+       #'(with-final (binding ...) body ...))
+      ((_ (resource value always: action binding ...) body ...)
+       #'(let (resource value)
+           (try
+            (with-final (binding ...) body ...)
+            (finally (action resource)))))
+      ((_ (resource value error: action binding ...) body ...)
+       #'(let (resource value)
+           (%scm-catch
+            #t
+            (lambda () (with-final (binding ...) body ...))
+            (lambda ex
+              (call-with-exception-suppression
+               ex
+               (lambda () (action resource)))))))
       ((_ () body ...)
        #'(begin body ...)))))
