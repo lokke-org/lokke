@@ -185,6 +185,10 @@
       ((_ expr ...)
        #'(begin #nil expr ...)))))
 
+;; Because otherwise the replace: prevents it from being visible and
+;; folded into the generic as the base case.
+(define close (@ (guile) close))
+
 ;; Must import this close if you want to adjust it.
 ;; FIXME: do it and/or with-open belong in this module?
 (define-generic close)
