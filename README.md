@@ -158,7 +158,7 @@ Differences from Clojure/JVM (an incomplete list)
 * Number is taken to mean <number> (i.e. objects satisfying number?).
 * Clojure namespaces *are* Guile modules (which have very comparable
   semantcs), and the Clojure namespace is situatied under `(lokke ns)`
-  in the Guile module tree, i.e. clojure.string is implemented by the
+  in the Guile module tree, i.e. `clojure.string` is implemented by the
   `(lokke ns clojure string)` module.
 * Qualified Clojure references like the `clojure.string/join` in
   `(clojure.string/join ...)` automatically resolve to the appropriate
@@ -168,18 +168,26 @@ Differences from Clojure/JVM (an incomplete list)
   e.g. `(guile.guile/current-time)` or `(guile.ice-9/pretty-print
   ...)`.  More specifically, they provide a convenient way to refer to
   guile module references, avoiding the `(lokke ns)` prefix addition.
+* `(alias ...)` calls only take full effect at the end of the
+  enclosing top level form (because at the moment, the compiler works
+  from a snapshot of the alias map, cf. `rewrite-il-calls`).
 * Metadata is currently more or less broken/ignored, but some of the
   initial pieces are in place to support improved handling.
+* `.indexOf` is `index-of`
+* `.lastIndexOf` is `last-index-of`
 * regex support is provided by guile's facilities on the current host
 * regex "Matcher" semantics are not supported yet.
 * Many of the coercions haven't been included: float double
 * No agents or refs yet.
 * No BigDecimal (decimal?, bigdec, etc.).
+* No support for BASErNUM bases over 16.
+* No bigint syntax, e.g. 7N, nor explicit bigints
+* No BigDecimal syntax, e.g. 4.2M
 * For now, types are implemented via GOOPS which means that you can
   actually modify them via slot-set!.  We may eventually pursue
   immutable GOOPS classes in Guile, but of course you can modify
   anything on the JVM too if you really set your mind to it.
-* atoms don't yet support watchers or metadata.
+* atoms don't yet support metadata.
 * In addition to nil, the `lokke` command's `-e` option doesn't print
   unspecified values (Guile's `*unspecified*`).
 * `lokke.io` is the parallel of `clojure.java.io`.
@@ -258,11 +266,8 @@ On the Scheme side
 
 * #nil is nil
 * There is no `do`, only `begin`.
-* There is no `@`; only `deref`.
 * Lists are Guile lists.
 * Strings are Guile strings.
-* `.indexOf` is `index-of`
-* `.lastIndexOf` is `last-index-of`
 * As with Clojure and `:refer`, explicit symbol imports are
   recommended, e.g. `#:use-module ((foo) #:select (x))` rather than
   just `#:use-module (foo)`, and Lokke modules assume this is the norm.
@@ -288,12 +293,6 @@ On the Scheme side
   symbols for import most of the time.
 * We prefer to format module declarations along the same lines
   suggested here: https://stuartsierra.com/2016/clojure-how-to-ns.html
-* No support for BASErNUM bases over 16.
-* No explicit bigints, e.g. 7N
-* no BigDecimal, e.g. 4.2M
-* `(alias ...)` calls only take full effect at the end of the
-  enclosing top level form (because at the moment, the compiler works
-  from a snapshot of the alias map, cf. `rewrite-il-calls`).
 
 Known Issues
 ------------
