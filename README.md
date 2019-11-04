@@ -300,6 +300,10 @@ Known Issues
 
 - quote is quoting /lokke/reader-vector too, e.g. (prn '[42])
 
+- The `foo.bar/baz` syntactic sugar doesn't work for Scheme modules
+  from the ./lokke REPL.  I suspect it's using the Lokke reader to
+  load the module instead of the Scheme reader.
+
 - See DESIGN for additional issues.
 
 
