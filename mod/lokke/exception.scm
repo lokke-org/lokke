@@ -166,7 +166,7 @@
                (apply %scm-throw ex))
              (lambda ex2
                ;; FIXME: can only add suppressed to ex-info exceptions...
-               (if (ex-info? ex2)
+               (if (ex-info? ex)
                    (apply %scm-throw (add-suppressed ex ex2))
                    ;; Match the JVM for now -- until/unless we figure out
                    ;; a way to handle suppressed exceptions universally.
