@@ -114,8 +114,8 @@
   (list-ref ex 4))
 
 (define (add-suppressed ex suppressed-ex)
-  (validate-arg 'ex-suppressed ex-info? "ex-info" ex)
-  (validate-arg 'ex-info (lambda (x) (maybe-exception? x))
+  (validate-arg 'add-suppressed ex-info? "ex-info" ex)
+  (validate-arg 'add-suppressed (lambda (x) (maybe-exception? x))
                 "exception" suppressed-ex)
   (ex-info (ex-message ex)
            (ex-data ex)
