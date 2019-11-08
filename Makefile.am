@@ -18,6 +18,9 @@ lib_lokke_vector_la_SOURCES = lib/lokke-vector.c
 lib_lokke_vector_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS)
 lib_lokke_vector_la_LDFLAGS = -module @GUILE_LDFLAGS@ @GUILE_LIBS@
 
+# Avoids the otherwise circular dependency
+BUILT_SOURCES = lib/lokke-reader.x lib/lokke-vector.x
+
 export LOKKE_TEST_PROTOCOL = tap
 
 TESTS = \
@@ -50,9 +53,4 @@ clean-local:
 
 SUFFIXES = .x
 .c.x:
-	guile-snarf -o $@ $< @GUILE_CFLAGS@ -I gnulib -std=gnu11
-
-# This is just a hack until/unless we deal with the initial circular dep
-# .x depends on .c depends on .x...
-.PHONY: bootstrap
-bootstrap: lib/lokke-reader.x lib/lokke-vector.x
+	guile-snarf -o $@ $< @GUILE_CFLAGS@ $(AM_CFLAGS)

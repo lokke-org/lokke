@@ -66,7 +66,6 @@ Then
     $ ./setup-deps
     $ autoreconf -fi
     $ ./configure
-    $ make bootstrap
     $ make check
 
 Hopefully the tests will pass.  If not, please report them to
