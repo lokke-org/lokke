@@ -172,18 +172,21 @@
             (loop (next s) (%scm-cons (first s) result))
             (reverse! result))))
 
-(define (show coll emit open close)
-  (display open (*out*))
+(define (show coll emit port open close)
+  (display open port)
   (when-let (coll (seq coll))
     (emit (first coll))
     (do ((coll (next coll) (next coll)))
         ((nil? coll))
-      (display " " (*out*))
+      (display " " port)
       (emit (first coll))))
-  (display close (*out*)))
+  (display close port))
 
-(define-method (pr (s <seq>)) (show s pr "(" ")"))
-(define-method (print (s <seq>)) (show s print "(" ")"))
+(define-method (pr-on (s <seq>) port)
+  (show s pr port "(" ")"))
+
+(define-method (print-on (s <seq>) port)
+  (show s display port "(" ")"))
 
 ;; For now, just emulate the same output as Guile, assuming that
 ;; <class> is always correct.
@@ -247,13 +250,13 @@
 
 (define-method (reduce f val coll)
   (if-let (s (seq coll))
-          (reduce f (f val (first s)) (next s))
-          val))
+    (reduce f (f val (first s)) (next s))
+    val))
 
 (define-method (reduce f coll)
   (if-let (s (seq coll))
-          (reduce f (first s) (next s))
-          (f)))
+    (reduce f (first s) (next s))
+    (f)))
 
 (define-method (into to from)
   (reduce conj to from))

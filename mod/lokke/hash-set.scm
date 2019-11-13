@@ -76,9 +76,6 @@
          (content (reverse! content)))
     (read-only-str (apply string-append "#{" (append content '("}"))))))
 
-(define-method (pr-str (m <hash-set>)) (render-str m pr-str))
-(define-method (print-str (m <hash-set>)) (render-str m print-str))
-
 (define (show s emit)
   (display "#{" (*out*))
   (let ((first? #t))
@@ -91,8 +88,11 @@
                      (set-hamt s)))
   (display "}" (*out*)))
 
-(define-method (pr (s <hash-set>)) (show s pr))
-(define-method (print (s <hash-set>)) (show s print))
+(define-method (pr-on (s <hash-set>) port)
+  (show s display port))
+
+(define-method (print-on (s <hash-set>) port)
+  (show s display port))
 
 (define (hash-set? x) (is-a? x <hash-set>))
 

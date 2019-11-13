@@ -102,24 +102,24 @@
         (read-only-str
          (string-append "[" (string-join (lokke-vector->list v) " ") "]")))))
 
-(define-method (pr-str (v <lokke-vector>)) (render-str v pr))
-(define-method (print (v <lokke-vector>)) (render-str v print))
-
-(define (show-vector v emit)
+(define (show-vector v emit port)
   (let ((length (lokke-vector-length v)))
     (if (zero? length)
-        (display "[]" (*out*))
+        (display "[]" port)
         (begin
-          (display "[" (*out*))
+          (display "[" port)
           (emit (lokke-vector-ref v 0))
           (do ((i 1 (1+ i)))
               ((= i length))
-            (display " " (*out*))
+            (display " " port)
             (emit (lokke-vector-ref v i)))
-          (display "]" (*out*))))))
+          (display "]" port)))))
 
-(define-method (pr (v <lokke-vector>)) (show-vector v pr))
-(define-method (print (v <lokke-vector>)) (show-vector v print))
+(define-method (pr-on (v <lokke-vector>) port)
+  (show-vector v pr port))
+
+(define-method (print-on (v <lokke-vector>) port)
+  (show-vector v display port))
 
 (define-method (counted? (v <lokke-vector>)) #t)
 (define-method (count (v <lokke-vector>)) (lokke-vector-length v))

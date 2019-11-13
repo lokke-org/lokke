@@ -41,17 +41,18 @@
 (define (render-str m render)
   (read-only-str (string-append "[" (render (key m)) " " (render (val m)) "]")))
 
-(define (show m emit)
-  (display "[" (*out*))
+(define (show m emit port)
+  (display "[" port)
   (emit (key m))
-  (display " " (*out*))
+  (display " " port)
   (emit (val m))
-  (display "]" (*out*)))
+  (display "]" port))
 
-(define-method (pr-str (v <map-entry>)) (render-str v pr))
-(define-method (print (v <map-entry>)) (render-str v print))
-(define-method (pr (v <map-entry>)) (show v pr))
-(define-method (print (v <map-entry>)) (show v print))
+(define-method (pr-on (v <map-entry>) port)
+  (show v display port))
+
+(define-method (print-on (v <map-entry>) port)
+  (show v display port))
 
 (define (map-entry? x) (is-a? x <map-entry>))
 

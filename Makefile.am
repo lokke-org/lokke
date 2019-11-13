@@ -33,6 +33,7 @@ TESTS = \
   test/clojure-ns \
   test/clojure-string \
   test/clojure-vector \
+  test/clojure-pr \
   test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \
@@ -49,6 +50,9 @@ TESTS = \
   test/clojure-collection \
   test/clojure-fn \
   test/clojure-math
+  test/clojure-collection \
+  test/lokke-pr
+
 
 # FIXME...
 clean-local:
