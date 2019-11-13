@@ -81,8 +81,18 @@
   #:use-module ((lokke invoke) #:select (invoke))
   #:use-module ((lokke ns lokke io) #:select (read-line slurp spit))
   #:use-module ((lokke pr)
-                #:select (*err* *in* *out*
-                                format pr pr-str print print-str println prn str))
+                #:select (*err*
+                          *in*
+                          *out*
+                          format
+                          pr
+                          pr-str
+                          print
+                          print-str
+                          println
+                          prn
+                          str
+                          with-out-str))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
@@ -346,6 +356,7 @@
                when-let
                when-not
                with-open
+               with-out-str
                with-meta
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))

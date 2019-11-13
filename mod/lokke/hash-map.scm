@@ -98,23 +98,23 @@
     (read-only-str
      (apply string-append "{" (append content '("}"))))))
 
-(define-method (pr-str (m <hash-map>)) (render-str m pr-str))
-(define-method (print-str (m <hash-map>)) (render-str m print-str))
-
-(define (show m emit)
-  (display "{" (*out*))
+(define (show m emit port)
+  (display "{" port)
   (let ((first? #t))
     (hamts/hamt-fold (lambda (k v result)
                        (if first?
                            (set! first? #f)
-                           (display ", " (*out*)))
-                       (emit k) (display #\space (*out*)) (emit v))
+                           (display ", " port))
+                       (emit k port) (display #\space port) (emit v port))
                      #t
                      (map-hamt m)))
-  (display "}" (*out*)))
+  (display "}" port))
 
-(define-method (pr (m <hash-map>)) (show m pr))
-(define-method (print (m <hash-map>)) (show m print))
+(define-method (pr-on (m <hash-map>) port)
+  (show m pr-on port))
+
+(define-method (print-on (m <hash-map>) port)
+  (show m print-on port))
 
 (define (hash-map? x) (is-a? x <hash-map>))
 

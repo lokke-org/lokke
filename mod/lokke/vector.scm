@@ -34,7 +34,7 @@
                           update))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke compare) #:select (clj= compare))
-  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke scm vector)
                 #:select (<lokke-vector>
                           list->lokke-vector
@@ -64,8 +64,8 @@
                first
                get
                nth
-               pr
-               print
+               pr-on
+               print-on
                rest
                seq
                update)
@@ -102,24 +102,24 @@
         (read-only-str
          (string-append "[" (string-join (lokke-vector->list v) " ") "]")))))
 
-(define-method (pr-str (v <lokke-vector>)) (render-str v pr))
-(define-method (print (v <lokke-vector>)) (render-str v print))
-
-(define (show-vector v emit)
+(define (show-vector v emit port)
   (let ((length (lokke-vector-length v)))
     (if (zero? length)
-        (display "[]" (*out*))
+        (display "[]" port)
         (begin
-          (display "[" (*out*))
-          (emit (lokke-vector-ref v 0))
+          (display "[" port)
+          (emit (lokke-vector-ref v 0) port)
           (do ((i 1 (1+ i)))
               ((= i length))
-            (display " " (*out*))
-            (emit (lokke-vector-ref v i)))
-          (display "]" (*out*))))))
+            (display " " port)
+            (emit (lokke-vector-ref v i) port))
+          (display "]" port)))))
 
-(define-method (pr (v <lokke-vector>)) (show-vector v pr))
-(define-method (print (v <lokke-vector>)) (show-vector v print))
+(define-method (pr-on (v <lokke-vector>) port)
+  (show-vector v pr-on port))
+
+(define-method (print-on (v <lokke-vector>) port)
+  (show-vector v print-on port))
 
 (define-method (counted? (v <lokke-vector>)) #t)
 (define-method (count (v <lokke-vector>)) (lokke-vector-length v))

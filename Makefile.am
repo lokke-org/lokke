@@ -33,6 +33,7 @@ TESTS = \
   test/clojure-ns \
   test/clojure-string \
   test/clojure-vector \
+  test/clojure-pr \
   test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \
@@ -40,6 +41,7 @@ TESTS = \
   test/lokke-hash-map \
   test/lokke-hash-set \
   test/lokke-ns \
+  test/lokke-pr \
   test/lokke-scm-atom \
   test/lokke-scm-vector \
   test/lokke-symbol \
