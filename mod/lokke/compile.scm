@@ -108,17 +108,19 @@
 Clojure reference like clojure.string/join to the corresponding Guile
 <modulle-ref>."
   (let ((name (tree-il/toplevel-ref-name top)))
-    (if (simple-symbol? name)
-        top
-        (let* ((parsed (parse-symbol name))
-               (ns-sym (parsed-sym-ns parsed)))
-          (unless ns-sym
-            ;; FIXME: appropriate?  They're class references for Clojure/JVM
-            (error "Top-level x.y references are currently not allowed" name))
-          (tree-il/make-module-ref (tree-il/toplevel-ref-src top)
-                                   (resolved-ns-sym->mod-name ns-sym ns-aliases)
-                                   (parsed-sym-ref parsed)
-                                   #f)))))
+    (cond
+     ((string-prefix? "/lokke/" (symbol->string name)) top)
+     ((simple-symbol? name) top)
+     (else
+      (let* ((parsed (parse-symbol name))
+             (ns-sym (parsed-sym-ns parsed)))
+        (unless ns-sym
+          ;; FIXME: appropriate?  They're class references for Clojure/JVM
+          (error "Top-level x.y references are currently not allowed" name))
+        (tree-il/make-module-ref (tree-il/toplevel-ref-src top)
+                                 (resolved-ns-sym->mod-name ns-sym ns-aliases)
+                                 (parsed-sym-ref parsed)
+                                 #f))))))
 
 (define il-count 0)
 
