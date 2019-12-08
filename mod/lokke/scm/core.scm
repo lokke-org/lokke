@@ -47,15 +47,15 @@
 
 (define-syntax ->
   (syntax-rules ()
-    ((-> x) x)
-    ((-> x (f args ...) expr ...) (-> (f x args ...) expr ...))
-    ((-> x f expr ...) (-> (f x) expr ...))))
+    ((_ x) x)
+    ((_ x (f args ...) expr ...) (-> (f x args ...) expr ...))
+    ((_ x f expr ...) (-> (f x) expr ...))))
 
 (define-syntax ->>
   (syntax-rules ()
-    ((->> x) x)
-    ((->> x (f args ...) expr ...) (-> (f args ... x) expr ...))
-    ((->> x f expr ...) (-> (f x) expr ...))))
+    ((_ x) x)
+    ((_ x (f args ...) expr ...) (->> (f args ... x) expr ...))
+    ((_ x f expr ...) (->> (f x) expr ...))))
 
 (define-syntax comment
   (syntax-rules ()
