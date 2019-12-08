@@ -19,6 +19,7 @@
 
 (define-module (lokke concurrent)
   use-module: ((ice-9 atomic) select: (make-atomic-box))
+  use-module: ((ice-9 futures) select: ((future . %scm-future) touch))
   use-module: (oop goops)
   use-module: ((lokke scm atom)
                select: (atom?
@@ -35,6 +36,7 @@
            add-watch
            remove-watch
            deref
+           future
            reset!
            set-validator!
            swap!)
@@ -53,3 +55,18 @@
 (define-method (remove-watch (a <atom>) key) (atom-remove-watch a key))
 (define-method (set-validator! (a <atom>) validate)
   (atom-set-validator! a validate))
+
+;; Can't just alias guile futures because this doesn't work w/goops:
+;;   (define <future> (@@ (ice-9 futures) <future>))
+;; think maybe because it's a record, and even if (class-of
+;; (%scm-future #f)) would work, we can't use it because it deadlocks
+;; compilation somehow right now (guile 2.2.6).
+
+(define-class <future> ()
+  (scm-future init-keyword: scm-future:))
+
+(define-method (deref (x <future>))
+  (touch (slot-ref x 'scm-future)))
+
+(define-syntax-rule (future exp ...)
+  (make <future> scm-future: (%scm-future (begin exp ...))))

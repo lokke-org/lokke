@@ -48,6 +48,7 @@
                         add-watch
                         remove-watch
                         deref
+                        future
                         reset!
                         set-validator!
                         swap!))
@@ -210,6 +211,7 @@
               fn
               fnext
               format
+              future
               gensym
               get
               get-in
