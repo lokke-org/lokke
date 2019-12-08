@@ -13,6 +13,7 @@
 
 (define-module (lokke scm core)
   #:use-module ((lokke base syntax) #:select (-> ->>))
+  #:use-module ((rnrs arithmetic fixnums) #:version (6) #:select (fixnum?))
   #:use-module ((srfi srfi-1) #:select (fold reduce first second third))
   #:use-module ((srfi srfi-88) #:select (string->keyword))
   #:re-export ((+ . +')
@@ -24,10 +25,12 @@
                (1- . dec')
                (1- . dec)
                (eq? . identical?)
+               (fixnum? . int?)
                (modulo . mod)
                (negative? . neg?)
                (positive? . pos?)
                (quotient . quot)
+               (real? . double?)
                (real? . float?)
                (string->keyword . keyword) ; FIXME: restrictions?
                (string->symbol . symbol)   ; FIXME: restrictions?
@@ -35,7 +38,11 @@
   #:export (comment
             doto
             true? false?
-            comp complement constantly juxt partial
+            comp complement constantly juxt
+            nat-int?
+            neg-int?
+            partial
+            pos-int?
             rand rand-int
             str))
 
@@ -112,3 +119,7 @@
 
 (define (str . items)
   (string-concatenate (map (lambda (x) (format #f "~a" x)) items)))
+
+(define (pos-int? x) (and (fixnum? x) (positive? x)))
+(define (neg-int? x) (and (fixnum? x) (negative? x)))
+(define (nat-int? x) (and (fixnum? x) (not (negative? x))))

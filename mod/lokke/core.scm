@@ -109,16 +109,21 @@
                         dec
                         dec'
                         doto
+                        double?
                         false?
                         float?
                         identical?
                         inc
                         inc'
+                        int?
                         juxt
                         mod
                         neg?
+                        nat-int?
+                        neg-int?
                         partial
                         pos?
+                        pos-int?
                         quot
                         rand
                         rand-int
@@ -207,6 +212,7 @@
               dorun
               dotimes
               doto
+              double?
               drop
               empty
               empty?
@@ -241,6 +247,7 @@
               in-ns
               inc
               inc'
+              int?
               into
               invoke
               key
@@ -265,6 +272,8 @@
               name
               namespace
               neg?
+              nat-int?
+              neg-int?
               next
               nfirst
               nnext
@@ -278,6 +287,7 @@
               or
               partial
               pos?
+              pos-int?
               pr
               pr-str
               print
