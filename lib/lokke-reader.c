@@ -678,10 +678,36 @@ static SCM
 sign_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
                                   int is_negative, SCM default_radix)
 {
-  if (offset == str_len)
-    return SCM_BOOL_F;
-  const SCM radix_chr = SCM_MAKE_CHAR('r');
   const size_t remaining = str_len - offset;
+  if (remaining == 0)
+    return SCM_BOOL_F;
+  const SCM c0 = scm_c_string_ref(str, offset);
+  if (c0 == SCM_MAKE_CHAR ('0')) {
+    // oct or hex: 025 or 0xf7
+    switch (remaining)
+      {
+      case 1:
+        return SCM_I_MAKINUM(0);
+      case 2:  // Only one char, e.g. 07, so can't be hex
+        return radix_stripped_substring_to_integer(str, str_len, offset + 1,
+                                                   is_negative,
+                                                   SCM_I_MAKINUM(8));
+      default:
+        {
+          const SCM c1 = scm_c_string_ref(str, offset + 1);
+          if (c1 == SCM_MAKE_CHAR ('x') || c1 == SCM_MAKE_CHAR ('X'))
+            return radix_stripped_substring_to_integer(str, str_len, offset + 2,
+                                                       is_negative,
+                                                       SCM_I_MAKINUM(16));
+          else
+            return radix_stripped_substring_to_integer(str, str_len, offset + 1,
+                                                       is_negative,
+                                                       SCM_I_MAKINUM(8));
+        }
+      }
+  }
+
+  const SCM radix_chr = SCM_MAKE_CHAR('r');
   if (remaining > 2 && scm_c_string_ref(str, offset + 1) == radix_chr) {
     const SCM r1 = scm_c_string_ref(str, offset);
     SCM radix;

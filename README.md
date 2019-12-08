@@ -310,8 +310,6 @@ Known Issues
   operations where the fallback is a lot more expensive.
 
 - Unimplemnted syntaxes:
-    hex 0xff
-    oct 017
     negative exponents -1.2e-5
 
 - The code has not been evaluated with respect to the need for
