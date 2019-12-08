@@ -86,6 +86,15 @@
   use-module: (lokke vector)  ;; FIXME: select
   use-module: ((lokke metadata)
                select: (*print-meta* meta set-meta! vary-meta with-meta))
+  use-module: ((lokke scm bit)
+               select: (bit-and
+                        bit-clear
+                        bit-flip
+                        bit-not
+                        bit-or
+                        bit-set
+                        bit-test
+                        bit-xor))
   use-module: ((lokke scm core)
                ;; Notably not str
                select: (+'
@@ -93,10 +102,6 @@
                         -'
                         ->
                         ->>
-                        bit-and
-                        bit-not
-                        bit-or
-                        bit-xor
                         comment
                         comp
                         complement
@@ -165,8 +170,12 @@
               (begin . do)
               binding
               bit-and
+              bit-clear
+              bit-flip
               bit-not
               bit-or
+              bit-set
+              bit-test
               bit-xor
               boolean?
               char?

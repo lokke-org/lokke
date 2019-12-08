@@ -43,8 +43,9 @@ TESTS = \
   test/metadata-handling \
   test/ns-lokke-io \
   test/reader-basics \
+  test/clojure-collection \
   test/clojure-fn \
-  test/clojure-collection
+  test/clojure-math
 
 # FIXME...
 clean-local:

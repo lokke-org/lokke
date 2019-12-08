@@ -1,0 +1,70 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-math
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+;; FIXME: test errors for too few args
+
+(is (= 1 (bit-and 1 1)))
+(is (= 0 (bit-and 0 1)))
+(is (= 0 (bit-and 0 0)))
+(is (= 1 (bit-and 1 1 1)))
+(is (= 0 (bit-and 1 0 1)))
+(is (= 2r101 (bit-and 2r111 2r101)))
+
+(is (= 1 (bit-or 1 1)))
+(is (= 1 (bit-or 0 1)))
+(is (= 0 (bit-or 0 0)))
+(is (= 1 (bit-or 1 1 1)))
+(is (= 0 (bit-or 0 0 0)))
+(is (= 2r111 (bit-or 2r111 2r101)))
+
+(is (= 0 (bit-xor 1 1)))
+(is (= 1 (bit-xor 0 1)))
+(is (= 0 (bit-xor 0 0)))
+(is (= 1 (bit-xor 1 1 1)))
+(is (= 0 (bit-xor 0 0 0)))
+(is (= 1 (bit-xor 0 1 0)))
+(is (= 2r010 (bit-xor 2r111 2r101)))
+
+(is (= 0 (bit-not -1)))
+(is (= 1 (bit-not -2)))
+(is (= -1 (bit-not 0)))
+(is (= -2 (bit-not 1)))
+
+(is (= 0 (bit-clear 1 0)))
+(is (= 2 (bit-clear 2 0)))
+(is (= -3 (bit-clear -1 1)))
+
+(is (= 1 (bit-flip 0 0)))
+(is (= 1024 (bit-flip 0 10)))
+(is (= -1025 (bit-flip -1 10)))
+
+(is (= 1 (bit-set 0 0)))
+(is (= 1024 (bit-set 0 10)))
+(is (= -6 (bit-set -8 1)))
+
+(is (= false (bit-test 0 0)))
+(is (= false (bit-test 0 20)))
+(is (= true (bit-test 2r10100 2)))
+(is (= true (bit-test -1 0)))
+(is (= true (bit-test -1 42)))
+(is (= false (bit-test -3 1)))
+
+(end-tests (ns-name *ns*) :exit? true)

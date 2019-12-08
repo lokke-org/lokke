@@ -290,6 +290,7 @@ On the Scheme side
     `char->integer`.
 * The `integer` method is effectively `(truncate (num x))`, using
   Guile's `truncate`.
+* For now, `bit-test` treats negative values as twos-complement.
 * We favor SRFI-88 postfix keywords like `foo:`.  While there are no
   immediate plans to port bits to other Schemes, all else equal, we
   might as well use the standard when there is one.  Plus it's easier
