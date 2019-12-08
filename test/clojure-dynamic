@@ -1,0 +1,36 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-dynamic
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(defdyn *dyn* 1)
+(is (= 1 *dyn*))
+(is (= 3 (binding [*dyn* 3] *dyn*)))
+(is (= 3 (binding [*dyn* 3] (deref (future *dyn*)))))
+(is (= 1 (deref (future *dyn*))))
+
+(defdynloc *dynloc* 1)
+;; The commented out tests here won't work until the upstream default
+;; value bug is fixed.
+;;(is (= 1 *dynloc*))
+(is (= 3 (binding [*dynloc* 3] *dynloc*)))
+;;(is (= 1 (binding [*dynloc* 3] (deref (future *dynloc*)))))
+;;(is (= 1 (deref (future *dynloc*))))
+
+(end-tests (ns-name *ns*) :exit? true)

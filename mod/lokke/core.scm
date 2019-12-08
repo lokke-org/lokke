@@ -23,9 +23,12 @@
   use-module: ((srfi srfi-1) select: (drop-right iota last))
   use-module: ((lokke base syntax)
                select: (and
+                        binding
                         (cond . clj-cond)
                         def
                         defn
+                        defdyn
+                        defdynloc
                         dotimes
                         fn
                         if
@@ -160,6 +163,7 @@
               atom?
               (begin . %scm-begin)
               (begin . do)
+              binding
               bit-and
               bit-not
               bit-or
@@ -184,6 +188,8 @@
               dec
               dec'
               def
+              defdyn
+              defdynloc
               defn
               deref
               disj

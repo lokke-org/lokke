@@ -87,6 +87,12 @@ expander will handle expansions normally.  The intention is for any
 quoted lists to end up compiled to normal Guile const lists (which are
 immutable, though possibly only when compiled right now).
 
+When a dynamic variable `foo` is defined, it is actually represented
+by a "hidden" top-level definition `(define /lokke/dynamic-foo
+(make-fluid ...))` in the current Guile module.  Then `foo` itself is
+made an identifier-syntax that expands into `(fluid-ref
+/lokke/dynamic-foo)`.
+
 Modules and namespaces
 ----------------------
 

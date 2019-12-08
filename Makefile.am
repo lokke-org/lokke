@@ -26,6 +26,7 @@ export LOKKE_TEST_PROTOCOL = tap
 TESTS = \
   test/equality \
   test/clojure-defmacro \
+  test/clojure-dynamic \
   test/clojure-exceptions \
   test/clojure-ns \
   test/clojure-string \

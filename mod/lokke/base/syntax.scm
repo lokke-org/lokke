@@ -42,8 +42,10 @@
                         last
                         take-right))
   use-module: ((lokke base destructure) select: (destructure-binding-syntax))
+  use-module: ((lokke base dynamic) select: (binding defdyn defdynloc))
   use-module: ((lokke base util) select: (pairify vec-tag?))
   use-module: (oop goops)
+  re-export: (binding defdyn defdynloc)
   export: (->
            ->>
            cond
