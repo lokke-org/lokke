@@ -31,6 +31,7 @@
                         <sequential>
                         <vector-seq>
                         assoc
+                        bounded-count
                         coll?
                         conj
                         cons
@@ -84,6 +85,7 @@
               <seq>
               <sequential>
               assoc
+              bounded-count
               clj=
               coll?
               conj

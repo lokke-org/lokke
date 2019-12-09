@@ -36,6 +36,7 @@
            <seq>
            <sequential>
            <vector-seq>
+           bounded-count
            coll?
            conj
            contains?
@@ -103,6 +104,17 @@
      ((counted? remaining) (+ sum (count remaining)))
      ((not (seq remaining)) sum)
      (else (loop (next remaining) (1+ sum))))))
+
+(define-method (bounded-count n coll)
+  (if (counted? coll)
+      (count coll)
+      (let loop ((remaining coll)
+                 (sum 0))
+        (cond
+         ((= sum n) n)
+         ((counted? remaining) (min n (+ sum (count remaining))))
+         ((not (seq remaining)) sum)
+         (else (loop (next remaining) (1+ sum)))))))
 
 (define (every? pred coll)
   (let ((s (seq coll)))

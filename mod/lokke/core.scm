@@ -186,6 +186,7 @@
               bit-test
               bit-xor
               boolean?
+              bounded-count
               char?
               (class-of . class)
               (clj-cond . cond)
