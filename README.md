@@ -6,40 +6,43 @@ Lokke is Clojure for Guile
  part on whether or not they end up seeming valuable enough to be
  worth the maintenance costs.]
 
-While the plan is to create a full dialect of Clojure for Guile, Lokke
-also consists of a set of Guile modules providing much of Clojure's
-functionality in two different guises.
+While the intention is to provide a full dialect of Clojure for Guile,
+Lokke also consists of a set of Guile modules providing much of
+Clojure's functionality in two different guises.
 
-For a more Clojure oriented experience
---------------------------------------
+For Clojure itself
+------------------
+
+The Clojure dialect is currently available via `./lokke` which can run
+code or provide a REPL.  See below for further information.
+
+For a more Clojure oriented experience in Scheme
+------------------------------------------------
 
 Lokke provides one set of modules, starting with (lokke core) that
 create an environment that looks suspiciously like Clojure.  In most
 cases these modules prefer Clojure's approach when there's a conflict,
 and they're not shy about using generic functions.  For example, `=`
-is a generic, and implements Clojure's semantics, not Scheme's.  In
-some cases, Scheme vectors are used in place of Clojure's immutable
-vectors, e.g. `(fn #(x 1 y 2) ...)`[1].  Currently `(lokke core)` and
-`(lokke base syntax)`, will for example replace `let` and `when`, via
-`use-modules`, so be cautious, though we recommend following the
-Clojure practice of always explicitly `#:select`ing the symbols you
-want to import, or `#:prefix`ing the entire namespace to avoid the
-problem entirely, and make it much easier to discover the origin of a
-binding.
+is a generic, and implements Clojure's semantics, not Scheme's, and
+currently `(lokke core)` and `(lokke base syntax)`, will replace `let`
+and `when`, via `use-modules`, so be cautious.  We recommend following
+the Clojure practice of explicitly `#:select`ing the symbols you want
+to import, or `#:prefix`ing the entire namespace to avoid the problem
+entirely, and to make it much easier to discover the origin of a
+binding.  In some cases, Scheme vectors may be required in place of
+Clojure's immutable vectors, e.g. `(fn #(x 1 y 2) ...)`, though the
+approach to these binding forms on the scheme side is still under
+discussion and may change.
 
-[1] Right now, it's `(let (...) ...)` but `(fn #(...) ...)`.  The
-    latter avoids some syntax ambiguities, and we may well change
-    `let` to match.
-
-For a more Scheme oriented experience
---------------------------------------
+For a more Scheme oriented experience in Scheme
+-----------------------------------------------
 
 Lokke may also provide (lokke scm ...) modules, which define a more
-Scheme-friendly, and possibly more efficient interface (think
-`(lokke-vector-length v)` as opposed to `(count v)`.
+Scheme-friendly, and possibly more efficient interface -- think
+`(lokke-vector-length v)` as compared to `(count v)`.
 
 Perhaps the most notable existing module is `(lokke scm vector)` which
-provides a C backed implementation of Clojure's
+is intended to provide a C backed implementation of Clojure's
 [persistent vectors](https://hypirion.com/musings/understanding-persistent-vector-pt-1).
 
 Getting started
@@ -88,6 +91,14 @@ Currently the Lokke repl *is* the Guile repl, with the initial
 language and environment set for Lokke, and so all of the Guile
 features should be available.  Though for now, `lokke` loads
 `~/.lokke_guile` (which must be Scheme code) rather than `~/.guile`.
+
+Lokke expects all Clojure namespaces to be located in a lokke/ns/
+subdirectory of one of the directories specified by the Guile load
+path, which can be adjusted by setting `GUILE_LOAD_PATH` in the
+environment.  For example, since `./mod` is in `./lokke`'s default
+load path, `clojure.string` can be loaded from
+mod/lokke/ns/clojure/string.scm (or `.clj` -- namspaces can be
+implemented in Clojure or Scheme).
 
 Assuming your guile was compiled with readline support, it's likely
 you'll want to add something like this to `~/.lokke_guile`:
@@ -323,6 +334,10 @@ Known Issues
 - The `foo.bar/baz` syntactic sugar doesn't work for Scheme modules
   from the ./lokke REPL.  I suspect it's using the Lokke reader to
   load the module instead of the Scheme reader.
+
+- The syntaxes probably aren't always consistent on the scheme side,
+  i.e. do we want to support `(fn #(...) ...)` or `(fn (...) ...)` if
+  either?  Presumably all destructuring bindings should work the same.
 
 - See DESIGN for additional issues.
 
