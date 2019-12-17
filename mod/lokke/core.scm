@@ -81,7 +81,7 @@
                         require
                         use))
   use-module: ((lokke invoke) select: (invoke))
-  use-module: ((lokke ns lokke io) select: (slurp spit))
+  use-module: ((lokke ns lokke io) select: (read-line slurp spit))
   use-module: ((lokke pr)
                select: (*err* *in* *out*
                         format pr pr-str print print-str println prn str))
@@ -302,6 +302,7 @@
               quote
               rand
               rand-int
+              read-line
               reduce
               reduce-kv
               refer

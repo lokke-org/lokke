@@ -13,20 +13,35 @@
 
 (read-set! keywords 'postfix)  ;; srfi-88
 
+;; Note: this currently cannot depend on core, since core pulls some
+;; functions like read-line from here.
+
 (define-module (lokke ns lokke io)
   version: (0 0 0)
   use-module: ((ice-9 binary-ports) select: (get-bytevector-all put-bytevector))
+  use-module: ((ice-9 rdelim) select: ((read-line . %scm-read-line)))
   use-module: ((ice-9 textual-ports) select: (get-string-all))
   use-module: (oop goops)
   use-module: ((lokke exception) select: (with-open))
   use-module: ((lokke hash-map) select: (get hash-map))
-  use-module: ((lokke pr) select: (str))
+  use-module: ((lokke pr) select: (*in* str))
   duplicates: (merge-generics replace warn-override-core warn last)
   re-export: (delete-file)
-  export: (copy mkstemp reader slurp slurp-bytes spit spit-bytes writer))
+  export: (copy
+           mkstemp
+           read-line
+           reader
+           slurp
+           slurp-bytes
+           spit
+           spit-bytes
+           writer))
 
 ;; FIXME: support binary paths somehow, without having to set the
 ;; LC_CTYPE to ISO-8859-1.
+
+(define (read-line)
+  (%scm-read-line *in*))
 
 (define-method (copy (input <string>) (output <string>))
   ;; We just ignore buffer-size for now
