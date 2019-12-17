@@ -23,17 +23,20 @@
 (define-module (lokke pr)
   use-module: ((ice-9 format) select: ((format . %scm-format)))
   use-module: ((language tree-il) prefix: tree-il/)
+  use-module: ((lokke base dynamic) select: (defdyn))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (drop take))
   use-module: ((srfi srfi-88) select: (keyword->string))
   replace: (format)
-  export: (*out*
+  export: (*err* *in* *out*
            module-name->ns-str
            module-name->ns-sym
            pr pr-str print print-str prn println str))
 
+(defdyn *in* (current-input-port))  ;; also binds /lokke/dynamic-*in*
 ;; FIXME: just using (*out*) so it'll be easy to find/fix later.
-(define (*out*) (current-error-port))
+(define (*out*) (current-output-port))
+(defdyn *err* (current-error-port))  ;; also binds /lokke/dynamic-*err*
 
 ;; For now, guile doesn't have one...
 (define (tree-il? x)

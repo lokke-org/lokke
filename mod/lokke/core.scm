@@ -82,7 +82,8 @@
                         use))
   use-module: ((lokke invoke) select: (invoke))
   use-module: ((lokke pr)
-               select: (format pr pr-str print print-str println prn str))
+               select: (*err* *in* *out*
+                        format pr pr-str print print-str println prn str))
   use-module: ((lokke set) select: (<set>))
   use-module: (lokke vector)  ;; FIXME: select
   use-module: ((lokke metadata)
@@ -135,8 +136,6 @@
   use-module: ((system base compile)
                select: (compile-file compiled-file-name))
   export: (*command-line-args*  ;; this is wrong...
-           *err*
-           *out*
            byte
            (do . %scm-do)
            distinct?
@@ -150,7 +149,10 @@
            some?)
   replace: (= apply instance? nil? do)
   re-export: (*
+              *err*
+              *in*
               *ns*
+              *out*
               *print-meta*
               +
               -
@@ -358,24 +360,6 @@
                                   final))
             (%scm-apply f (append (drop-right args 1)
                                   (seq->scm-list final)))))))
-
-;; FIXME: docstrings
-
-;; (define-syntax *err*
-;;   (make-variable-transformer
-;;    (lambda (x)
-;;      (syntax-case x ()
-;;        (_ #'(current-error-port))))))
-
-;; (define-syntax *out*
-;;   (make-variable-transformer
-;;    (lambda (x)
-;;      (syntax-case x ()
-;;        (_ #'(current-output-port))))))
-
-;; FIXME: wrong
-(define *err* (current-error-port))
-(define *out* (current-output-port))
 
 (define *command-line-args* (cdr (program-arguments)))
 
