@@ -46,7 +46,7 @@
               0
               2))))
 
-;; For now just support (is x) and (is (= x y)), since that's easy to
+;; For now just supports (is x) and (is (= x y)), since that's easy to
 ;; do with srfi-64, but this will almost certainly need an overhaul,
 ;; and/or moving away from the srfi.
 
