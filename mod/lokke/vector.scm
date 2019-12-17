@@ -123,6 +123,7 @@
 (define-method (pr (v <lokke-vector>)) (show-vector v pr))
 (define-method (print (v <lokke-vector>)) (show-vector v print))
 
+(define-method (counted? (v <lokke-vector>)) #t)
 (define-method (count (v <lokke-vector>)) (lokke-vector-length v))
 (define-method (empty (v <lokke-vector>)) empty-vector)
 (define-method (empty? (v <lokke-vector>)) (zero? (lokke-vector-length v)))

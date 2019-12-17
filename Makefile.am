@@ -30,6 +30,7 @@ TESTS = \
   test/clojure-exceptions \
   test/clojure-ns \
   test/clojure-string \
+  test/clojure-vector \
   test/lokke-compare \
   test/lokke-core \
   test/lokke-destructure \
