@@ -56,4 +56,14 @@
   (is (not (= '(1 2 3) '(4 5 6))))
   (is (not (= (seq [1 2 3]) [4 5 6]))))
 
+(testing "counted?"
+  (is (not (counted? nil)))
+  (is (counted? '()))
+  ;; FIXME: These differ from clojure/jvm right now because '(...) is
+  ;; actually just a guile pair.  Still have to decide if that's OK,
+  ;; but this begins to suggest more strongly it might not be, i.e. we
+  ;; may need a real persistent list sooner rather than later.
+  (is (not (counted? '(1 2))))
+  (is (not (counted? '(cons 1 (cons 2 nil))))))
+
 (end-tests (ns-name *ns*) :exit? true)
