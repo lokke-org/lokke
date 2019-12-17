@@ -81,6 +81,7 @@
                         require
                         use))
   use-module: ((lokke invoke) select: (invoke))
+  use-module: ((lokke ns lokke io) select: (slurp spit))
   use-module: ((lokke pr)
                select: (*err* *in* *out*
                         format pr pr-str print print-str println prn str))
@@ -320,6 +321,8 @@
               sequential?
               set-meta!
               set-validator!
+              slurp
+              spit
               some
               str
               string?
