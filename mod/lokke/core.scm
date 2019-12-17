@@ -21,6 +21,7 @@
   use-module: ((ice-9 match) select: (match-lambda*))
   use-module: (oop goops)
   use-module: ((srfi srfi-1) select: (drop-right iota last))
+  use-module: ((lokke base doc) select: (doc))
   use-module: ((lokke base syntax)
                select: (and
                         binding
@@ -138,7 +139,6 @@
            *out*
            byte
            (do . %scm-do)
-           doc
            distinct?
            instance?
            int
@@ -209,6 +209,7 @@
               disj
               dissoc
               doall
+              doc
               dorun
               dotimes
               doto
@@ -442,10 +443,3 @@
              (if (contains? seen item)
                  #f
                  (recur (cdr rst) (conj seen item)))))))))
-
-(define-method (doc (x <procedure>))
-  (let (s (procedure-documentation x))
-    (when s
-      (display "-------------------------\n")
-      (display s)
-      (newline))))

@@ -440,6 +440,8 @@
                    #:duplicates '(merge-generics replace warn-override-core warn
                                                  last)
                    #:pure)))
+          (module-define! m '/lokke/doc-lock (make-mutex))
+          (module-define! m '/lokke/doc (make-hash-table))
           (module-define! m '/lokke/ns-aliases (atom (hash-map)))
           m))))
 
@@ -482,7 +484,10 @@
              (define-module #,(datum->syntax x mod)
                #:duplicates (merge-generics replace warn-override-core warn last)
                #:pure)
-             (module-define! (current-module) '/lokke/ns-aliases (atom (hash-map)))
+             (let ((m (current-module)))
+               (module-define! m '/lokke/doc-lock (make-mutex))
+               (module-define! m '/lokke/doc (make-hash-table))
+               (module-define! m '/lokke/ns-aliases (atom (hash-map))))
              ;; FIXME: minimze this set
              (require 'guile.language.lokke.spec)  ;; FIXME: may not be needed
              (use 'guile.lokke.boot)

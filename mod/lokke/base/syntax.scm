@@ -29,11 +29,9 @@
 
 (define-module (lokke base syntax)
   use-module: ((guile)
-               :select ((cond . %scm-cond)
-                        (do . %scm-do)
+               :select ((do . %scm-do)
                         (if . %scm-if)
-                        (let . %scm-let)
-                        (let* . %scm-let*)))
+                        (let . %scm-let)))
   use-module: ((srfi srfi-1)
                :select (append-map
                         concatenate
@@ -42,8 +40,9 @@
                         last
                         take-right))
   use-module: ((lokke base destructure) select: (destructure-binding-syntax))
+  use-module: ((lokke base doc) select: (clear-def-doc! maybe-set-def-doc!))
   use-module: ((lokke base dynamic) select: (binding defdyn defdynloc))
-  use-module: ((lokke base util) select: (pairify vec-tag?))
+  use-module: ((lokke base util) select: (global-identifier? pairify vec-tag?))
   use-module: (oop goops)
   re-export: (binding defdyn defdynloc)
   export: (->
@@ -79,8 +78,19 @@
     ((_ x f expr ...) (->> (f x) expr ...))))
 
 (define-syntax def
-  (syntax-rules ()
-    ((_ name value) (define-public name value))))
+  (lambda (x)
+    (syntax-case x ()
+      ((_ name doc value) (string? (syntax->datum #'doc))
+       #`(begin
+           (define-public name value)
+           (maybe-set-def-doc! (module-variable (current-module) 'name)
+                               name
+                               #,(global-identifier? #'name) doc)))
+      ((_ name value)
+       #`(begin
+           (define-public name value)
+           (clear-def-doc! (module-variable (current-module) 'name)
+                           #,(global-identifier? #'name)))))))
 
 ;; FIXME: think we might have a redundant expansion, i.e. not sure
 ;; let** needs to cons the initial extra binding.
@@ -378,8 +388,13 @@
       ((_ arity arities ...)
        (multi-arity x #'(arity arities ...))))))
 
-(define-syntax-rule (defn name expr ...)
-  (def name (fn expr ...)))
+(define-syntax defn
+  (lambda (x)
+    (syntax-case x ()
+      ((_ name doc expr ...) (string? (syntax->datum #'doc))
+       #'(def name doc (fn expr ...)))
+      ((_ name expr ...)
+       #'(def name (fn expr ...))))))
 
 (define-syntax-rule (letfn ((fn-name fn-body ...) ...) body ...)
   (letrec ((fn-name (fn fn-name fn-body ...)) ...)

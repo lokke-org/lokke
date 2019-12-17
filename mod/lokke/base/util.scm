@@ -14,8 +14,15 @@
 (read-set! keywords 'postfix)  ;; srfi-88
 
 (define-module (lokke base util)
+  use-module: ((ice-9 receive) select: (receive))
   use-module: ((srfi srfi-1) select: (take))
-  export: (pairify require-nil vec-tag?))
+  use-module: ((system syntax) select: (syntax-local-binding))
+  export: (global-identifier? pairify require-nil vec-tag?))
+
+(define (global-identifier? syn)
+  (receive (type _)
+      (syntax-local-binding syn)
+    (eq? 'global type)))
 
 ;; We use this as a syntax-pattern fender to detect reader-vectors.
 (define (vec-tag? x) (eq? '/lokke/reader-vector (syntax->datum x)))
