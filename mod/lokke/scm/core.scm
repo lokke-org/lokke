@@ -12,11 +12,13 @@
 ;;;      option) any later version.
 
 (define-module (lokke scm core)
+  #:use-module ((lokke base syntax) #:select (-> ->>))
   #:use-module ((srfi srfi-1) #:select (fold reduce first second third))
   #:use-module ((srfi srfi-88) #:select (string->keyword))
   #:re-export ((+ . +')
                (- . -')
-               (- . -')
+               ->
+               ->>
                (1+ . inc')
                (1+ . inc)
                (1- . dec')
@@ -34,9 +36,7 @@
                (string->keyword . keyword) ; FIXME: restrictions?
                (string->symbol . symbol)   ; FIXME: restrictions?
                (substring/read-only . subs))
-  #:export (->
-            ->>
-            comment
+  #:export (comment
             doto
             true? false?
             comp complement constantly juxt partial
@@ -44,18 +44,6 @@
             str))
 
 ;; Are "Identifier Macros" felevant for any of our direct mappings?
-
-(define-syntax ->
-  (syntax-rules ()
-    ((_ x) x)
-    ((_ x (f args ...) expr ...) (-> (f x args ...) expr ...))
-    ((_ x f expr ...) (-> (f x) expr ...))))
-
-(define-syntax ->>
-  (syntax-rules ()
-    ((_ x) x)
-    ((_ x (f args ...) expr ...) (->> (f args ... x) expr ...))
-    ((_ x f expr ...) (->> (f x) expr ...))))
 
 (define-syntax comment
   (syntax-rules ()

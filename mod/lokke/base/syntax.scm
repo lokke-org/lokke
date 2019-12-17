@@ -44,7 +44,9 @@
   use-module: ((lokke base destructure) select: (destructure-binding-syntax))
   use-module: ((lokke base util) select: (pairify vec-tag?))
   use-module: (oop goops)
-  export: (cond
+  export: (->
+           ->>
+           cond
            def
            defn
            dotimes
@@ -61,6 +63,18 @@
 (eval-when (expand load eval)
   (define debug-fn? #f)
   (define debug-let? #f))
+
+(define-syntax ->
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x (f args ...) expr ...) (-> (f x args ...) expr ...))
+    ((_ x f expr ...) (-> (f x) expr ...))))
+
+(define-syntax ->>
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x (f args ...) expr ...) (->> (f args ... x) expr ...))
+    ((_ x f expr ...) (->> (f x) expr ...))))
 
 (define-syntax def
   (syntax-rules ()
