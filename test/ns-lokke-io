@@ -33,6 +33,6 @@
       (spit out message)
       (is (= message (slurp outname))))
     (is (not (guile.guile/file-exists? outname))))
-  (is (= "Danish" (subs (slurp "LOKKE") 0 6))))
+  (is (= "Lokke" (subs (slurp "README") 0 5))))
 
 (end-tests (ns-name *ns*) :exit? true)

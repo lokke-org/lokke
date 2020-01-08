@@ -1,14 +1,14 @@
 Lokke is Clojure for Guile
 ==========================
 
-[Note: everything is currently very experimental, including the
- various API "levels" -- they may or may not all survive, depending in
- part on whether or not they end up seeming valuable enough to be
- worth the maintenance costs.]
+> Note: everything is currently very experimental, including the
+> various API "levels" -- they may not all survive, depending in part
+> on whether or not they end up seeming valuable enough to be worth
+> the maintenance costs.
 
 While the intention is to provide a full dialect of Clojure for Guile,
-Lokke also consists of a set of Guile modules providing much of
-Clojure's functionality in two different guises.
+[Lokke](#Lokke-Danish) also consists of a set of Guile modules
+providing much of Clojure's functionality in two different guises.
 
 For Clojure itself
 ------------------
@@ -354,6 +354,28 @@ git can can add the appropriate pseudo-header for you via the
 Additional information, conventions, etc. may be found in the Hacking
 section in the DESIGN.
 
+Lokke (Danish)
+--------------
+
+### Etymology
+
+From Old Norse lokka. Cognate with German locken.
+Pronunciation
+
+  * IPA: /lɔkə/, [ˈlʌɡ̊ə]
+
+### Verb
+
+**lokke** ‎(imperative **lok**, infinitive **at lokke**, present tense **lokker**, past
+tense **lokkede**, past participle **har lokket**)
+  1. tempt, entice, lure, seduce
+  2. persuade, coax, cajole, wheedle, inveigle
+
+### Source
+
+Definition provided by the [wiktionary](https://en.wiktionary.org/wiki/lokke).
+([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
+
 License
 -------
 
@@ -375,3 +397,7 @@ describing the applicable terms, including, but not limited to:
   - Any file named epl.clj
 
 Copyright © 2015-2019 Rob Browning <rlb@defaultvalue.org>
+
+Local Variables:
+mode: markdown
+End:
