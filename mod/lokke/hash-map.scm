@@ -11,66 +11,64 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; This module must not depend on (lokke collection) because it
 ;; depends on (lokke base syntax) which depends on (lokke base
 ;; destructure) which depends on hash-map.
 
 (define-module (lokke hash-map)
   ;; FIXME: first and second should be together
-  use-module: ((ice-9 control) select: (call/ec))
-  use-module: ((lokke base collection)
-               select: (<coll>
-                        assoc
-                        conj
-                        cons
-                        contains?
-                        count
-                        counted?
-                        empty
-                        find
-                        first
-                        get
-                        lazy-seq
-                        second
-                        seq
-                        update))
-  use-module: ((lokke base map) select: (<map> select-keys))
-  use-module: ((lokke base map-entry) select: (key map-entry val))
-  use-module: ((lokke compare) select: (clj=))
-  use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
-  use-module: (oop goops)
-  use-module: ((pfds hamts) prefix: hamts/)
-  use-module: ((srfi srfi-1) select: (fold))
-  use-module: ((srfi srfi-69) prefix: hash/)
-  export: (<hash-map>
-           dissoc
-           hash-map
-           hash-map?
-           keys
-           kv-list
-           merge
-           reduce-kv
-           vals)
-  re-export: (assoc
-              clj=
-              conj
-              cons
-              contains?
-              count
-              counted?
-              empty
-              equal?
-              get
-              pr
-              pr-str
-              print
-              print-str
-              select-keys
-              seq
-              update)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((lokke base collection)
+                #:select (<coll>
+                          assoc
+                          conj
+                          cons
+                          contains?
+                          count
+                          counted?
+                          empty
+                          find
+                          first
+                          get
+                          lazy-seq
+                          second
+                          seq
+                          update))
+  #:use-module ((lokke base map) #:select (<map> select-keys))
+  #:use-module ((lokke base map-entry) #:select (key map-entry val))
+  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module (oop goops)
+  #:use-module ((pfds hamts) #:prefix hamts/)
+  #:use-module ((srfi srfi-1) #:select (fold))
+  #:use-module ((srfi srfi-69) #:prefix hash/)
+  #:export (<hash-map>
+            dissoc
+            hash-map
+            hash-map?
+            keys
+            kv-list
+            merge
+            reduce-kv
+            vals)
+  #:re-export (assoc
+               clj=
+               conj
+               cons
+               contains?
+               count
+               counted?
+               empty
+               equal?
+               get
+               pr
+               pr-str
+               print
+               print-str
+               select-keys
+               seq
+               update)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: move rest of common map generics to (lokke map)
 
@@ -80,9 +78,9 @@
 (define not-found (make-symbol "not-found"))
 
 (define-class <hash-map> (<map>)
-  (internals init-keyword: internals:))
+  (internals #:init-keyword #:internals))
 
-(define-syntax-rule (make-map hamt) (make <hash-map> internals: hamt))
+(define-syntax-rule (make-map hamt) (make <hash-map> #:internals hamt))
 (define-syntax-rule (map-hamt m) (slot-ref m 'internals))
 
 (define (read-only-str s) (substring/read-only s 0))

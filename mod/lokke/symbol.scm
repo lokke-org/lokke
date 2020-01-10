@@ -11,26 +11,24 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke symbol)
-  use-module: ((ice-9 receive) select: (receive))
-  use-module: ((lokke pr) select: (str))
-  use-module: ((lokke scm core) select: (->>))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (any))
-  use-module: ((srfi srfi-88) select: (string->keyword))
-  export: (ident?
-           keyword
-           name
-           namespace
-           ns-sym->mod-name
-           parse-symbol
-           parsed-sym-ns
-           parsed-sym-ref
-           require-ns-sym
-           simple-symbol?)
-  replace: (gensym symbol))
+  #:use-module ((ice-9 receive) #:select (receive))
+  #:use-module ((lokke base util) #:select (string->keyword))
+  #:use-module ((lokke pr) #:select (str))
+  #:use-module ((lokke scm core) #:select (->>))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) #:select (any))
+  #:export (ident?
+            keyword
+            name
+            namespace
+            ns-sym->mod-name
+            parse-symbol
+            parsed-sym-ns
+            parsed-sym-ref
+            require-ns-sym
+            simple-symbol?)
+  #:replace (gensym symbol))
 
 ;; FIXME: we may over-validate here, i.e. run too much through the
 ;; full parse-object gauntlet too often.
@@ -40,7 +38,7 @@
 (define (ident? x)
   (or (symbol? x) (keyword? x)))
 
-(define* (gensym optional: prefix)
+(define* (gensym #:optional prefix)
   ;; Generate something obscure that's a valid clj symbol
   (if prefix
       ((@ (guile) gensym) (string-append "__<?!?>__" (str prefix)))
@@ -168,7 +166,7 @@ clojure string) for clojure.string."
 ;; FIXME: *always* validate?
 ;; FIXME: method?
 ;; For now we just funnel everything to a <symbol> for parse-symbol
-(define* (symbol ns-or-name optional: (name #nil))
+(define* (symbol ns-or-name #:optional (name #nil))
   (if (not name)
       (let ((sym (cond
                   ((string? ns-or-name) (string->symbol ns-or-name))
@@ -213,5 +211,5 @@ clojure string) for clojure.string."
             (symbol->string ns)))
       (namespace (symbol x))))
 
-(define* (keyword name-or-ns optional: (name #nil))
+(define* (keyword name-or-ns #:optional (name #nil))
   (symbol->keyword (symbol name-or-ns name)))

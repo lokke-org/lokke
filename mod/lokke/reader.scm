@@ -11,27 +11,25 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke reader)
-  use-module: ((ice-9 pretty-print) select: (pretty-print))
-  use-module: ((ice-9 receive) select: (receive))
-  use-module: ((lokke base util) select: (pairify))
-  use-module: ((lokke collection) select: (empty? merge))
-  use-module: ((lokke hash-map) select: (assoc get hash-map hash-map?))
-  use-module: ((lokke hash-set) select: (hash-set))
-  use-module: ((lokke metadata) select: (with-meta set-meta!))
-  use-module: ((lokke ns) select: (ns-aliases))
-  use-module: ((lokke pr) select: (str))
-  use-module: ((lokke symbol)
-               select: (parse-symbol parsed-sym-ns parsed-sym-ref))
-  use-module: ((lokke transmogrify)
-               select: (literals->clj-instances preserve-meta-if-new!))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (concatenate iota fold))
-  use-module: ((srfi srfi-88) select: (keyword->string string->keyword))
-  export: (read read-for-compiler read-string read-string-for-compiler)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((ice-9 pretty-print) #:select (pretty-print))
+  #:use-module ((ice-9 receive) #:select (receive))
+  #:use-module ((lokke base util)
+                #:select (keyword->string pairify string->keyword))
+  #:use-module ((lokke collection) #:select (empty? merge))
+  #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
+  #:use-module ((lokke hash-set) #:select (hash-set))
+  #:use-module ((lokke metadata) #:select (with-meta set-meta!))
+  #:use-module ((lokke ns) #:select (ns-aliases))
+  #:use-module ((lokke pr) #:select (str))
+  #:use-module ((lokke symbol)
+                #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
+  #:use-module ((lokke transmogrify)
+                #:select (literals->clj-instances preserve-meta-if-new!))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) #:select (concatenate iota fold))
+  #:export (read read-for-compiler read-string read-string-for-compiler)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: perhaps we can improve some of the tree traversals via walk
 ;; function.
@@ -348,8 +346,8 @@
       (error (format #f "Improper reader conditional: #?~a~s"
                      (if splice? "@" "") reader-cond)))
     (let* ((cases (pairify reader-cond))
-           (code (or (assq-ref cases cljl:)
-                     (assq-ref cases default:))))
+           (code (or (assq-ref cases #:cljl)
+                     (assq-ref cases #:default))))
       (if code
           (if splice?
               (splice (car code) reader-cond)

@@ -11,20 +11,18 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke compare)
-  version: (0 0 0)
-  use-module: (oop goops)
-  use-module: ((srfi srfi-67) select: (boolean-compare
-                                       char-compare
-                                       number-compare
-                                       (string-compare . string-compare-67)
-                                       symbol-compare
-                                       vector-compare))
-  use-module: ((srfi srfi-88) select: (keyword->string))
-  export: (== clj= compare)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:version (0 0 0)
+  #:use-module ((lokke base util) #:select (keyword->string))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-67) #:select (boolean-compare
+                                         char-compare
+                                         number-compare
+                                         (string-compare . string-compare-67)
+                                         symbol-compare
+                                         vector-compare))
+  #:export (== clj= compare)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: what do we want with respect to improper lists?
 ;; FIXME: do we want equal? for vector vs pair that are more efficient?

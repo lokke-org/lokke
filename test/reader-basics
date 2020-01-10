@@ -14,28 +14,26 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix) ;; srfi-88
-
 (use-modules
- ((lokke reader) prefix: t/)
- ((lokke hash-map) select: (hash-map))
- ((lokke hash-set) select: (hash-set))
- ((lokke scm test-anything) select: (tap-test-runner))
+ ((lokke reader) #:prefix t/)
+ ((lokke hash-map) #:select (hash-map))
+ ((lokke hash-set) #:select (hash-set))
+ ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke scm vector)
-  select: (lokke-vec
-           lokke-vector
-           lokke-vector?
-           lokke-vector-length
-           lokke-vector-ref))
- ((rnrs io ports) select: (eof-object))
+  #:select (lokke-vec
+            lokke-vector
+            lokke-vector?
+            lokke-vector-length
+            lokke-vector-ref))
+ ((rnrs io ports) #:select (eof-object))
  ((srfi srfi-64)
-  select: (test-assert
-           test-begin
-           test-end
-           test-equal
-           test-group
-           test-runner-current
-           test-runner-fail-count)))
+  #:select (test-assert
+            test-begin
+            test-end
+            test-equal
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
 
 ;; FIXME: test edn and non-edn reads
 

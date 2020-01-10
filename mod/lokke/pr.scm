@@ -11,8 +11,6 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; FIXME: consider falling back to write/display (customized via
 ;; GOOPS) when the reps are the same.
 
@@ -21,17 +19,20 @@
 ;; FIXME: *out* *err*, etc.
 
 (define-module (lokke pr)
-  use-module: ((ice-9 format) select: ((format . %scm-format)))
-  use-module: ((language tree-il) prefix: tree-il/)
-  use-module: ((lokke base dynamic) select: (defdyn))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (drop take))
-  use-module: ((srfi srfi-88) select: (keyword->string))
-  replace: (format)
-  export: (*err* *in* *out*
-           module-name->ns-str
-           module-name->ns-sym
-           pr pr-str print print-str prn println str))
+  #:use-module ((ice-9 format) #:select ((format . %scm-format)))
+  #:use-module ((language tree-il) #:prefix tree-il/)
+  #:use-module ((lokke base dynamic) #:select (defdyn))
+  #:use-module ((lokke base util) #:select (keyword->string))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) #:select (drop take))
+  #:replace (format)
+  #:export (*err*
+            *in*
+            *out*
+            module-name->ns-str
+            module-name->ns-sym
+            pr pr-str print print-str prn println str)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (defdyn *in* (current-input-port))  ;; also binds /lokke/dynamic-*in*
 ;; FIXME: just using (*out*) so it'll be easy to find/fix later.

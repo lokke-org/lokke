@@ -16,8 +16,6 @@ exec ./guile "$0" "$@"
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; FIXME: not positive it wasn't an artifact of other problems, but
 ;; may have observed that --language=lokke causes everything, even
 ;; scheme modules to pass through the lokke reader.  For now we'll
@@ -29,12 +27,12 @@ exec ./guile "$0" "$@"
  ((lokke compile) :select (load-file))
  ((lokke ns) :select (default-environment))
  ((srfi srfi-69)
-  select: (make-hash-table
-           hash-table->alist
-           hash-table-ref
-           hash-table-set!
-           hash-table-update!
-           hash-table-update!/default)))
+  #:select (make-hash-table
+            hash-table->alist
+            hash-table-ref
+            hash-table-set!
+            hash-table-update!
+            hash-table-update!/default)))
 
 (define not-even-started 254)
 
@@ -75,7 +73,7 @@ exec ./guile "$0" "$@"
   (define (add-evaluator code)
     (lambda (actions)
       (cons (lambda ()
-              (let ((result (eval-string code lang: 'lokke compile?: #t)))
+              (let ((result (eval-string code #:lang 'lokke #:compile? #t)))
                 (unless (or (nil? result) (eq? *unspecified* result))
                   (println result))))
             actions)))

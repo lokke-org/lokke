@@ -11,29 +11,27 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke scm vector)
-  use-module: ((ice-9 match) select: (match))
-  use-module: ((lokke base collection) select: (<sequential>))
-  use-module: ((lokke scm foreign-object) select: (make-foreign-object-type*))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (fold))
-  use-module: ((srfi srfi-43) select: (vector-fold))
-  export: (<lokke-vector>
-           list->lokke-vector
-           lokke-vec
-           lokke-vector
-           lokke-vector->list
-           lokke-vector-append
-           lokke-vector-assoc
-           lokke-vector-conj
-           lokke-vector-equal?
-           lokke-vector-length
-           lokke-vector-ref
-           lokke-vector?
-           vector->lokke-vector)
-  re-export: (equal?))
+  #:use-module ((ice-9 match) #:select (match))
+  #:use-module ((lokke base collection) #:select (<sequential>))
+  #:use-module ((lokke scm foreign-object) #:select (make-foreign-object-type*))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) #:select (fold))
+  #:use-module ((srfi srfi-43) #:select (vector-fold))
+  #:export (<lokke-vector>
+            list->lokke-vector
+            lokke-vec
+            lokke-vector
+            lokke-vector->list
+            lokke-vector-append
+            lokke-vector-assoc
+            lokke-vector-conj
+            lokke-vector-equal?
+            lokke-vector-length
+            lokke-vector-ref
+            lokke-vector?
+            vector->lokke-vector)
+  #:re-export (equal?))
 
 ;; FIXME: implement a "cursor" on the C side that can be used for
 ;; traversals, including seq.
@@ -42,7 +40,7 @@
 ;; FIXME: make-foreign-object-type* is an ugly potentially fragile hack.
 (define <lokke-vector>
   ;; NOTE: this cannot be redefined since it's cached in the C code.
-  (make-foreign-object-type* 'lokke-vector '(data) supers: (list <sequential>)))
+  (make-foreign-object-type* 'lokke-vector '(data) #:supers (list <sequential>)))
 
 ;; Avoid undefined warnings
 (define lokke-empty-vector #f)

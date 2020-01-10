@@ -13,9 +13,9 @@
 
 (define-module (lokke scm core)
   #:use-module ((lokke base syntax) #:select (-> ->>))
+  #:use-module ((lokke base util) #:select (string->keyword))
   #:use-module ((rnrs arithmetic fixnums) #:version (6) #:select (fixnum?))
   #:use-module ((srfi srfi-1) #:select (fold reduce first second third))
-  #:use-module ((srfi srfi-88) #:select (string->keyword))
   #:re-export ((+ . +')
                (- . -')
                ->

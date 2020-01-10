@@ -11,25 +11,23 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base destructure)
   ;;((language tree-il) #:prefix tree-il/)
-  use-module: ((lokke base collection) select: (drop get nth seq?))
-  use-module: ((lokke base util) select: (pairify vec-tag?))
-  use-module: ((lokke hash-map) select: (hash-map))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1)
-               select: (break
-                        concatenate
-                        every
-                        find-tail
-                        first
-                        proper-list?
-                        second
-                        take))
-  use-module: ((srfi srfi-11) select: (let-values))
-  export: (destructure-binding-syntax))
+  #:use-module ((lokke base collection) #:select (drop get nth seq?))
+  #:use-module ((lokke base util) #:select (pairify vec-tag?))
+  #:use-module ((lokke hash-map) #:select (hash-map))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1)
+                #:select (break
+                          concatenate
+                          every
+                          find-tail
+                          first
+                          proper-list?
+                          second
+                          take))
+  #:use-module ((srfi srfi-11) #:select (let-values))
+  #:export (destructure-binding-syntax))
 
 (eval-when (expand load eval)
   (define debug? #f))
@@ -120,7 +118,7 @@
 
 (define (extract-map-defaults lst)
   ;; FIXME: support alists or other scm literal too?
-  (let-values (((head or-spec) (break (lambda (x) (eq? or: (syntax->datum x)))
+  (let-values (((head or-spec) (break (lambda (x) (eq? #:or (syntax->datum x)))
                                       lst)))
     (if (null? or-spec)
         (values head #nil)
@@ -129,7 +127,7 @@
             (error ":or has no value" lst))  ;; FIXME: include more context
           (unless (valid-or-content? (cadr or-spec))
             (error ":or is not a mapping of symbols to values:" lst))
-          (let ((another (find-tail (lambda (x) (eq? or: (syntax->datum x)))
+          (let ((another (find-tail (lambda (x) (eq? #:or (syntax->datum x)))
                                     (cddr or-spec))))
             (when another
               (error "Multiple :or specifications:" lst))

@@ -11,346 +11,344 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke core)
-  use-module: ((guile)
-               select: ((apply . %scm-apply)
-                        (begin . %scm-begin)
-                        (let . %scm-let)))
-  use-module: ((ice-9 match) select: (match-lambda*))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (drop-right iota last))
-  use-module: ((lokke base doc) select: (doc))
-  use-module: ((lokke base syntax)
-               select: (and
-                        binding
-                        (cond . clj-cond)
-                        def
-                        defn
-                        defdyn
-                        defdynloc
-                        dotimes
-                        fn
-                        if
-                        if-let
-                        if-not
-                        let
-                        letfn
-                        loop
-                        or
-                        when
-                        when-let
-                        when-not))
-  use-module: (lokke collection)
-  use-module: ((lokke compare) select: (== clj= compare))
-  use-module: ((lokke compile) select: (clj-defmacro load-file))
-  use-module: ((lokke concurrent)
-               select: (<atom>
-                        atom
-                        atom?
-                        add-watch
-                        remove-watch
-                        deref
-                        future
-                        reset!
-                        set-validator!
-                        swap!))
-  use-module: ((lokke exception)
-               select: (ExceptionInfo
-                        close
-                        ex-cause
-                        ex-data
-                        ex-info
-                        ex-message
-                        throw
-                        try
-                        with-open))
-  use-module: (lokke hash-map)
-  use-module: (lokke hash-set)
-  use-module: ((lokke ns)
-               select: (*ns*
-                        alias
-                        find-ns
-                        in-ns
-                        ns
-                        ns-aliases
-                        ns-name
-                        refer
-                        refer-clojure
-                        require
-                        use))
-  use-module: ((lokke invoke) select: (invoke))
-  use-module: ((lokke ns lokke io) select: (read-line slurp spit))
-  use-module: ((lokke pr)
-               select: (*err* *in* *out*
-                        format pr pr-str print print-str println prn str))
-  use-module: ((lokke set) select: (<set>))
-  use-module: (lokke vector)  ;; FIXME: select
-  use-module: ((lokke metadata)
-               select: (*print-meta* meta set-meta! vary-meta with-meta))
-  use-module: ((lokke scm bit)
-               select: (bit-and
-                        bit-clear
-                        bit-flip
-                        bit-not
-                        bit-or
-                        bit-set
-                        bit-test
-                        bit-xor))
-  use-module: ((lokke scm core)
-               ;; Notably not str
-               select: (+'
-                        -'
-                        -'
-                        ->
-                        ->>
-                        comment
-                        comp
-                        complement
-                        constantly
-                        dec
-                        dec'
-                        doto
-                        double?
-                        false?
-                        float?
-                        identical?
-                        inc
-                        inc'
-                        int?
-                        juxt
-                        mod
-                        neg?
-                        nat-int?
-                        neg-int?
-                        partial
-                        pos?
-                        pos-int?
-                        quot
-                        rand
-                        rand-int
-                        subs
-                        true?))
-  use-module: ((lokke symbol)
-               select: (gensym ident? keyword name namespace symbol))
-  use-module: ((system base compile)
-               select: (compile-file compiled-file-name))
-  export: (*command-line-args*  ;; this is wrong...
-           byte
-           (do . %scm-do)
-           distinct?
-           instance?
-           int
-           integer
-           long
-           not=
-           num
-           short
-           some?)
-  replace: (= apply instance? nil? do)
-  re-export: (*
-              *err*
-              *in*
-              *ns*
-              *out*
-              *print-meta*
-              +
-              -
-              ->
-              ->>
-              /
-              ==
-              <atom>
-              <coll>
-              <map>
-              <map-entry>
-              <seq>
-              <set>
-              ExceptionInfo
-              add-watch
-              alias
-              and
-              assoc
-              atom
-              atom?
-              (begin . %scm-begin)
-              (begin . do)
-              binding
-              bit-and
-              bit-clear
-              bit-flip
-              bit-not
-              bit-or
-              bit-set
-              bit-test
-              bit-xor
-              boolean?
-              bounded-count
-              char?
-              (class-of . class)
-              (clj-cond . cond)
-              (clj-defmacro . defmacro)
-              close
-              coll?
-              comment
-              comp
-              compare
-              complement
-              conj
-              cons
-              constantly
-              contains?
-              count
-              counted?
-              dec
-              dec'
-              def
-              defdyn
-              defdynloc
-              defn
-              deref
-              disj
-              dissoc
-              doall
-              doc
-              dorun
-              dotimes
-              doto
-              double?
-              drop
-              empty
-              empty?
-              eval-when
-              even?
-              every?
-              ex-cause
-              ex-data
-              ex-info
-              ex-message
-              false?
-              ffirst
-              find
-              find-ns
-              first
-              float?
-              fn
-              fnext
-              format
-              future
-              gensym
-              get
-              get-in
-              hash-map
-              hash-set
-              ident?
-              identical?
-              identity
-              if
-              if-let
-              if-not
-              in-ns
-              inc
-              inc'
-              int?
-              into
-              invoke
-              key
-              keys
-              keyword
-              keyword?
-              lazy-seq
-              let
-              letfn
-              list
-              load-file
-              loop
-              macroexpand
-              map?
-              map-entry
-              map-entry?
-              max
-              merge
-              meta
-              min
-              mod
-              name
-              namespace
-              neg?
-              nat-int?
-              neg-int?
-              next
-              nfirst
-              nnext
-              not
-              not-any?
-              not-every?
-              ns
-              ns-aliases
-              ns-name
-              nth
-              or
-              partial
-              pos?
-              pos-int?
-              pr
-              pr-str
-              print
-              print-str
-              println
-              prn
-              quot
-              quote
-              rand
-              rand-int
-              read-line
-              reduce
-              reduce-kv
-              refer
-              refer-clojure
-              remove-watch
-              repeat
-              repeatedly
-              require
-              reset!
-              rest
-              second
-              select-keys
-              seq
-              seq->scm-list
-              seq?
-              seqable?
-              sequential?
-              set-meta!
-              set-validator!
-              slurp
-              spit
-              some
-              str
-              string?
-              subs
-              swap!
-              symbol
-              symbol?
-              take
-              throw
-              true?
-              try
-              update
-              use
-              val
-              vals
-              vary-meta
-              vec
-              vector
-              vector?
-              when
-              when-let
-              when-not
-              with-open
-              with-meta
-              zero?)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((guile)
+                #:select ((apply . %scm-apply)
+                          (begin . %scm-begin)
+                          (let . %scm-let)))
+  #:use-module ((ice-9 match) #:select (match-lambda*))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) #:select (drop-right iota last))
+  #:use-module ((lokke base doc) #:select (doc))
+  #:use-module ((lokke base syntax)
+                #:select (and
+                          binding
+                          (cond . clj-cond)
+                          def
+                          defn
+                          defdyn
+                          defdynloc
+                          dotimes
+                          fn
+                          if
+                          if-let
+                          if-not
+                          let
+                          letfn
+                          loop
+                          or
+                          when
+                          when-let
+                          when-not))
+  #:use-module (lokke collection)
+  #:use-module ((lokke compare) #:select (== clj= compare))
+  #:use-module ((lokke compile) #:select (clj-defmacro load-file))
+  #:use-module ((lokke concurrent)
+                #:select (<atom>
+                          atom
+                          atom?
+                          add-watch
+                          remove-watch
+                          deref
+                          future
+                          reset!
+                          set-validator!
+                          swap!))
+  #:use-module ((lokke exception)
+                #:select (ExceptionInfo
+                          close
+                          ex-cause
+                          ex-data
+                          ex-info
+                          ex-message
+                          throw
+                          try
+                          with-open))
+  #:use-module (lokke hash-map)
+  #:use-module (lokke hash-set)
+  #:use-module ((lokke ns)
+                #:select (*ns*
+                          alias
+                          find-ns
+                          in-ns
+                          ns
+                          ns-aliases
+                          ns-name
+                          refer
+                          refer-clojure
+                          require
+                          use))
+  #:use-module ((lokke invoke) #:select (invoke))
+  #:use-module ((lokke ns lokke io) #:select (read-line slurp spit))
+  #:use-module ((lokke pr)
+                #:select (*err* *in* *out*
+                                format pr pr-str print print-str println prn str))
+  #:use-module ((lokke set) #:select (<set>))
+  #:use-module (lokke vector) ;; #:FIXME select
+  #:use-module ((lokke metadata)
+                #:select (*print-meta* meta set-meta! vary-meta with-meta))
+  #:use-module ((lokke scm bit)
+                #:select (bit-and
+                          bit-clear
+                          bit-flip
+                          bit-not
+                          bit-or
+                          bit-set
+                          bit-test
+                          bit-xor))
+  #:use-module ((lokke scm core)
+                ;; Notably not str
+                #:select (+'
+                          -'
+                          -'
+                          ->
+                          ->>
+                          comment
+                          comp
+                          complement
+                          constantly
+                          dec
+                          dec'
+                          doto
+                          double?
+                          false?
+                          float?
+                          identical?
+                          inc
+                          inc'
+                          int?
+                          juxt
+                          mod
+                          neg?
+                          nat-int?
+                          neg-int?
+                          partial
+                          pos?
+                          pos-int?
+                          quot
+                          rand
+                          rand-int
+                          subs
+                          true?))
+  #:use-module ((lokke symbol)
+                #:select (gensym ident? keyword name namespace symbol))
+  #:use-module ((system base compile)
+                #:select (compile-file compiled-file-name))
+  #:export (*command-line-args* ;; this is wrong...
+            byte
+            (do . %scm-do)
+            distinct?
+            instance?
+            int
+            integer
+            long
+            not=
+            num
+            short
+            some?)
+  #:replace (= apply instance? nil? do)
+  #:re-export (*
+               *err*
+               *in*
+               *ns*
+               *out*
+               *print-meta*
+               +
+               -
+               ->
+               ->>
+               /
+               ==
+               <atom>
+               <coll>
+               <map>
+               <map-entry>
+               <seq>
+               <set>
+               ExceptionInfo
+               add-watch
+               alias
+               and
+               assoc
+               atom
+               atom?
+               (begin . %scm-begin)
+               (begin . do)
+               binding
+               bit-and
+               bit-clear
+               bit-flip
+               bit-not
+               bit-or
+               bit-set
+               bit-test
+               bit-xor
+               boolean?
+               bounded-count
+               char?
+               (class-of . class)
+               (clj-cond . cond)
+               (clj-defmacro . defmacro)
+               close
+               coll?
+               comment
+               comp
+               compare
+               complement
+               conj
+               cons
+               constantly
+               contains?
+               count
+               counted?
+               dec
+               dec'
+               def
+               defdyn
+               defdynloc
+               defn
+               deref
+               disj
+               dissoc
+               doall
+               doc
+               dorun
+               dotimes
+               doto
+               double?
+               drop
+               empty
+               empty?
+               eval-when
+               even?
+               every?
+               ex-cause
+               ex-data
+               ex-info
+               ex-message
+               false?
+               ffirst
+               find
+               find-ns
+               first
+               float?
+               fn
+               fnext
+               format
+               future
+               gensym
+               get
+               get-in
+               hash-map
+               hash-set
+               ident?
+               identical?
+               identity
+               if
+               if-let
+               if-not
+               in-ns
+               inc
+               inc'
+               int?
+               into
+               invoke
+               key
+               keys
+               keyword
+               keyword?
+               lazy-seq
+               let
+               letfn
+               list
+               load-file
+               loop
+               macroexpand
+               map?
+               map-entry
+               map-entry?
+               max
+               merge
+               meta
+               min
+               mod
+               name
+               namespace
+               neg?
+               nat-int?
+               neg-int?
+               next
+               nfirst
+               nnext
+               not
+               not-any?
+               not-every?
+               ns
+               ns-aliases
+               ns-name
+               nth
+               or
+               partial
+               pos?
+               pos-int?
+               pr
+               pr-str
+               print
+               print-str
+               println
+               prn
+               quot
+               quote
+               rand
+               rand-int
+               read-line
+               reduce
+               reduce-kv
+               refer
+               refer-clojure
+               remove-watch
+               repeat
+               repeatedly
+               require
+               reset!
+               rest
+               second
+               select-keys
+               seq
+               seq->scm-list
+               seq?
+               seqable?
+               sequential?
+               set-meta!
+               set-validator!
+               slurp
+               spit
+               some
+               str
+               string?
+               subs
+               swap!
+               symbol
+               symbol?
+               take
+               throw
+               true?
+               try
+               update
+               use
+               val
+               vals
+               vary-meta
+               vec
+               vector
+               vector?
+               when
+               when-let
+               when-not
+               with-open
+               with-meta
+               zero?)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define = clj=)
 (define (not= . args) (not (apply = args)))

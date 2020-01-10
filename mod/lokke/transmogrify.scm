@@ -11,22 +11,20 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke transmogrify)
-  use-module: ((ice-9 pretty-print) select: (pretty-print))
-  use-module: ((lokke collection) select: (seq? seq->scm-list))
-  use-module: ((lokke hash-map) select: (hash-map hash-map? kv-list))
-  use-module: ((lokke hash-set) select: (hash-set? into set))
-  use-module: ((lokke metadata) select: (meta))
-  use-module: ((lokke scm vector)
-               select: (lokke-vec lokke-vector? lokke-vector->list))
-  use-module: (oop goops)
-  export: (clj-instances->literals
-           literals->clj-instances
-           literals->scm-instances
-           preserve-meta-if-new!)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((ice-9 pretty-print) #:select (pretty-print))
+  #:use-module ((lokke collection) #:select (seq? seq->scm-list))
+  #:use-module ((lokke hash-map) #:select (hash-map hash-map? kv-list))
+  #:use-module ((lokke hash-set) #:select (hash-set? into set))
+  #:use-module ((lokke metadata) #:select (meta))
+  #:use-module ((lokke scm vector)
+                #:select (lokke-vec lokke-vector? lokke-vector->list))
+  #:use-module (oop goops)
+  #:export (clj-instances->literals
+            literals->clj-instances
+            literals->scm-instances
+            preserve-meta-if-new!)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define debug-transmogrify? #f)
 

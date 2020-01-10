@@ -11,28 +11,26 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke set)
-  version: (0 0 0)
-  use-module: ((lokke base collection) select: (<coll>))
-  use-module: ((lokke collection) select: (contains? count every? seq))
-  use-module: (oop goops)
-  export: (<set>
-           difference
-           index
-           intersection
-           join
-           map-invert
-           project
-           rename
-           rename-keys
-           select
-           set?
-           subset?
-           superset?
-           union)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:version (0 0 0)
+  #:use-module ((lokke base collection) #:select (<coll>))
+  #:use-module ((lokke collection) #:select (contains? count every? seq))
+  #:use-module (oop goops)
+  #:export (<set>
+            difference
+            index
+            intersection
+            join
+            map-invert
+            project
+            rename
+            rename-keys
+            select
+            set?
+            subset?
+            superset?
+            union)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <set> (<coll>))
 (define-generic difference)

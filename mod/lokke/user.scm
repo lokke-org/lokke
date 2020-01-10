@@ -11,8 +11,6 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; This is the default module, i.e. the normal enviornment for the
 ;; REPL and command-line -e/-i evaluation.  We define it in Scheme so
 ;; that you can more easily switch to lokke from the guile repl.  See

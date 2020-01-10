@@ -302,11 +302,7 @@ On the Scheme side
 * The `integer` method is effectively `(truncate (num x))`, using
   Guile's `truncate`.
 * For now, `bit-test` treats negative values as twos-complement.
-* We favor SRFI-88 postfix keywords like `foo:`.  While there are no
-  immediate plans to port bits to other Schemes, all else equal, we
-  might as well use the standard when there is one.  Plus it's easier
-  to type and easier on the eyes than `#:foo`.
-* We prefer to follow the Clojure convention of explcitly `select:`ing
+* We prefer to follow the Clojure convention of explcitly `#:select`ing
   symbols for import most of the time.
 * We prefer to format module declarations along the same lines
   suggested here: https://stuartsierra.com/2016/clojure-how-to-ns.html

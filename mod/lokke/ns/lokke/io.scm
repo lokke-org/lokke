@@ -11,31 +11,29 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; Note: this currently cannot depend on core, since core pulls some
 ;; functions like read-line from here.
 
 (define-module (lokke ns lokke io)
-  version: (0 0 0)
-  use-module: ((ice-9 binary-ports) select: (get-bytevector-all put-bytevector))
-  use-module: ((ice-9 rdelim) select: ((read-line . %scm-read-line)))
-  use-module: ((ice-9 textual-ports) select: (get-string-all))
-  use-module: (oop goops)
-  use-module: ((lokke exception) select: (with-open))
-  use-module: ((lokke hash-map) select: (get hash-map))
-  use-module: ((lokke pr) select: (*in* str))
-  duplicates: (merge-generics replace warn-override-core warn last)
-  re-export: (delete-file)
-  export: (copy
-           mkstemp
-           read-line
-           reader
-           slurp
-           slurp-bytes
-           spit
-           spit-bytes
-           writer))
+  #:version (0 0 0)
+  #:use-module ((ice-9 binary-ports) #:select (get-bytevector-all put-bytevector))
+  #:use-module ((ice-9 rdelim) #:select ((read-line . %scm-read-line)))
+  #:use-module ((ice-9 textual-ports) #:select (get-string-all))
+  #:use-module (oop goops)
+  #:use-module ((lokke exception) #:select (with-open))
+  #:use-module ((lokke hash-map) #:select (get hash-map))
+  #:use-module ((lokke pr) #:select (*in* str))
+  #:duplicates (merge-generics replace warn-override-core warn last)
+  #:re-export (delete-file)
+  #:export (copy
+            mkstemp
+            read-line
+            reader
+            slurp
+            slurp-bytes
+            spit
+            spit-bytes
+            writer))
 
 ;; FIXME: support binary paths somehow, without having to set the
 ;; LC_CTYPE to ISO-8859-1.
@@ -60,9 +58,9 @@ binary mode the encoding will be ISO-8859-1.  If both :binary and
 encoding are false (the default), guesses the encoding as decribed in
 Guile's \"File Ports\" documentation."
   (let* ((opts (apply hash-map opts))
-         (enc (get opts encoding: #f))
-         (bin? (get opts binary: #f)))
-    (open-input-file path encoding: enc binary: bin?)))
+         (enc (get opts #:encoding #f))
+         (bin? (get opts #:binary #f)))
+    (open-input-file path #:encoding enc #:binary bin?)))
 
 (define-method (reader (p <input-port>)) p)
 
@@ -74,15 +72,15 @@ encoding are false (the default), guesses the encoding as decribed in
 Guile's \"File Ports\" documentation.  Opens the file in POSIX append
 mode if the :append option is set to true."
   (let* ((opts (apply hash-map opts))
-         (enc (get opts encoding: #f))
-         (bin? (get opts binary: #f))
-         (append? (get opts append: #f)))
+         (enc (get opts #:encoding #f))
+         (bin? (get opts #:binary #f))
+         (append? (get opts #:append #f)))
     (open-file path
                (if bin?
                    (if append? "ab" "wb")
                    (if append? "a" "w"))
-               encoding: enc
-               binary: bin?)))
+               #:encoding enc
+               #:binary bin?)))
 
 (define-method (writer (p <output-port>)) p)
 
@@ -111,7 +109,7 @@ exactly like slurp."
     ;; FIXME: replace with print-on once it's ready
     (put-bytevector out bytevector)))
 
-(define* (mkstemp template optional: mode)
+(define* (mkstemp template #:optional mode)
   "Behaves exactly like Guile's mkstemp! except that the template is
 not modified.  The filename will be available via
 guile.ice-9.ports/port-filename until the port is closed."

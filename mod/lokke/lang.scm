@@ -13,10 +13,8 @@
 
 ;; Support functions for clojure.core (at least).
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke lang)
-  export: (named?))
+  #:export (named?))
 
 (define (named? x)
   (or (symbol? x) (keyword? x)))

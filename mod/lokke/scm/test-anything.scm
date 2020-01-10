@@ -11,26 +11,24 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke scm test-anything)
-  use-module: ((ice-9 regex)
-               select: (regexp-substitute/global))
-  use-module: ((srfi srfi-28))
-  use-module: ((srfi srfi-64)
-                select: (test-result-ref
-                         test-result-kind
-                         test-runner-factory
-                         test-runner-null
-                         test-runner-on-test-end!
-                         test-runner-on-bad-count!
-                         test-runner-on-bad-end-name!
-                         test-runner-on-final!
-                         test-runner-test-name
-                         test-runner-fail-count
-                         test-runner-skip-count
-                         test-runner-pass-count))
-  export: (tap-test-runner))
+  #:use-module ((ice-9 regex)
+                #:select (regexp-substitute/global))
+  #:use-module ((srfi srfi-28))
+  #:use-module ((srfi srfi-64)
+                #:select (test-result-ref
+                          test-result-kind
+                          test-runner-factory
+                          test-runner-null
+                          test-runner-on-test-end!
+                          test-runner-on-bad-count!
+                          test-runner-on-bad-end-name!
+                          test-runner-on-final!
+                          test-runner-test-name
+                          test-runner-fail-count
+                          test-runner-skip-count
+                          test-runner-pass-count))
+  #:export (tap-test-runner))
 
 (define tap-test-name
   (let ((quashes (make-regexp "[\n\r\f]+")))

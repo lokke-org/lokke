@@ -14,21 +14,19 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ; srfi-88
-
 (use-modules
- ((lokke scm test-anything) select: (tap-test-runner))
- ((lokke compare) prefix: t/)
- ((lokke vector) select: (vector))
- ((srfi srfi-1) select: (iota))
+ ((lokke scm test-anything) #:select (tap-test-runner))
+ ((lokke compare) #:prefix t/)
+ ((lokke vector) #:select (vector))
+ ((srfi srfi-1) #:select (iota))
  ((srfi srfi-64)
-  select: (test-assert
-           test-begin
-           test-end
-           test-equal
-           test-group
-           test-runner-current
-           test-runner-fail-count)))
+  #:select (test-assert
+            test-begin
+            test-end
+            test-equal
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -90,11 +88,11 @@
  (test-equal -1 (t/compare 'x 'y))
  (test-equal -1 (t/compare 'x 'xy))
 
- (test-equal 1 (t/compare xy: x:))
- (test-equal 1 (t/compare y: x:))
- (test-equal 0 (t/compare x: x:))
- (test-equal -1 (t/compare x: y:))
- (test-equal -1 (t/compare x: xy:))
+ (test-equal 1 (t/compare #:xy #:x))
+ (test-equal 1 (t/compare #:y #:x))
+ (test-equal 0 (t/compare #:x #:x))
+ (test-equal -1 (t/compare #:x #:y))
+ (test-equal -1 (t/compare #:x #:xy))
 
  (test-equal 1 (t/compare #(1 2) #(1)))
  (test-equal 1 (t/compare #(2) #(1)))

@@ -11,67 +11,65 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke vector)
-  use-module: (oop goops)
-  use-module: ((lokke collection)
-               select: (<coll>
-                        <seq>
-                        assoc
-                        coll?
-                        conj
-                        contains?
-                        count
-                        counted?
-                        empty
-                        empty?
-                        find
-                        first
-                        get
-                        nth
-                        reduce
-                        rest
-                        seq
-                        update))
-  use-module: ((lokke base map-entry) select: (map-entry))
-  use-module: ((lokke compare) select: (clj= compare))
-  use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
-  use-module: ((lokke scm vector)
-                select: (<lokke-vector>
-                         list->lokke-vector
-                         lokke-vec
-                         lokke-vector
-                         lokke-vector->list
-                         lokke-vector-assoc
-                         lokke-vector-conj
-                         lokke-vector-equal?
-                         lokke-vector-length
-                         lokke-vector-ref
-                         lokke-vector?
-                         vector->lokke-vector))
-  use-module: ((srfi srfi-67) select: (vector-compare))
-  replace: (vector vector?)
-  export: (vec)
-  re-export: (assoc
-              clj=
-              compare
-              conj
-              contains?
-              count
-              counted?
-              empty
-              empty?
-              find
-              first
-              get
-              nth
-              pr
-              print
-              rest
-              seq
-              update)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module (oop goops)
+  #:use-module ((lokke collection)
+                #:select (<coll>
+                          <seq>
+                          assoc
+                          coll?
+                          conj
+                          contains?
+                          count
+                          counted?
+                          empty
+                          empty?
+                          find
+                          first
+                          get
+                          nth
+                          reduce
+                          rest
+                          seq
+                          update))
+  #:use-module ((lokke base map-entry) #:select (map-entry))
+  #:use-module ((lokke compare) #:select (clj= compare))
+  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke scm vector)
+                #:select (<lokke-vector>
+                          list->lokke-vector
+                          lokke-vec
+                          lokke-vector
+                          lokke-vector->list
+                          lokke-vector-assoc
+                          lokke-vector-conj
+                          lokke-vector-equal?
+                          lokke-vector-length
+                          lokke-vector-ref
+                          lokke-vector?
+                          vector->lokke-vector))
+  #:use-module ((srfi srfi-67) #:select (vector-compare))
+  #:replace (vector vector?)
+  #:export (vec)
+  #:re-export (assoc
+               clj=
+               compare
+               conj
+               contains?
+               count
+               counted?
+               empty
+               empty?
+               find
+               first
+               get
+               nth
+               pr
+               print
+               rest
+               seq
+               update)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define vector? lokke-vector?)
 
@@ -159,13 +157,13 @@
 ;; FIXME: perhaps a generic vec-seq for things with O(1) i ref?
 
 (define-class <lokke-vector-seq> (<seq>)
-  (v init-keyword: v:)
-  (i init-keyword: i: init-value: 0))
+  (v #:init-keyword #:v)
+  (i #:init-keyword #:i #:init-value 0))
 
 (define-method (seq (v <lokke-vector>))
   (if (zero? (lokke-vector-length v))
       #nil
-      (make <lokke-vector-seq> v: v)))
+      (make <lokke-vector-seq> #:v v)))
 
 (define-method (seq (s <lokke-vector-seq>))
   (let* ((i (slot-ref s 'i))
@@ -184,7 +182,7 @@
 (define-method (rest (x <lokke-vector-seq>))
   (let ((v (slot-ref x 'v))
         (i (slot-ref x 'i)))
-    (make <lokke-vector-seq> v: v i: (1+ i))))
+    (make <lokke-vector-seq> #:v v #:i (1+ i))))
 
 (define-method (counted? (vs <lokke-vector-seq>)) #t)
 

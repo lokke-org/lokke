@@ -11,13 +11,19 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base util)
-  use-module: ((ice-9 receive) select: (receive))
-  use-module: ((srfi srfi-1) select: (take))
-  use-module: ((system syntax) select: (syntax-local-binding))
-  export: (global-identifier? pairify require-nil vec-tag?))
+  #:use-module ((ice-9 receive) #:select (receive))
+  #:use-module ((srfi srfi-1) #:select (take))
+  #:use-module ((system syntax) #:select (syntax-local-binding))
+  #:export (global-identifier?
+            keyword->string
+            pairify
+            require-nil
+            string->keyword
+            vec-tag?))
+
+(define (string->keyword x) (symbol->keyword (string->symbol x)))
+(define (keyword->string x) (symbol->string (keyword->symbol x)))
 
 (define (global-identifier? syn)
   (receive (type _)

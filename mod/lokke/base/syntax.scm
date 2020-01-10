@@ -25,41 +25,39 @@
 ;; We might also want to improve the error handling, in part via more
 ;; liberal use of syntax pattern guards.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base syntax)
-  use-module: ((guile)
-               :select ((do . %scm-do)
-                        (if . %scm-if)
-                        (let . %scm-let)))
-  use-module: ((srfi srfi-1)
-               :select (append-map
-                        concatenate
-                        dotted-list?
-                        drop-right
-                        last
-                        take-right))
-  use-module: ((lokke base destructure) select: (destructure-binding-syntax))
-  use-module: ((lokke base doc) select: (clear-def-doc! maybe-set-def-doc!))
-  use-module: ((lokke base dynamic) select: (binding defdyn defdynloc))
-  use-module: ((lokke base util) select: (global-identifier? pairify vec-tag?))
-  use-module: (oop goops)
-  re-export: (binding defdyn defdynloc)
-  export: (->
-           ->>
-           cond
-           def
-           defn
-           dotimes
-           fn
-           if-let
-           if-not
-           letfn
-           loop
-           when-let
-           when-not)
+  #:use-module ((guile)
+                #:select ((do . %scm-do)
+                          (if . %scm-if)
+                          (let . %scm-let)))
+  #:use-module ((srfi srfi-1)
+                #:select (append-map
+                          concatenate
+                          dotted-list?
+                          drop-right
+                          last
+                          take-right))
+  #:use-module ((lokke base destructure) #:select (destructure-binding-syntax))
+  #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
+  #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
+  #:use-module ((lokke base util) #:select (global-identifier? pairify vec-tag?))
+  #:use-module (oop goops)
+  #:re-export (binding defdyn defdynloc)
+  #:export (->
+            ->>
+            cond
+            def
+            defn
+            dotimes
+            fn
+            if-let
+            if-not
+            letfn
+            loop
+            when-let
+            when-not)
   ;; We leave let as let within this module.
-  replace: (and or cond if (let** . let) when))
+  #:replace (and or cond if (let** . let) when))
 
 (eval-when (expand load eval)
   (define debug-fn? #f)

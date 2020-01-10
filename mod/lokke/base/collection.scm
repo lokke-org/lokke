@@ -21,55 +21,53 @@
 ;; when, when-let, because they depend on let and let depends on this
 ;; module for destructuring.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base collection)
-  version: (0 0 0)
-  use-module: ((guile) :select ((cons . %scm-cons)))
-  use-module: ((lokke base util) select: (require-nil))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) select: (proper-list?))
-  use-module: ((srfi srfi-43) select: (vector-append))
-  export: (<coll>
-           <lazy-seq>
-           <pair-seq>
-           <seq>
-           <sequential>
-           <vector-seq>
-           bounded-count
-           coll?
-           conj
-           contains?
-           count
-           counted?
-           drop
-           empty
-           every?
-           ffirst
-           find
-           first
-           fnext
-           get
-           get-in
-           lazy-seq
-           make-pair-seq
-           next
-           nfirst
-           nnext
-           not-empty
-           nth
-           rest
-           rseq
-           second
-           seq
-           seq?
-           seqable?
-           sequential?
-           take
-           update)
-  re-export: (cons)
-  replace: (assoc first)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:version (0 0 0)
+  #:use-module ((guile) :select ((cons . %scm-cons)))
+  #:use-module ((lokke base util) #:select (require-nil))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) #:select (proper-list?))
+  #:use-module ((srfi srfi-43) #:select (vector-append))
+  #:export (<coll>
+            <lazy-seq>
+            <pair-seq>
+            <seq>
+            <sequential>
+            <vector-seq>
+            bounded-count
+            coll?
+            conj
+            contains?
+            count
+            counted?
+            drop
+            empty
+            every?
+            ffirst
+            find
+            first
+            fnext
+            get
+            get-in
+            lazy-seq
+            make-pair-seq
+            next
+            nfirst
+            nnext
+            not-empty
+            nth
+            rest
+            rseq
+            second
+            seq
+            seq?
+            seqable?
+            sequential?
+            take
+            update)
+  #:re-export (cons)
+  #:replace (assoc first)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: should these implmentations of rest actually be next?
 
@@ -203,12 +201,12 @@
 ;; This is also the persistent list implementation.  All pair-seq
 ;; lists should terminate with '()
 (define-class <pair-seq> (<seq>)
-  (rfirst getter: pair-seq-first init-keyword: first:)
-  (rrrest getter: pair-seq-rest init-keyword: rest:))
+  (rfirst #:getter pair-seq-first #:init-keyword #:first)
+  (rrrest #:getter pair-seq-rest #:init-keyword #:rest))
 
 (eval-when (eval load)
   (define (make-pair-seq first rest)
-    (make <pair-seq> first: first rest: rest)))
+    (make <pair-seq> #:first first #:rest rest)))
 
 (eval-when (expand compile)
   (define make-pair-seq %scm-cons))
@@ -297,8 +295,8 @@
 ;;; <vector-seq>
 
 (define-class <vector-seq> (<seq>)
-  (v init-keyword: v:)
-  (i init-keyword: i: init-value: 0))
+  (v #:init-keyword #:v)
+  (i #:init-keyword #:i #:init-value 0))
 
 (define-method (count (x <vector-seq>))
   (- (vector-length (slot-ref x 'v))
@@ -318,7 +316,7 @@
         (i (slot-ref x 'i)))
     (if (= i (vector-length v))
         '()
-        (make <vector-seq> v: v i: (1+ i)))))
+        (make <vector-seq> #:v v #:i (1+ i)))))
 
 (define-method (seq (s <vector-seq>))
   (let* ((i (slot-ref s 'i))
@@ -330,13 +328,13 @@
 (define-method (seq (v <vector>))
   (if (zero? (vector-length v))
       #nil
-      (make <vector-seq> v: v)))
+      (make <vector-seq> #:v v)))
 
 ;;; <vector-rseq>
 
 (define-class <vector-rseq> (<seq>)
-  (v init-keyword: v:)
-  (i init-keyword: i:))
+  (v #:init-keyword #:v)
+  (i #:init-keyword #:i))
 
 (define-method (count (x <vector-rseq>)) (1+ (slot-ref x 'i)))
 (define-method (counted? (x <vector-rseq>)) #t)
@@ -351,25 +349,25 @@
   (let ((i (slot-ref x 'i)))
     (if (negative? i)
         '()
-        (make <vector-seq> v: (slot-ref x 'v) i: (1- i)))))
+        (make <vector-seq> #:v (slot-ref x 'v) #:i (1- i)))))
 
 (define-method (seq (s <vector-rseq>)) (if (negative? (slot-ref s 'i)) #nil s))
 
 (define-method (rseq (v <vector>))
   (if (zero? (vector-length v))
       #nil
-      (make <vector-rseq> v: v i: (vector-length v))))
+      (make <vector-rseq> #:v v #:i (vector-length v))))
 
 
 ;;; <lazy-seq>
 
 (define-class <lazy-seq> (<seq>)
-  (s init-keyword: s:))
+  (s #:init-keyword #:s))
 
 (define-syntax lazy-seq
   (syntax-rules ()
     ((lazy-seq) '())
-    ((lazy-seq body ...) (make <lazy-seq> s: (delay (begin body ...))))))
+    ((lazy-seq body ...) (make <lazy-seq> #:s (delay (begin body ...))))))
 
 (define-method (first (ls <lazy-seq>)) (first (seq ls)))
 
@@ -399,7 +397,7 @@
              s
              (drop (1- n) (next s)))))))
 
-(define* (get-in associative keys optional: (not-found #nil))
+(define* (get-in associative keys #:optional (not-found #nil))
   (let loop ((src associative) (keys keys))
     (let ((keys (seq keys)))
       (if (not keys)

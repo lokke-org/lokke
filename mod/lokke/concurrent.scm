@@ -15,33 +15,31 @@
 ;; it depends on (lokke base syntax) which depends on (lokke base
 ;; destructure) which depends on hash-map which depends on this.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke concurrent)
-  use-module: ((ice-9 atomic) select: (make-atomic-box))
-  use-module: ((ice-9 futures) select: ((future . %scm-future) touch))
-  use-module: (oop goops)
-  use-module: ((lokke scm atom)
-               select: (atom?
-                        atom
-                        atom-add-watch
-                        atom-compare-and-set!
-                        atom-deref
-                        atom-remove-watch
-                        atom-reset!
-                        atom-set-validator!
-                        atom-swap!))
-  export: (<atom>
-           atom?
-           add-watch
-           remove-watch
-           deref
-           future
-           reset!
-           set-validator!
-           swap!)
-  re-export: (atom)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((ice-9 atomic) #:select (make-atomic-box))
+  #:use-module ((ice-9 futures) #:select ((future . %scm-future) touch))
+  #:use-module (oop goops)
+  #:use-module ((lokke scm atom)
+                #:select (atom?
+                          atom
+                          atom-add-watch
+                          atom-compare-and-set!
+                          atom-deref
+                          atom-remove-watch
+                          atom-reset!
+                          atom-set-validator!
+                          atom-swap!))
+  #:export (<atom>
+            atom?
+            add-watch
+            remove-watch
+            deref
+            future
+            reset!
+            set-validator!
+            swap!)
+  #:re-export (atom)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define <atom> (class-of (make-atomic-box #t)))
 (define (atom? x) (is-a? x <atom>))
@@ -63,10 +61,10 @@
 ;; compilation somehow right now (guile 2.2.6).
 
 (define-class <future> ()
-  (scm-future init-keyword: scm-future:))
+  (scm-future #:init-keyword #:scm-future))
 
 (define-method (deref (x <future>))
   (touch (slot-ref x 'scm-future)))
 
 (define-syntax-rule (future exp ...)
-  (make <future> scm-future: (%scm-future (begin exp ...))))
+  (make <future> #:scm-future (%scm-future (begin exp ...))))

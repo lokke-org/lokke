@@ -11,27 +11,26 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke ns clojure string)
-  use-module: ((ice-9 i18n)
-                select: (string-locale-downcase string-locale-upcase))
-  use-module: ((lokke base syntax) select: (if-let))
-  use-module: ((lokke collection) select: (first next seq))
-  use-module: ((lokke pr) select: (str))
-  use-module: ((srfi srfi-1) select: (every proper-list?))
-  export: (blank?
-           capitalize
-           ends-with?
-           includes?
-           join
-           lower-case
-           starts-with?
-           trim
-           trim-newline
-           triml
-           trimr
-           upper-case))
+  #:use-module ((ice-9 i18n)
+                #:select (string-locale-downcase string-locale-upcase))
+  #:use-module ((lokke base syntax) #:select (if-let))
+  #:use-module ((lokke collection) #:select (first next seq))
+  #:use-module ((lokke pr) #:select (str))
+  #:use-module ((srfi srfi-1) #:select (every proper-list?))
+  #:export (blank?
+            capitalize
+            ends-with?
+            includes?
+            join
+            lower-case
+            starts-with?
+            trim
+            trim-newline
+            triml
+            trimr
+            upper-case)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 
 (define (read-only s) (substring/read-only s 0))

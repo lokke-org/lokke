@@ -14,13 +14,11 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ; srfi-88
-
 (use-modules
- ((lokke scm test-anything) select: (tap-test-runner))
- ((lokke ns) prefix: t/)
+ ((lokke scm test-anything) #:select (tap-test-runner))
+ ((lokke ns) #:prefix t/)
  ((srfi srfi-64)
-  select: (test-assert
+  #:select (test-assert
             test-begin
             test-end
             test-equal

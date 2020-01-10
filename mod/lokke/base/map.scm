@@ -11,14 +11,12 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base map)
-  use-module: ((lokke base collection) select: (<coll> count every? get seq))
-  use-module: ((lokke base map-entry) select: (key val))
-  use-module: (oop goops)
-  export: (<map> map? select-keys)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((lokke base collection) #:select (<coll> count every? get seq))
+  #:use-module ((lokke base map-entry) #:select (key val))
+  #:use-module (oop goops)
+  #:export (<map> map? select-keys)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; Define the <map> basics here.  They can't go in anything that
 ;; depends on (lokke collection) because it depends on (lokke base

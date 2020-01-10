@@ -14,21 +14,19 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ; srfi-88
-
 (define-module (test lokke-exception)
-  use-module: ((lokke scm test-anything) select: (tap-test-runner))
-  use-module: ((lokke exception) select: (close with-open))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-64)
-               select: (test-assert
-                        test-begin
-                        test-end
-                        test-equal
-                        test-group
-                        test-runner-current
-                        test-runner-fail-count))
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((lokke scm test-anything) #:select (tap-test-runner))
+  #:use-module ((lokke exception) #:select (close with-open))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-64)
+                #:select (test-assert
+                          test-begin
+                          test-end
+                          test-equal
+                          test-group
+                          test-runner-current
+                          test-runner-fail-count))
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -36,7 +34,7 @@
 (test-begin (basename (car (program-arguments))))
 
 (define-class <close-observer> ()
-  (closes init-value: 0))
+  (closes #:init-value 0))
 
 (define-method (close (x <close-observer>))
   (slot-set! x 'closes (1+ (slot-ref x 'closes))))

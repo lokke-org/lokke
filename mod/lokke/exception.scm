@@ -11,43 +11,41 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; For now, we do things in a bit more primitive way than we otherwise
 ;; might, in order to limit the dependencies of these potentially
 ;; lower level error handling mechanisms.  We can always lighten up
 ;; later if that turns out to be fine.
 
 (define-module (lokke exception)
-  version: (0 0 0)
-  use-module: ((guile) hide: (catch))  ;; to work as literal, can't be defined
-  use-module: ((guile) select: ((catch . %scm-catch) (throw . %scm-throw)))
-  use-module: ((lokke base map) select: (map?))
-  use-module: ((lokke base util) select: (vec-tag?))
-  use-module: ((lokke base syntax) select: (let))
-  use-module: ((lokke scm vector)
-               select: (lokke-vector?
-                        lokke-vector
-                        lokke-vector-conj
-                        lokke-vector-length
-                        lokke-vector-ref))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1) :select (find first second))
-  replace: (close throw)
-  export: (ExceptionInfo
-           ex-cause
-           ex-data
-           ex-info
-           ex-info?
-           ex-message
-           ex-suppressed
-           ex-tag
-           throw
-           try
-           with-final
-           with-open)
-  duplicates: (merge-generics replace warn-override-core warn last)
-  pure:)
+  #:version (0 0 0)
+  #:use-module ((guile) #:hide (catch)) ;; to work as literal, can't be defined
+  #:use-module ((guile) #:select ((catch . %scm-catch) (throw . %scm-throw)))
+  #:use-module ((lokke base map) #:select (map?))
+  #:use-module ((lokke base util) #:select (vec-tag?))
+  #:use-module ((lokke base syntax) #:select (let))
+  #:use-module ((lokke scm vector)
+                #:select (lokke-vector?
+                          lokke-vector
+                          lokke-vector-conj
+                          lokke-vector-length
+                          lokke-vector-ref))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1) :select (find first second))
+  #:replace (close throw)
+  #:export (ExceptionInfo
+            ex-cause
+            ex-data
+            ex-info
+            ex-info?
+            ex-message
+            ex-suppressed
+            ex-tag
+            throw
+            try
+            with-final
+            with-open)
+  #:duplicates (merge-generics replace warn-override-core warn last)
+  #:pure)
 
 ;; Currently we rely on Guile's more efficient "single direction",
 ;; catch/throw mechanism.  i.e. you can only throw "up" the stack.
@@ -77,7 +75,7 @@
 (define (maybe-exception? x)
   (and (pair? x) (symbol? (first x))))
 
-(define* (ex-info msg map key: (cause #nil) (suppressed #nil))
+(define* (ex-info msg map #:key (cause #nil) (suppressed #nil))
   (validate-arg 'ex-info string? "string" msg)
   (validate-arg 'ex-info map? "map" map)
   (validate-arg 'ex-info (lambda (x) (or (not x) (maybe-exception? x)))
@@ -120,9 +118,9 @@
                 "exception" suppressed-ex)
   (ex-info (ex-message ex)
            (ex-data ex)
-           cause: (ex-cause ex)
-           suppressed: (lokke-vector-conj (or (list-ref ex 4) (lokke-vector))
-                                          suppressed-ex)))
+           #:cause (ex-cause ex)
+           #:suppressed (lokke-vector-conj (or (list-ref ex 4) (lokke-vector))
+                                           suppressed-ex)))
 
 (define (throw ex)
   (validate-arg 'throw (lambda (x) (maybe-exception? ex)) "exception" ex)
@@ -240,12 +238,12 @@
     (syntax-case x ()
       ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
        #'(with-final (binding ...) body ...))
-      ((_ (resource value always: action binding ...) body ...)
+      ((_ (resource value #:always action binding ...) body ...)
        #'(let (resource value)
            (try
             (with-final (binding ...) body ...)
             (finally (action resource)))))
-      ((_ (resource value error: action binding ...) body ...)
+      ((_ (resource value #:error action binding ...) body ...)
        #'(let (resource value)
            (%scm-catch
             #t

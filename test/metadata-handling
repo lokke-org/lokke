@@ -14,24 +14,22 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix) ;; srfi-88
-
 (use-modules
- ((lokke collection) select: (merge))
- ((lokke hash-map) select: (conj hash-map))
- ((lokke hash-set) select: (hash-set))
- ((lokke metadata) prefix: t/)
- ((lokke reader) prefix: lokke/)
- ((lokke scm test-anything) select: (tap-test-runner))
- ((lokke scm vector) :select (lokke-vector))
+ ((lokke collection) #:select (merge))
+ ((lokke hash-map) #:select (conj hash-map))
+ ((lokke hash-set) #:select (hash-set))
+ ((lokke metadata) #:prefix t/)
+ ((lokke reader) #:prefix lokke/)
+ ((lokke scm test-anything) #:select (tap-test-runner))
+ ((lokke scm vector) #:select (lokke-vector))
  ((srfi srfi-64)
-  select: (test-assert
-           test-begin
-           test-end
-           test-equal
-           test-group
-           test-runner-current
-           test-runner-fail-count)))
+  #:select (test-assert
+            test-begin
+            test-end
+            test-equal
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))

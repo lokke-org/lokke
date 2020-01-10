@@ -11,52 +11,50 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke compile)
-  use-module: ((ice-9 match) select: (match))
-  use-module: ((ice-9 pretty-print) select: (pretty-print))
-  use-module: ((ice-9 receive) select: (receive))
-  use-module: ((ice-9 sandbox)
-               select: (all-pure-bindings
-                        all-pure-and-impure-bindings
-                        make-sandbox-module))
-  use-module: ((ice-9 vlist) select: (alist->vhash vhash-assq))
-  use-module: ((language scheme compile-tree-il) prefix: scheme/)
-  use-module: ((language tree-il) prefix: tree-il/)
-  use-module: ((lokke hash-map) select: (get))
-  use-module: ((lokke ns) select: (ns-aliases))
-  use-module: ((lokke scm atom) select: (atom-deref))
-  use-module: ((lokke symbol)
-               select: (ns-sym->mod-name
-                        parse-symbol
-                        parsed-sym-ns
-                        parsed-sym-ref
-                        simple-symbol?))
-  use-module: ((lokke transmogrify)
-               select: (clj-instances->literals
-                        literals->clj-instances
-                        literals->scm-instances
-                        preserve-meta-if-new!))
-  use-module: (oop goops)
-  use-module: ((srfi srfi-1)
-               select: (any
-                        every
-                        find
-                        first
-                        fold
-                        last
-                        second))
-  use-module: ((srfi srfi-43) select: (vector-map))
-  use-module: ((system base compile)
-               select: ((compile . base-compile)
-                        compile-file
-                        compiled-file-name))
-  export: (clj-defmacro
-           load-file
-           make-lokke-language
-           tree->tree-il)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((ice-9 match) #:select (match))
+  #:use-module ((ice-9 pretty-print) #:select (pretty-print))
+  #:use-module ((ice-9 receive) #:select (receive))
+  #:use-module ((ice-9 sandbox)
+                #:select (all-pure-bindings
+                          all-pure-and-impure-bindings
+                          make-sandbox-module))
+  #:use-module ((ice-9 vlist) #:select (alist->vhash vhash-assq))
+  #:use-module ((language scheme compile-tree-il) #:prefix scheme/)
+  #:use-module ((language tree-il) #:prefix tree-il/)
+  #:use-module ((lokke hash-map) #:select (get))
+  #:use-module ((lokke ns) #:select (ns-aliases))
+  #:use-module ((lokke scm atom) #:select (atom-deref))
+  #:use-module ((lokke symbol)
+                #:select (ns-sym->mod-name
+                          parse-symbol
+                          parsed-sym-ns
+                          parsed-sym-ref
+                          simple-symbol?))
+  #:use-module ((lokke transmogrify)
+                #:select (clj-instances->literals
+                          literals->clj-instances
+                          literals->scm-instances
+                          preserve-meta-if-new!))
+  #:use-module (oop goops)
+  #:use-module ((srfi srfi-1)
+                #:select (any
+                          every
+                          find
+                          first
+                          fold
+                          last
+                          second))
+  #:use-module ((srfi srfi-43) #:select (vector-map))
+  #:use-module ((system base compile)
+                #:select ((compile . base-compile)
+                          compile-file
+                          compiled-file-name))
+  #:export (clj-defmacro
+            load-file
+            make-lokke-language
+            tree->tree-il)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; Right now the tree walkers in this code tend to be prescriptive,
 ;; i.e. they reject any type they don't recognize.  That's been

@@ -11,120 +11,118 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke collection)
-  version: (0 0 0)
-  use-module: ((ice-9 format) select: (format))
-  use-module: ((guile) :select ((cons . %scm-cons)))
-  use-module: (oop goops)
-  use-module: ((ice-9 match) select: (match-lambda match-lambda*))
-  use-module: ((srfi srfi-1) select: (circular-list? proper-list?))
-  use-module: ((srfi srfi-43) select: (vector-unfold))
-  use-module: ((lokke base syntax) select: (if-let when when-let when-not))
-  use-module: ((lokke base util) select: (require-nil))
-  use-module: ((lokke base collection)
-               select: (<coll>
-                        <lazy-seq>
-                        <pair-seq>
-                        <seq>
-                        <sequential>
-                        <vector-seq>
-                        assoc
-                        bounded-count
-                        coll?
-                        conj
-                        cons
-                        contains?
-                        count
-                        counted?
-                        drop
-                        empty
-                        every?
-                        ffirst
-                        find
-                        first
-                        fnext
-                        get
-                        get-in
-                        lazy-seq
-                        next
-                        nfirst
-                        nnext
-                        nth
-                        rest
-                        second
-                        seq
-                        seq?
-                        seqable?
-                        sequential?
-                        take
-                        update))
-  use-module: ((lokke base map) select: (<map> map? select-keys))
-  use-module: ((lokke base map-entry)
-               select: (<map-entry> key map-entry map-entry? val))
-  use-module: ((lokke scm vector) select: (<lokke-vector>))
-  use-module: ((lokke compare) select: (clj=))
-  use-module: ((lokke invoke) select: (invoke))
-  use-module: ((lokke pr) select: (*out*  pr print))
-  export: (doall
-           dorun
-           empty?
-           into
-           not-any?
-           not-every?
-           reduce
-           repeat
-           repeatedly
-           seq->scm-list
-           some)
-  replace: (merge)
-  re-export: (<coll>
-              <map>
-              <map-entry>
-              <seq>
-              <sequential>
-              assoc
-              bounded-count
-              clj=
-              coll?
-              conj
-              cons
-              contains?
-              count
-              counted?
-              drop
-              empty
-              every?
-              ffirst
-              find
-              first
-              fnext
-              get
-              get-in
-              invoke
-              key
-              lazy-seq
-              map?
-              map-entry
-              map-entry?
-              next
-              nfirst
-              nnext
-              nth
-              pr
-              print
-              rest
-              second
-              select-keys
-              seq
-              seq?
-              seqable?
-              sequential?
-              take
-              update
-              val)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:version (0 0 0)
+  #:use-module ((ice-9 format) #:select (format))
+  #:use-module ((guile) :select ((cons . %scm-cons)))
+  #:use-module (oop goops)
+  #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
+  #:use-module ((srfi srfi-1) #:select (circular-list? proper-list?))
+  #:use-module ((srfi srfi-43) #:select (vector-unfold))
+  #:use-module ((lokke base syntax) #:select (if-let when when-let when-not))
+  #:use-module ((lokke base util) #:select (require-nil))
+  #:use-module ((lokke base collection)
+                #:select (<coll>
+                          <lazy-seq>
+                          <pair-seq>
+                          <seq>
+                          <sequential>
+                          <vector-seq>
+                          assoc
+                          bounded-count
+                          coll?
+                          conj
+                          cons
+                          contains?
+                          count
+                          counted?
+                          drop
+                          empty
+                          every?
+                          ffirst
+                          find
+                          first
+                          fnext
+                          get
+                          get-in
+                          lazy-seq
+                          next
+                          nfirst
+                          nnext
+                          nth
+                          rest
+                          second
+                          seq
+                          seq?
+                          seqable?
+                          sequential?
+                          take
+                          update))
+  #:use-module ((lokke base map) #:select (<map> map? select-keys))
+  #:use-module ((lokke base map-entry)
+                #:select (<map-entry> key map-entry map-entry? val))
+  #:use-module ((lokke scm vector) #:select (<lokke-vector>))
+  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke invoke) #:select (invoke))
+  #:use-module ((lokke pr) #:select (*out*  pr print))
+  #:export (doall
+            dorun
+            empty?
+            into
+            not-any?
+            not-every?
+            reduce
+            repeat
+            repeatedly
+            seq->scm-list
+            some)
+  #:replace (merge)
+  #:re-export (<coll>
+               <map>
+               <map-entry>
+               <seq>
+               <sequential>
+               assoc
+               bounded-count
+               clj=
+               coll?
+               conj
+               cons
+               contains?
+               count
+               counted?
+               drop
+               empty
+               every?
+               ffirst
+               find
+               first
+               fnext
+               get
+               get-in
+               invoke
+               key
+               lazy-seq
+               map?
+               map-entry
+               map-entry?
+               next
+               nfirst
+               nnext
+               nth
+               pr
+               print
+               rest
+               second
+               select-keys
+               seq
+               seq?
+               seqable?
+               sequential?
+               take
+               update
+               val)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-method (invoke (key <keyword>) map) (get map key))
 (define-method (invoke (key <keyword>) map not-found) (get map key not-found))

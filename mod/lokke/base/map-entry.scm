@@ -15,23 +15,21 @@
 ;; depends on (lokke base syntax) which depends on (lokke base
 ;; destructure) which depends on hash-map which depends on this.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base map-entry)
-  use-module: (oop goops)
-  use-module: ((lokke base collection)
-               select: (<sequential> cons first nth rest second seq))
-  use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
-  export: (<map-entry> key map-entry map-entry? val)
-  re-export: (first nth second)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module (oop goops)
+  #:use-module ((lokke base collection)
+                #:select (<sequential> cons first nth rest second seq))
+  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:export (<map-entry> key map-entry map-entry? val)
+  #:re-export (first nth second)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <map-entry> (<sequential>)
-  (k init-keyword: k:)
-  (v init-keyword: v:))
+  (k #:init-keyword #:k)
+  (v #:init-keyword #:v))
 
 (define (map-entry k v)
-  (make <map-entry> k: k v: v))
+  (make <map-entry> #:k k #:v v))
 
 (define-method (first (entry <map-entry>)) (slot-ref entry 'k))
 (define-method (second (entry <map-entry>)) (slot-ref entry 'v))

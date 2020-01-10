@@ -11,15 +11,13 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke repl)
-  use-module: ((lokke ns) select: (default-environment))
-  use-module: ((lokke pr) select: (prn))
-  use-module: ((system repl common) select: (make-repl repl-option-set!))
-  use-module: ((system repl repl) select: (run-repl))
-  export: (repl)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((lokke ns) #:select (default-environment))
+  #:use-module ((lokke pr) #:select (prn))
+  #:use-module ((system repl common) #:select (make-repl repl-option-set!))
+  #:use-module ((system repl repl) #:select (run-repl))
+  #:export (repl)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; If upstream is willing to add an initial-module argument to repl,
 ;; or equivalent, and some way to set the printer, then we won't need

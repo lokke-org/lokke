@@ -14,12 +14,10 @@
 ;; This is in a separate file for now so that pr can depend on it
 ;; without needing a full dependency on (lokke base syntax).
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base dynamic)
-  use-module: ((ice-9 match) select: (match-lambda))
-  use-module: ((lokke base util) select: (pairify vec-tag?))
-  export: (binding defdyn defdynloc))
+  #:use-module ((ice-9 match) #:select (match-lambda))
+  #:use-module ((lokke base util) #:select (pairify vec-tag?))
+  #:export (binding defdyn defdynloc))
 
 
 (define (secret-dynfluid-name context syn)

@@ -11,26 +11,24 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke scm atom)
-  use-module: ((ice-9 atomic)
-               select: (atomic-box?
-                        atomic-box-compare-and-swap!
-                        atomic-box-ref
-                        make-atomic-box))
-  use-module: ((srfi srfi-11) select: (let-values))
-  use-module: ((lokke hash-map)
-               select: (assoc contains? dissoc hash-map reduce-kv))
-  export: (atom?
-           atom
-           atom-add-watch
-           atom-compare-and-set!
-           atom-deref
-           atom-remove-watch
-           atom-reset!
-           atom-set-validator!
-           atom-swap!))
+  #:use-module ((ice-9 atomic)
+                #:select (atomic-box?
+                          atomic-box-compare-and-swap!
+                          atomic-box-ref
+                          make-atomic-box))
+  #:use-module ((srfi srfi-11) #:select (let-values))
+  #:use-module ((lokke hash-map)
+                #:select (assoc contains? dissoc hash-map reduce-kv))
+  #:export (atom?
+            atom
+            atom-add-watch
+            atom-compare-and-set!
+            atom-deref
+            atom-remove-watch
+            atom-reset!
+            atom-set-validator!
+            atom-swap!))
 
 ;; Tried to keep this lightweight, i.e. just an atomic-box, but if we
 ;; decide we want to have metadata here too (intead of handling it in
@@ -61,7 +59,7 @@
                 (cons validator watchers)
                 validator)))
 
-(define* (atom value optional: validator)
+(define* (atom value #:optional validator)
   (make-atomic-box (make-state value validator #f)))
 
 (define (atom-deref atom) (state-val (atomic-box-ref atom)))

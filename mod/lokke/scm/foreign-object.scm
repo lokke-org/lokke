@@ -24,11 +24,9 @@
 
 ;; FIXME: badger upstream?  ^
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke scm foreign-object)
-  use-module: (oop goops)
-  export: (make-foreign-object-type*))
+  #:use-module (oop goops)
+  #:export (make-foreign-object-type*))
 
 (define <foreign-class>
   (@@ (system foreign-object) <foreign-class>))

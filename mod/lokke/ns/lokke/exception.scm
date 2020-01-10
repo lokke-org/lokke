@@ -11,15 +11,13 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 ;; At the moment, this module is just a convenience so that these
 ;; functions will be available via lokke.exception.
 
 (define-module (lokke ns lokke exception)
-  version: (0 0 0)
-  use-module: ((lokke exception)
-               select: (ex-info? ex-suppressed ex-tag with-final))
-  re-export: (ex-info? ex-suppressed ex-tag with-final)
-  duplicates: (merge-generics replace warn-override-core warn last)
-  pure:)
+  #:version (0 0 0)
+  #:use-module ((lokke exception)
+                #:select (ex-info? ex-suppressed ex-tag with-final))
+  #:re-export (ex-info? ex-suppressed ex-tag with-final)
+  #:duplicates (merge-generics replace warn-override-core warn last)
+  #:pure)

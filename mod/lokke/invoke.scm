@@ -11,12 +11,10 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke invoke)
-  use-module: (oop goops)
-  export: (invoke)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module (oop goops)
+  #:export (invoke)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-method (invoke f . args)
   (error (format #f "No invoke method for ~s:" (class-of f))

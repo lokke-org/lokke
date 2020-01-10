@@ -13,40 +13,39 @@
 
 ;;; Namespace underpinnings
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke ns)
-  use-module: ((lokke hash-map) select: (assoc get hash-map pr-str))
-  use-module: ((lokke pr) select: (module-name->ns-sym))
-  use-module: ((lokke scm atom) select: (atom atom-deref atom-swap!))
-  use-module: ((lokke symbol)
-               select: (ns-sym->mod-name
-                        parsed-sym-ns
-                        parsed-sym-ref
-                        require-ns-sym))
-  use-module: ((lokke scm vector)
-               select: (lokke-vector? lokke-vector->list))
-  use-module: ((lokke symbol) select: (simple-symbol?))
-  use-module: ((lokke transmogrify) select: (literals->scm-instances))
-  use-module: ((srfi srfi-1) select: (every find proper-list? take drop))
-  use-module: ((srfi srfi-9 gnu) select: (define-immutable-record-type))
-  use-module: ((system base compile) select: (compile-file compiled-file-name))
-  export: (*ns*
-           alias
-           create-ns
-           default-environment
-           find-ns
-           fix-let
-           in-ns
-           ns
-           ns-aliases
-           ns-name
-           re-export-all!
-           refer
-           refer-clojure
-           require
-           resolve-sym-aliases
-           use))
+  #:use-module ((lokke hash-map) #:select (assoc get hash-map pr-str))
+  #:use-module ((lokke pr) #:select (module-name->ns-sym))
+  #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
+  #:use-module ((lokke symbol)
+                #:select (ns-sym->mod-name
+                          parsed-sym-ns
+                          parsed-sym-ref
+                          require-ns-sym))
+  #:use-module ((lokke scm vector)
+                #:select (lokke-vector? lokke-vector->list))
+  #:use-module ((lokke symbol) #:select (simple-symbol?))
+  #:use-module ((lokke transmogrify) #:select (literals->scm-instances))
+  #:use-module ((srfi srfi-1) #:select (every find proper-list? take drop))
+  #:use-module ((srfi srfi-9 gnu) #:select (define-immutable-record-type))
+  #:use-module ((system base compile) #:select (compile-file compiled-file-name))
+  #:export (*ns*
+            alias
+            create-ns
+            default-environment
+            find-ns
+            fix-let
+            in-ns
+            ns
+            ns-aliases
+            ns-name
+            re-export-all!
+            refer
+            refer-clojure
+            require
+            resolve-sym-aliases
+            use)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: assuming we need to, does guile handle locking/blocking wrt
 ;; module operations, i.e. simultaneous resolve, etc.
@@ -276,7 +275,7 @@
             (make-ns-dep-spec (ns-sym->mod-name name) alias select hide))
           (let ((kind (car specs)))
             (case kind
-              ((as:)
+              ((#:as)
                (when (null? (cdr specs))
                  (error "No name for :as in" item))
                (let ((alias (require-ns-sym (cadr specs))))

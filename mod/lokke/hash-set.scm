@@ -11,56 +11,54 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke hash-set)
-  use-module: ((ice-9 control) select: (call/ec))
-  use-module: ((lokke collection)
-               select: (conj
-                        cons
-                        contains?
-                        count
-                        counted?
-                        empty
-                        get
-                        into
-                        lazy-seq
-                        reduce
-                        rest seq))
-  use-module: ((lokke invoke) select: (invoke))
-  use-module: ((lokke compare) select: (clj=))
-  use-module: ((lokke pr) select: (*out* pr pr-str print print-str))
-  use-module: ((lokke set) select: (<set>))
-  use-module: (oop goops)
-  use-module: ((pfds hamts) prefix: hamts/)
-  use-module: ((srfi srfi-41) select: (stream-lambda))
-  use-module: ((srfi srfi-69) prefix: hash/)
-  use-module: ((rnrs) :prefix rnrs/)
-  export: (<hash-set>
-           disj
-           foo
-           hash-set
-           hash-set?
-           set)
-  re-export: (clj=
-              conj
-              contains?
-              count
-              empty
-              get
-              into
-              invoke
-              pr
-              pr-str
-              print
-              print-str)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((lokke collection)
+                #:select (conj
+                          cons
+                          contains?
+                          count
+                          counted?
+                          empty
+                          get
+                          into
+                          lazy-seq
+                          reduce
+                          rest seq))
+  #:use-module ((lokke invoke) #:select (invoke))
+  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke set) #:select (<set>))
+  #:use-module (oop goops)
+  #:use-module ((pfds hamts) #:prefix hamts/)
+  #:use-module ((srfi srfi-41) #:select (stream-lambda))
+  #:use-module ((srfi srfi-69) #:prefix hash/)
+  #:use-module ((rnrs) :prefix rnrs/)
+  #:export (<hash-set>
+            disj
+            foo
+            hash-set
+            hash-set?
+            set)
+  #:re-export (clj=
+               conj
+               contains?
+               count
+               empty
+               get
+               into
+               invoke
+               pr
+               pr-str
+               print
+               print-str)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: implement (lokke set) operations, here, or more generically
 ;; when appropriate, there.
 
 (define-class <hash-set> (<set>)
-  (internals init-keyword: internals:))
+  (internals #:init-keyword #:internals))
 
 (define-syntax-rule (set-hamt s) (slot-ref s 'internals))
 
@@ -100,24 +98,24 @@
 
 (define (set coll)
   (make <hash-set>
-    internals: (reduce (lambda (result x)
-                         (hamts/hamt-set result x x))
-                       (hamts/make-hamt hash/hash eqv?)
-                       coll)))
+    #:internals (reduce (lambda (result x)
+                          (hamts/hamt-set result x x))
+                        (hamts/make-hamt hash/hash eqv?)
+                        coll)))
 
 (define (hash-set . xs) (set xs))
 
 (define-method (conj (s <hash-set>) . xs)
   (make <hash-set>
-    internals: (reduce (lambda (result x) (hamts/hamt-set result x x))
-                       (set-hamt s)
-                       xs)))
+    #:internals (reduce (lambda (result x) (hamts/hamt-set result x x))
+                        (set-hamt s)
+                        xs)))
 
 (define-method (disj (s <hash-set>) . xs)
   (make <hash-set>
-    internals: (reduce (lambda (result x) (hamts/hamt-delete result x))
-                       (set-hamt s)
-                       xs)))
+    #:internals (reduce (lambda (result x) (hamts/hamt-delete result x))
+                        (set-hamt s)
+                        xs)))
 
 (define-method (count (x <hash-set>))
   (hamts/hamt-size (set-hamt x)))

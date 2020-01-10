@@ -16,16 +16,14 @@
 ;; providing bits needed to bootstrap the system by compiling
 ;; clojure.core, i.e. (lokke ns clojure core).
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke boot)
-  use-module: ((lokke ns) select: (ns))
-  export: (/lokke/reader-hash-map
-           /lokke/reader-hash-set
-           /lokke/reader-vector
-           syntax-quote)
-  re-export: (ns quasiquote quote unquote unquote-splicing)
-  duplicates: (merge-generics replace warn-override-core warn last))
+  #:use-module ((lokke ns) #:select (ns))
+  #:export (/lokke/reader-hash-map
+            /lokke/reader-hash-set
+            /lokke/reader-vector
+            syntax-quote)
+  #:re-export (ns quasiquote quote unquote unquote-splicing)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-syntax-rule (syntax-quote form)
   (quasiquote form))

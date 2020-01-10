@@ -13,17 +13,15 @@
 
 ;; Lokke, a Clojure dialect
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (language lokke spec)
-  use-module: ((system base compile) select: (compile-file compiled-file-name))
-  use-module: ((system base language)
-               select: (invalidate-compilation-cache!
-                        make-language
-                        define-language))
-  use-module: ((lokke compile) select: (tree->tree-il))
-  use-module: ((lokke ns) select: (default-environment))
-  use-module: ((lokke reader) select: (read-for-compiler)))
+  #:use-module ((system base compile) #:select (compile-file compiled-file-name))
+  #:use-module ((system base language)
+                #:select (invalidate-compilation-cache!
+                          make-language
+                          define-language))
+  #:use-module ((lokke compile) #:select (tree->tree-il))
+  #:use-module ((lokke ns) #:select (default-environment))
+  #:use-module ((lokke reader) #:select (read-for-compiler)))
 
 (define debug-lang? #f)
 

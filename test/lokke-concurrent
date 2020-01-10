@@ -14,21 +14,19 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (use-modules
- ((lokke scm test-anything) select: (tap-test-runner))
- ((lokke concurrent) prefix: t/)
+ ((lokke scm test-anything) #:select (tap-test-runner))
+ ((lokke concurrent) #:prefix t/)
  ((srfi srfi-64)
-  select: (test-assert
-           test-begin
-           test-end
-           test-eq
-           test-equal
-           test-eqv
-           test-group
-           test-runner-current
-           test-runner-fail-count)))
+  #:select (test-assert
+            test-begin
+            test-end
+            test-eq
+            test-equal
+            test-eqv
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))

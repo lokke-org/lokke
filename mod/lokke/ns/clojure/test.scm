@@ -11,22 +11,21 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ; srfi-88
-
 (define-module (lokke ns clojure test)
-  use-module: ((lokke scm test-anything) select: (tap-test-runner))
-  use-module: ((srfi srfi-64)
-               select: (test-assert
-                        test-begin
-                        test-end
-                        test-equal
-                        test-group
-                        test-runner-current
-                        test-runner-fail-count))
-  export: (begin-tests
-           end-tests
-           is
-           testing))
+  #:use-module ((lokke scm test-anything) #:select (tap-test-runner))
+  #:use-module ((srfi srfi-64)
+                #:select (test-assert
+                             test-begin
+                           test-end
+                           test-equal
+                           test-group
+                           test-runner-current
+                           test-runner-fail-count))
+  #:export (begin-tests
+            end-tests
+            is
+            testing)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define* (begin-tests suite-name)
   (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
@@ -35,7 +34,7 @@
                   (symbol->string suite-name)
                   suite-name)))
 
-(define* (end-tests optional: suite-name key: exit?)
+(define* (end-tests #:optional suite-name #:key exit?)
   (if suite-name
       (test-end (if (symbol? suite-name)
                     (symbol->string suite-name)

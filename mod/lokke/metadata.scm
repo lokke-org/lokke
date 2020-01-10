@@ -11,15 +11,14 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke metadata)
-  use-module: (oop goops)
-  export: (*print-meta*
-           meta
-           set-meta!
-           vary-meta
-           with-meta))
+  #:use-module (oop goops)
+  #:export (*print-meta*
+            meta
+            set-meta!
+            vary-meta
+            with-meta)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; We've just let metadata be broken for now, i.e. some of it may
 ;; kinda work, but we need to review the whole thing, and add a bunch

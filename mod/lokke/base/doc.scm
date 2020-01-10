@@ -11,14 +11,12 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(read-set! keywords 'postfix)  ;; srfi-88
-
 (define-module (lokke base doc)
-  use-module: ((ice-9 threads) select: (with-mutex))
-  use-module: ((lokke base util) select: (global-identifier?))
-  use-module: ((srfi srfi-1) select: (drop take))
-  use-module: ((texinfo string-utils) select: (make-text-wrapper))
-  export: (clear-def-doc! doc maybe-set-def-doc!))
+  #:use-module ((ice-9 threads) #:select (with-mutex))
+  #:use-module ((lokke base util) #:select (global-identifier?))
+  #:use-module ((srfi srfi-1) #:select (drop take))
+  #:use-module ((texinfo string-utils) #:select (make-text-wrapper))
+  #:export (clear-def-doc! doc maybe-set-def-doc!))
 
 ;; Currently def (and by extension defn) documentation strings are
 ;; associated with the guile variable itself for top-level definitions
@@ -83,7 +81,7 @@ procedure-documentation if the value is a procedure."
                "."))
 
 (define show-doc
-  (let ((wrap (make-text-wrapper initial-indent: "  " subsequent-indent: "  ")))
+  (let ((wrap (make-text-wrapper #:initial-indent "  " #:subsequent-indent "  ")))
     (lambda (name doc)
       (display "-------------------------\n")
       (when name (display name) (newline))
