@@ -14,7 +14,8 @@ For Clojure itself
 ------------------
 
 The Clojure dialect is currently available via `./lokke` which can run
-code or provide a REPL.  See below for further information.
+code or provide a REPL.  See [below](#getting-started) for further
+information.
 
 For a more Clojure oriented experience in Scheme
 ------------------------------------------------
