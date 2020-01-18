@@ -141,10 +141,6 @@ copy_vector_tail(const vector_t * const v, uint_fast8_t tail_len,
     return result;
 }
 
-// FIXME: change recursion to take an address of the leaf item so we
-// can avoid copying, and extra
-// mallocs... i.e. store_tree_with...(tree_node_t *dest, ...)
-
 static inline uint_fast8_t
 msb_u32(uint32_t x)
 {
@@ -190,8 +186,9 @@ leaf_index_for_level(uint_fast8_t level, uint32_t n)
     return 0;
 }
 
-static tree_node_t *
-tree_with_updated_value(const tree_node_t * const n,
+static void
+tree_with_updated_value(tree_node_t * const result,
+                        const tree_node_t * const n,
                         uint_fast8_t level, uint32_t index,
                         SCM value)
 {
@@ -201,30 +198,28 @@ tree_with_updated_value(const tree_node_t * const n,
     const uint_fast8_t radix_i = leaf_index_for_level (level, index);
     if (level == 0) {
         // It's in this node.
-        tree_node_t *result = scm_gc_malloc (sizeof (tree_node_t), "lokke tree node");
         result->leaves = n->leaves;
         result->leaf_count = n->leaf_count;
         result->content = scm_gc_malloc (sizeof (SCM) * 32, "lokke tree node content");
         memcpy (result->content, n->content, sizeof (SCM) * 32);
         result->content[radix_i] = value;
-        return result;
+        return;
     }
     // Recurse to find the right place, then rewrite the spine on the way out.
     assert (radix_i < n->leaf_count);
-    tree_node_t *sub_tree = tree_with_updated_value(&(n->leaves[radix_i]),
-                                                    level - 1, index, value);
     // FIXME: same as for tail incorporation...
-    tree_node_t *result = scm_gc_malloc (sizeof (tree_node_t), "lokke tree node");
     result->content = n->content;
     result->leaves = scm_gc_malloc (sizeof (tree_node_t) * n->leaf_count, "lokke tree node leaves");
     memcpy (result->leaves, n->leaves, sizeof (tree_node_t) * n->leaf_count);
-    result->leaves[radix_i] = *sub_tree;
+    tree_with_updated_value(&(result->leaves[radix_i]),
+                            &(n->leaves[radix_i]),
+                            level - 1, index, value);
     result->leaf_count = n->leaf_count;
-    return result;
 }
 
-static tree_node_t *
-tree_incorporating_tail(const tree_node_t * const n,
+static void
+tree_incorporating_tail(tree_node_t * const result,
+                        const tree_node_t * const n,
                         uint_fast8_t level, uint32_t tail_index,
                         SCM *tail) {
     // The tail always gets appended as the highest new index/radix.
@@ -236,7 +231,6 @@ tree_incorporating_tail(const tree_node_t * const n,
         // whether or not this is at the "top" of the tree.  If we're
         // at the top, then [0] isn't a thing, we start at [1].
 
-        tree_node_t *result = scm_gc_malloc (sizeof (tree_node_t), "lokke tree node");
         result->content = n->content;
         result->leaf_count = radix_i + 1;
         result->leaves = scm_gc_malloc (sizeof (tree_node_t) * result->leaf_count,
@@ -247,7 +241,7 @@ tree_incorporating_tail(const tree_node_t * const n,
         result->leaves[radix_i].leaves = NULL;
         if (n->leaf_count != 0) {
             memcpy (result->leaves, n->leaves, sizeof (tree_node_t) * radix_i);
-            return result;
+            return;
         }
         if (radix_i == 1) {
             // top of the tree, so there is no [0] (jumped straight to [1])
@@ -255,17 +249,15 @@ tree_incorporating_tail(const tree_node_t * const n,
             result->leaves[0].leaf_count = 0;
             result->leaves[0].leaves = NULL;
         }
-        return result;
+        return;
     }
-    tree_node_t *sub_tree = tree_incorporating_tail(&(n->leaves[radix_i]),
-                                                   level - 1, tail_index, tail);
-    tree_node_t *result = scm_gc_malloc (sizeof (tree_node_t), "lokke tree node");
     result->content = n->content;
     result->leaf_count = n->leaf_count;
     result->leaves = scm_gc_malloc (sizeof (tree_node_t) * result->leaf_count, "lokke tree node leaves");
     memcpy(result->leaves, n->leaves, sizeof (tree_node_t) * n->leaf_count);
-    result->leaves[radix_i] = *sub_tree;
-    return result;
+    tree_incorporating_tail(&(result->leaves[radix_i]),
+                            &(n->leaves[radix_i]),
+                            level - 1, tail_index, tail);
 }
 
 static SCM
@@ -375,14 +367,14 @@ SCM_DEFINE (lokke_vector_conj_1, "lokke-vector-conj-1", 2, 0, 0,
   assert (tail_len == 32);
   // Move tail into tree.
   const uint32_t new_index = v->length;
-  tree_node_t *tree = tree_incorporating_tail(&v->larger.tree,
-                                              index_depth(new_index - 32),
-                                              new_index - 32,
-                                              v->larger.tail);
   vector_t *result = scm_gc_malloc (sizeof (larger_vector_t), "larger lokke vector");
   result->type = v->type;
   result->length = v->length + 1;
-  result->larger.tree = *tree;
+  tree_incorporating_tail(&(result->larger.tree),
+                          &(v->larger.tree),
+                          index_depth(new_index - 32),
+                          new_index - 32,
+                          v->larger.tail);
   result->larger.tail_offset = v->larger.tail_offset + 32;
   result->larger.tail = scm_gc_malloc (sizeof (SCM), "lokke vector tail");
   result->larger.tail[0] = item;
@@ -423,8 +415,9 @@ SCM_DEFINE (lokke_vector_assoc_1, "lokke-vector-assoc-1", 3, 0, 0,
 
     vector_t *result = scm_gc_malloc (sizeof (larger_vector_t), "larger lokke vector");
     memcpy (result, v, sizeof(larger_vector_t));
-    result->larger.tree = *tree_with_updated_value(&v->larger.tree,
-                                                   index_depth(n), n, value);
+    tree_with_updated_value(&(result->larger.tree),
+                            &(v->larger.tree),
+                            index_depth(n), n, value);
     return scm_make_foreign_object_1 (vector_type_scm, result);
 }
 #undef FUNC_NAME
