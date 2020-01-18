@@ -361,6 +361,11 @@ SCM_DEFINE (lokke_vector_conj_1, "lokke-vector-conj-1", 2, 0, 0,
       return scm_make_foreign_object_1 (vector_type_scm, result);
   }
   assert (v->type == LOK_VEC_LARGE);
+
+  if (v->length == UINT32_MAX)
+    scm_error (scm_out_of_range_key, FUNC_NAME,
+               "Cannot append to full vector", SCM_EOL, SCM_EOL);
+
   const uint32_t tail_len = v->length - v->larger.tail_offset;
   if (tail_len < 32) {
       vector_t *result = copy_vector_tail (v, tail_len, 1);
@@ -398,7 +403,7 @@ SCM_DEFINE (lokke_vector_assoc_1, "lokke-vector-assoc-1", 3, 0, 0,
         // FIXME: avoid double-validation...
         return lokke_vector_conj_1 (vector, value);
 
-    if (n > v->length)
+    if (n > v->length || n == UINT32_MAX)
         SCM_OUT_OF_RANGE (2, index);
 
     if (v->type == LOK_VEC_SMALL) {
