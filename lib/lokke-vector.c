@@ -378,7 +378,7 @@ SCM_DEFINE (lokke_vector_assoc_1, "lokke-vector-assoc-1", 3, 0, 0,
 
     if (v->length <= 32) {
         vector_t *result = copy_small_vector(v, 0);
-        v->small[n] = value;
+        result->small[n] = value;
         return scm_make_foreign_object_1 (vector_type_scm, result);
     }
 

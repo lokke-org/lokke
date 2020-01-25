@@ -33,6 +33,7 @@
 (test-begin (basename (car (program-arguments))))
 
 ;; FIXME: no error tests
+;; FIXME: test.check style tests (or perahps at least simple random sampling)
 
 (test-assert (t/lokke-vector? (t/lokke-vector)))
 (test-assert (not (t/lokke-vector? #f)))
@@ -67,6 +68,39 @@
   (do ((i 0 (1+ i)))
       ((= i (t/lokke-vector-length v)))
     (test-equal i (t/lokke-vector-ref v i))))
+
+(test-group
+ "conj"
+ (for-each
+  (lambda (i)
+    (let ((candidate (t/lokke-vec (iota i))))
+      (test-equal (t/lokke-vec (iota (1+ i)))
+        (t/lokke-vector-conj candidate i))))
+  '(0 32 1024)))
+
+(test-group
+ "assoc as append"
+ (for-each
+  (lambda (i)
+    (let ((candidate (t/lokke-vec (iota i))))
+      (test-equal (t/lokke-vec (iota (1+ i)))
+        (t/lokke-vector-assoc candidate i i))))
+  '(0 32 1024)))
+
+(define (canary-list n canary-i)
+  (let ((result (iota n)))
+    (list-set! result canary-i 'canary)
+    result))
+
+(test-group
+ "internal assoc"
+ ;; Give the tree enough depth to exercise the main paths.
+ (for-each
+  (lambda (i)
+    (let ((v (t/lokke-vec (iota (1+ i)))))
+      (test-equal (t/lokke-vec (canary-list (1+ i) i))
+        (t/lokke-vector-assoc v i 'canary))))
+  '(0 31 32 1023 1024 2999)))
 
 (test-end)
 
