@@ -92,6 +92,8 @@ by a "hidden" top-level definition `(define /lokke/dynamic-foo
 (make-fluid ...))` in the current Guile module.  Then `foo` itself is
 made an identifier-syntax that expands into `(fluid-ref
 /lokke/dynamic-foo)`.
+[Bindingconveyance](https://clojure.org/reference/vars#conveyance) is
+provided by transferring Guile's `current-dynamic-state`.
 
 Modules and namespaces
 ----------------------

@@ -67,4 +67,8 @@
   (touch (slot-ref x 'scm-future)))
 
 (define-syntax-rule (future exp ...)
-  (make <future> #:scm-future (%scm-future (begin exp ...))))
+  (make <future>
+    ;; Provide our version of binding conveyance by transferring the state
+    #:scm-future (let ((bindings (current-dynamic-state)))
+                   (%scm-future
+                    (with-dynamic-state bindings (lambda () exp ...))))))
