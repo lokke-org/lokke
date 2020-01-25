@@ -267,42 +267,37 @@ vector_ref(const vector_t * const v, uint32_t n)
     if (n >= v->length)
         return does_not_exist;
 
-    switch (v->type) {
-        case LOK_VEC_SMALL:
-            return (n < 32) ? v->small[n] : does_not_exist;
-        case LOK_VEC_LARGE:
-            if (n >= v->larger.tail_offset) {
-                const uint_fast8_t tail_i = n - v->larger.tail_offset;
-                assert (tail_i < 32);
-                return v->larger.tail[tail_i];
-            }
-            const tree_node_t *node = &(v->larger.tree);
-            if (n > 0) {  // clz undefined at 0
-                const uint_fast8_t depth = index_depth (n);
-                switch (depth) {
-                    // Intentionally falls through cases
-                    case 6:
-                        node = &(node->leaves[(n & 0xc0000000) >> 30]);
-                    case 5:
-                        node = &(node->leaves[(n & 0x3e000000) >> 25]);
-                    case 4:
-                        node = &(node->leaves[(n & 0x01f00000) >> 20]);
-                    case 3:
-                        node = &(node->leaves[(n & 0x000f8000) >> 15]);
-                    case 2:
-                        node = &(node->leaves[(n & 0x00007c00) >> 10]);
-                    case 1:
-                        node = &(node->leaves[(n & 0x000003e0) >> 5]);
-                }
-            }
-            SCM result = node->content[n & 0x1f];
-            return result;
-        default:
-            assert (0);
-            break;
+    if (v->type == LOK_VEC_SMALL)
+        return (n < 32) ? v->small[n] : does_not_exist;
+
+    assert (v->type == LOK_VEC_LARGE);
+
+    if (n >= v->larger.tail_offset) {
+        const uint_fast8_t tail_i = n - v->larger.tail_offset;
+        assert (tail_i < 32);
+        return v->larger.tail[tail_i];
     }
-    assert (0);  // never reached
-    return SCM_BOOL_F;
+
+    const tree_node_t *node = &(v->larger.tree);
+    if (n > 0) {  // clz undefined at 0
+        const uint_fast8_t depth = index_depth (n);
+        switch (depth) {
+            // Intentionally falls through cases
+            case 6:
+                node = &(node->leaves[(n & 0xc0000000) >> 30]);
+            case 5:
+                node = &(node->leaves[(n & 0x3e000000) >> 25]);
+            case 4:
+                node = &(node->leaves[(n & 0x01f00000) >> 20]);
+            case 3:
+                node = &(node->leaves[(n & 0x000f8000) >> 15]);
+            case 2:
+                node = &(node->leaves[(n & 0x00007c00) >> 10]);
+            case 1:
+                node = &(node->leaves[(n & 0x000003e0) >> 5]);
+        }
+    }
+    return node->content[n & 0x1f];
 }
 
 SCM_DEFINE (lokke_vector_ref, "lokke-vector-ref", 2, 1, 0,
