@@ -35,6 +35,14 @@
 // FIXME naming convenction for safe vs unsafe functions, or maybe
 // anything not SCM_DEFINED is assumed to be unsafe.
 
+// Assumptions:
+//  - OK to access small/large after checking size, i.e. -fno-strict-aliasing
+
+typedef struct {
+    uint32_t length;  // In common with large vecs
+    SCM elt[];
+} smaller_vec_t;
+
 typedef struct tree_node_t {
     SCM *elt;  // Always len 32 since this was a tail or small that got full
     struct tree_node_t *leaves;
@@ -42,36 +50,16 @@ typedef struct tree_node_t {
 } tree_node_t;
 
 typedef struct {
-    tree_node_t tree;
-    SCM *tail;  // No tail length because tail length = length - tail_offset
+    uint32_t length;  // In common with small vecs
     uint32_t tail_offset;
-} larger_t;
-
-// This duplication is super ugly, and is it even entirely legal?  The
-// point is to have a union type we can use to try to avoid strict
-// aliasing violations, though honestly, it's probably irrelevant
-// since we'll probably need -fno-strict-aliasing for guile itself
-// anyway...
-
-// The small variant of vector_t (below), for use with malloc
-typedef struct {
-    uint32_t length;
-    SCM *small;
-} smaller_vec_t;
-
-// The larger variant of vector_t (below), for use with malloc
-typedef struct {
-    uint32_t length;
-    larger_t larger;
+    SCM *tail;  // No tail length because tail length = length - tail_offset
+    tree_node_t tree;
 } larger_vec_t;
 
-// The actual union type for general use (wrt strict aliasing, etc.)
+// Access to the common field(s) -- exact prefix of smaller and larger.
 typedef struct {
-  uint32_t length;
-  union {
-    SCM *small;
-    larger_t larger;
-  };
+    uint32_t length;
+    // ...
 } vector_t;
 
 static SCM empty_vector;
@@ -89,48 +77,57 @@ SCM_DEFINE (lokke_vector_length, "lokke-vector-length", 1, 0, 0,
 }
 #undef FUNC_NAME
 
+static inline size_t
+sizeof_small_vec(const size_t n)
+{
+    return sizeof (smaller_vec_t) + n * sizeof(SCM);
+}
+
 static SCM
 make_empty_vector ()
 {
-    vector_t * const vec = scm_gc_malloc (sizeof (smaller_vec_t),
-                                          "small lokke vector");
+    smaller_vec_t * const vec = scm_gc_malloc (sizeof_small_vec(0),
+                                               "small lokke vector");
     vec->length = 0;
-    // FIXME: small could be NULL here, but iirc we'd need adjustment
-    // to some of the other code, and there's only one of these
-    // (i.e. scm_empty_vector) -- and definitely not worth changing if
-    // it would cause any extra logic on more well worn paths.
-    vec->small = scm_gc_malloc (sizeof (SCM), "small lokke vector content");
-    vec->small[0] = SCM_BOOL_F;
     return scm_make_foreign_object_1 (vector_type_scm, vec);
 }
 
-static vector_t *
-copy_small_vector(const vector_t * const v, const uint_fast8_t expand_n)
+static smaller_vec_t *
+smaller_vec_copy(const smaller_vec_t * const v)
 {
-    // Assumes caller knows expand_n won't overflow 32.
-    vector_t * const result = scm_gc_malloc (sizeof (smaller_vec_t),
-                                             "small lokke vector");
-    result->length = v->length + expand_n;
-    result->small = scm_gc_malloc (sizeof (SCM) * result->length, "small lokke vector content");
-    memcpy (result->small, v->small, v->length * sizeof(SCM));
+    // Assumes caller knows this won't overflow 32.
+    const size_t size = sizeof_small_vec(v->length);
+    smaller_vec_t * const result = scm_gc_malloc (size, "small lokke vector");
+    memcpy (result, v, size);
     return result;
 }
 
-static vector_t *
-copy_vector_tail(const vector_t * const v, const uint_fast8_t tail_len,
-                 const uint_fast8_t expand_n)
+static smaller_vec_t *
+smaller_vec_conj(const smaller_vec_t * const v, SCM elt)
+{
+    // Assumes caller knows this won't overflow 32.
+    smaller_vec_t * const result =
+        scm_gc_malloc (sizeof_small_vec(v->length + 1), "small lokke vector");
+    result->length = v->length + 1;
+    for (int i = 0; i < v->length; i++) result->elt[i] = v->elt[i];
+    result->elt[v->length] = elt;
+    return result;
+}
+
+static larger_vec_t *
+copy_vector_tail(const larger_vec_t * const v, const uint_fast8_t tail_len,
+                 uint_fast8_t expand_n)
 {
     // Assumes caller knows expand_n won't overflow tail.
-    assert (v->length > 32);
     SCM * const new_tail = scm_gc_malloc (sizeof (SCM) * (tail_len + expand_n),
                                           "lokke vector tail");
-    memcpy (new_tail, v->larger.tail, tail_len * sizeof (SCM));
-    vector_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
-                                             "larger lokke vector");
+    memcpy (new_tail, v->tail, tail_len * sizeof (SCM));
+    larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
+                                                 "larger lokke vector");
     memcpy (result, v, sizeof(larger_vec_t));
     if (expand_n)
         result->length += expand_n;
-    result->larger.tail = new_tail;
+    result->tail = new_tail;
     return result;
 }
 
@@ -153,14 +150,14 @@ msb_u32(const uint32_t x)
 }
 
 static inline uint_fast8_t
-index_depth(const uint32_t n)
+index_depth(uint32_t n)
 {
     // Return the tree depth of the node with the value for index i.
     return (msb_u32 (n) - 1) / 5;
 }
 
 static inline uint_fast8_t
-leaf_index_for_level(uint_fast8_t level, uint32_t n)
+leaf_index_for_level(const uint_fast8_t level, const uint32_t n)
 {
     // Return the fan-out index for the vector index n n at a given
     // level in the tree.
@@ -260,16 +257,19 @@ vector_ref(const vector_t * const v, const uint32_t n)
     if (n >= v->length)
         return does_not_exist;
 
-    if (v->length <= 32)
-        return (n < 32) ? v->small[n] : does_not_exist;
-
-    if (n >= v->larger.tail_offset) {
-        const uint_fast8_t tail_i = n - v->larger.tail_offset;
-        assert (tail_i < 32);
-        return v->larger.tail[tail_i];
+    if (v->length <= 32) {
+        if (n >= 32)
+            return does_not_exist;
+        return ((smaller_vec_t *) v)->elt[n];
     }
 
-    const tree_node_t * node = &(v->larger.tree);
+    const larger_vec_t * const vl = (larger_vec_t *) v;
+    if (n >= vl->tail_offset) {
+        const uint_fast8_t tail_i = n - vl->tail_offset;
+        assert (tail_i < 32);
+        return vl->tail[tail_i];
+    }
+    const tree_node_t *node = &(vl->tree);
     if (n > 0) {  // clz undefined at 0
         const uint_fast8_t depth = index_depth (n);
         switch (depth) {
@@ -318,22 +318,25 @@ SCM_DEFINE (lokke_vector_conj_1, "lokke-vector-conj-1", 2, 0, 0,
     scm_assert_foreign_object_type (vector_type_scm, vector);
     vector_t * const v = scm_foreign_object_ref (vector, 0);
 
-    if (v->length < 32) {  // Stay small
-        vector_t * const result = copy_small_vector(v, 1);
-        result->small[v->length] = item;
-        return scm_make_foreign_object_1 (vector_type_scm, result);
-    }
+    if (v->length < 32)  // Stay small
+        return scm_make_foreign_object_1 (vector_type_scm,
+                                          smaller_vec_conj((smaller_vec_t *) v,
+                                                           item));
 
-    if (v->length == 32) {  // Convert from small to large
-        vector_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
-                                                 "larger lokke vector");
+    if (v->length == 32) {
+        const smaller_vec_t * const vs = (smaller_vec_t *) v;
+        larger_vec_t *result = scm_gc_malloc (sizeof (larger_vec_t),
+                                              "larger lokke vector");
         result->length = 33;
-        result->larger.tree.elt = v->small;
-        result->larger.tree.leaves = NULL;
-        result->larger.tree.leaf_count = 0;
-        result->larger.tail = scm_gc_malloc (sizeof (SCM), "lokke vector tail");
-        result->larger.tail[0] = item;
-        result->larger.tail_offset = 32;
+        SCM * const elt = scm_gc_malloc(sizeof(SCM) * 32,
+                                        "lokke vector content");
+        memcpy(elt, vs->elt, sizeof(SCM) * 32);
+        result->tree.elt = elt;
+        result->tree.leaves = NULL;
+        result->tree.leaf_count = 0;
+        result->tail = scm_gc_malloc (sizeof (SCM), "lokke vector tail");
+        result->tail[0] = item;
+        result->tail_offset = 32;
         return scm_make_foreign_object_1 (vector_type_scm, result);
     }
 
@@ -341,26 +344,27 @@ SCM_DEFINE (lokke_vector_conj_1, "lokke-vector-conj-1", 2, 0, 0,
         scm_error (scm_out_of_range_key, FUNC_NAME,
                    "Cannot append to full vector", SCM_EOL, SCM_EOL);
 
-    const uint32_t tail_len = v->length - v->larger.tail_offset;
+    const larger_vec_t * const vl = (larger_vec_t *) v;
+    const uint32_t tail_len = vl->length - vl->tail_offset;
     if (tail_len < 32) {
-        vector_t * const result = copy_vector_tail (v, tail_len, 1);
-        result->larger.tail[tail_len] = item;
+        larger_vec_t * const result = copy_vector_tail (vl, tail_len, 1);
+        result->tail[tail_len] = item;
         return scm_make_foreign_object_1 (vector_type_scm, result);
     }
     assert (tail_len == 32);
     // Move tail into tree.
-    const uint32_t new_index = v->length;
-    vector_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
-                                             "larger lokke vector");
-    result->length = v->length + 1;
-    tree_incorporating_tail(&(result->larger.tree),
-                            &(v->larger.tree),
+    const uint32_t new_index = vl->length;
+    larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
+                                                 "larger lokke vector");
+    result->length = vl->length + 1;
+    tree_incorporating_tail(&(result->tree),
+                            &(vl->tree),
                             index_depth(new_index - 32),
                             new_index - 32,
-                            v->larger.tail);
-    result->larger.tail_offset = v->larger.tail_offset + 32;
-    result->larger.tail = scm_gc_malloc (sizeof (SCM), "lokke vector tail");
-    result->larger.tail[0] = item;
+                            vl->tail);
+    result->tail_offset = vl->tail_offset + 32;
+    result->tail = scm_gc_malloc (sizeof (SCM), "lokke vector tail");
+    result->tail[0] = item;
     return scm_make_foreign_object_1 (vector_type_scm, result);
 }
 #undef FUNC_NAME
@@ -382,23 +386,26 @@ SCM_DEFINE (lokke_vector_assoc_1, "lokke-vector-assoc-1", 3, 0, 0,
         SCM_OUT_OF_RANGE (2, index);
 
     if (v->length <= 32) {
-        vector_t * const result = copy_small_vector(v, 0);
-        result->small[n] = value;
+        const smaller_vec_t * const vs = (smaller_vec_t *) v;
+        smaller_vec_t *result = smaller_vec_copy((smaller_vec_t *) vs);
+        result->elt[n] = value;
         return scm_make_foreign_object_1 (vector_type_scm, result);
     }
 
-    if (n >= v->larger.tail_offset) {
-        uint_fast8_t tail_len = v->length - v->larger.tail_offset;
-        vector_t * const result = copy_vector_tail (v, tail_len, 0);
-        result->larger.tail[n - v->larger.tail_offset] = value;
+    const larger_vec_t * const vl = (larger_vec_t *) v;
+
+    if (n >= vl->tail_offset) {
+        uint_fast8_t tail_len = vl->length - vl->tail_offset;
+        larger_vec_t * const result = copy_vector_tail (vl, tail_len, 0);
+        result->tail[n - vl->tail_offset] = value;
         return scm_make_foreign_object_1 (vector_type_scm, result);
     }
 
-    vector_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
-                                             "larger lokke vector");
-    memcpy (result, v, sizeof(larger_vec_t));
-    tree_with_updated_value(&(result->larger.tree),
-                            &(v->larger.tree),
+    larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
+                                                 "larger lokke vector");
+    memcpy (result, vl, sizeof(larger_vec_t));
+    tree_with_updated_value(&(result->tree),
+                            &(vl->tree),
                             index_depth(n), n, value);
     return scm_make_foreign_object_1 (vector_type_scm, result);
 }
@@ -407,9 +414,9 @@ SCM_DEFINE (lokke_vector_assoc_1, "lokke-vector-assoc-1", 3, 0, 0,
 void
 init_lokke_vector()
 {
-    assert (sizeof(unsigned long) >= sizeof (uint32_t));  // for builtin_clzl
-    assert (sizeof (smaller_vec_t) <= sizeof (vector_t));
-    assert (sizeof (larger_vec_t) <= sizeof (vector_t));
+    assert (sizeof (unsigned long) >= sizeof (uint32_t));  // for builtin_clzl
+    assert (sizeof (smaller_vec_t) >= sizeof (vector_t));
+    assert (sizeof (larger_vec_t) > sizeof (vector_t));
 
     // FIXME: OK to disallow changes like this?
     vector_type_scm = scm_variable_ref (scm_c_lookup ("<lokke-vector>"));

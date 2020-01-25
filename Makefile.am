@@ -7,7 +7,9 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver
 
 EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
 
-AM_CFLAGS = -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always
+AM_CFLAGS = \
+  -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
+  -fno-strict-aliasing
 
 pkglib_LTLIBRARIES = lib/lokke-reader.la  lib/lokke-vector.la
 lib_lokke_reader_la_SOURCES = lib/lokke-reader.c
