@@ -127,7 +127,7 @@
 (define-method (empty? (v <lokke-vector>)) (zero? (lokke-vector-length v)))
 
 (define-method (assoc (v <lokke-vector>) . indexes-and-values)
-  (apply lokke-vector-assoc indexes-and-values))
+  (apply lokke-vector-assoc v indexes-and-values))
 
 (define (valid-index? v i)
   (and (integer? i) (>= i 0) (< i (lokke-vector-length v))))

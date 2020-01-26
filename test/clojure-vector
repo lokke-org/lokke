@@ -29,5 +29,7 @@
 (is (= 2 (get [1 2 3] 1)))
 (is (= 2 (nth [1 2 3] 1)))
 (is (= [1 2 3] (conj [1 2] 3)))
+(is (= [1 2 3] (assoc [1 2] 2 3)))
+(is (= [1 2 3] (assoc [1 2 0] 2 3)))
 
 (end-tests (ns-name *ns*) :exit? true)
