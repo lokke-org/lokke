@@ -191,6 +191,8 @@ TODO
   and possibly hidden name, i.e. /lokke/ns-aliases.  Then /lokke/@
   might just need to be adjusted to consult that too.
 
+- Add `for` and adjust `doseq` to provide for-style bindings.
+
 - File and line numbers are not handled properly everywhere in the
   reader, errors, etc.
 
