@@ -43,16 +43,16 @@
 
 (define (show m emit port)
   (display "[" port)
-  (emit (key m))
+  (emit (key m) port)
   (display " " port)
-  (emit (val m))
+  (emit (val m) port)
   (display "]" port))
 
 (define-method (pr-on (v <map-entry>) port)
-  (show v display port))
+  (show v pr-on port))
 
 (define-method (print-on (v <map-entry>) port)
-  (show v display port))
+  (show v print-on port))
 
 (define (map-entry? x) (is-a? x <map-entry>))
 

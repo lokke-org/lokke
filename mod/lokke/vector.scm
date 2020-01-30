@@ -105,21 +105,21 @@
 (define (show-vector v emit port)
   (let ((length (lokke-vector-length v)))
     (if (zero? length)
-        (display "[]" port)
-        (begin
-          (display "[" port)
-          (emit (lokke-vector-ref v 0))
-          (do ((i 1 (1+ i)))
-              ((= i length))
-            (display " " port)
-            (emit (lokke-vector-ref v i)))
-          (display "]" port)))))
+      (display "[]" port)
+      (begin
+        (display "[" port)
+        (emit (lokke-vector-ref v 0) port)
+        (do ((i 1 (1+ i)))
+            ((= i length))
+          (display " " port)
+          (emit (lokke-vector-ref v i) port))
+        (display "]" port)))))
 
 (define-method (pr-on (v <lokke-vector>) port)
-  (show-vector v pr port))
+  (show-vector v pr-on port))
 
 (define-method (print-on (v <lokke-vector>) port)
-  (show-vector v display port))
+  (show-vector v print-on port))
 
 (define-method (counted? (v <lokke-vector>)) #t)
 (define-method (count (v <lokke-vector>)) (lokke-vector-length v))

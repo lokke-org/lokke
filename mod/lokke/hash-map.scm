@@ -85,7 +85,7 @@
 
 (define (read-only-str s) (substring/read-only s 0))
 
-(define (render-str m render port)
+(define (render-str m render)
   (let* ((first? #t)
          (content (hamts/hamt-fold (lambda (k v result)
                                      (when first? (set! first? #f))
@@ -105,15 +105,16 @@
                        (if first?
                            (set! first? #f)
                            (display ", " port))
-                       (emit k) (display #\space port) (emit v))
+                       (emit k port) (display #\space port) (emit v port))
                      #t
                      (map-hamt m)))
   (display "}" port))
 
 (define-method (pr-on (m <hash-map>) port)
-  (show m print-on port))
+  (show m pr-on port))
+
 (define-method (print-on (m <hash-map>) port)
-  (show m display port))
+  (show m print-on port))
 
 (define (hash-map? x) (is-a? x <hash-map>))
 

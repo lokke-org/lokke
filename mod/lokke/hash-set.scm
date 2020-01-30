@@ -76,23 +76,23 @@
          (content (reverse! content)))
     (read-only-str (apply string-append "#{" (append content '("}"))))))
 
-(define (show s emit)
-  (display "#{" (*out*))
+(define (show s emit port)
+  (display "#{" port)
   (let ((first? #t))
     (hamts/hamt-fold (lambda (k _ result)
                        (if first?
                            (set! first? #f)
-                           (display " " (*out*)))
-                       (emit k))
+                           (display " " port))
+                       (emit k port))
                      #t
                      (set-hamt s)))
-  (display "}" (*out*)))
+  (display "}" port))
 
 (define-method (pr-on (s <hash-set>) port)
-  (show s display port))
+  (show s pr-on port))
 
 (define-method (print-on (s <hash-set>) port)
-  (show s display port))
+  (show s print-on port))
 
 (define (hash-set? x) (is-a? x <hash-set>))
 

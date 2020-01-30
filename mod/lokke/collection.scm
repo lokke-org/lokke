@@ -175,18 +175,18 @@
 (define (show coll emit port open close)
   (display open port)
   (when-let (coll (seq coll))
-    (emit (first coll))
+    (emit (first coll) port)
     (do ((coll (next coll) (next coll)))
         ((nil? coll))
       (display " " port)
-      (emit (first coll))))
+      (emit (first coll) port)))
   (display close port))
 
 (define-method (pr-on (s <seq>) port)
-  (show s pr port "(" ")"))
+  (show s pr-on port "(" ")"))
 
 (define-method (print-on (s <seq>) port)
-  (show s display port "(" ")"))
+  (show s print-on port "(" ")"))
 
 ;; For now, just emulate the same output as Guile, assuming that
 ;; <class> is always correct.

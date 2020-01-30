@@ -63,32 +63,80 @@
 
 (define-syntax-rule (with-out-str e ...)
   (with-output-to-string
-    (lambda () (begin e ...))))
+    (lambda () e ...)))
 
 (define (format . args) (apply %scm-format #f args))
 
 (define (read-only-str s) (substring/read-only s 0))
 
 (define (str-somehow x details)
-  (if (eq? x *unspecified*)
-    (if (or (eq? x #nil) (null? x))
-      "nil"
-      (read-only-str
-       (string-append
-        "#object["
-        (if (tree-il? x)
-          (%scm-format #f "~s" x)
-          ;; This may not be the preferred rep for structs/records/etc.
-          (apply %scm-format #f "~s 0x~x~a~a"
-                 (class-name (class-of x))
-                 (object-address x)
-                 (if details
-                   (list " " details)
-                   '("" ""))))
-        "]")))))
+  (clj-cond
+   (eq? x *unspecified*)
+   ""
+   (eq? x #nil)
+   "nil"
+   (null? x)
+   "()"
+   (read-only-str
+    (string-append
+     "#object["
+     (if (tree-il? x)
+       (%scm-format #f "~s" x)
+       ;; This may not be the preferred rep for structs/records/etc.
+       (apply %scm-format #f "~s 0x~x~a~a"
+              (class-name (class-of x))
+              (object-address x)
+              (if details
+                (list " " details)
+                '("" ""))))
+     "]"))))
 
 (define-method (pr-on x port)
   (print-on x port)
+  #nil)
+
+(define-method (pr-on (x <class>) port)
+  (display (class-name x) port)
+  #nil)
+
+(define-method (pr-on (x <boolean>) port)
+  (display (boolean->string x) port)
+  #nil)
+
+(define-method (pr-on (x <null>) port)
+  (display "()" port)
+  #nil)
+
+(define-method (pr-on (x <number>) port)
+  (display x port)
+  #nil)
+
+;; ;; FIXME: symbols...
+(define-method (pr-on (x <symbol>) port)
+  (display (symbol->string x) port)
+  #nil)
+
+;; FIXME: keywords...
+(define-method (pr-on (x <keyword>) port)
+  (display #\: port)
+  (display (keyword->string x) port)
+  #nil)
+
+(define-method (pr-on (x <char>) port)
+  (display (string #\\ x) port)
+  #nil)
+
+(define-method (pr-on (x <string>) port)
+  (write x port)
+  #nil)
+
+(define-method (pr-on (x <syntax>) port)
+  (write x port)
+  #nil)
+
+(define-method (pr-str (x <module>))
+  (display (str-somehow x (pr-str (module-name->ns-str (module-name x))))
+           port)
   #nil)
 
 (define-method (print-on (x <string>) port)
@@ -103,17 +151,24 @@
   (display "()" port)
   #nil)
 
-(define-method (print-on (x <pair>) port)
+(define (show-pair p emit port)
   (display "(" port)
-  (let loop ((items x))
+  (let loop ((items p))
     (when (pair? items)
       (let ((item (car items))
             (more (cdr items)))
-        (print-on item port)
+        (emit item port)
         (when (pair? more)
-          (display #\space port)
+          (emit #\space port)
           (loop more)))))
-  (display ")" port)
+  (display ")" port))
+
+(define-method (print-on (x <pair>) port)
+  (show-pair x print-on port)
+  #nil)
+
+(define-method (pr-on (x <pair>) port)
+  (show-pair x pr-on port)
   #nil)
 
 (define (boolean->string x)
@@ -140,8 +195,8 @@
   (string-join (map symbol->string
                     (if (and (> (length m) 2)
                              (equal? '(lokke ns) (take m 2)))
-                      (drop m 2)
-                      (cons 'guile m)))
+			(drop m 2)
+			(cons 'guile m)))
                "."))
 
 (define (module-name->ns-sym m) (string->symbol (module-name->ns-str m)))
@@ -156,24 +211,24 @@
   (display (keyword->string x) port)
   #nil)
 
-;;(define-method (print (x <syntax>)) (display x (*out*))   #nil)
-
 (define-method (print-on x port)
   (display (str-somehow x #f) port)
   #nil)
 
+(define (show-all items emit port)
+  (if (pair? items)
+    (let ((x (car items))
+          (more (cdr items)))
+      (emit x port)
+      (let loop ((rest more))
+        (when (pair? rest)
+          (display #\space port)
+          (emit (car rest) port)
+          (loop (cdr rest)))
+        #nil))))
+
 (define (print . items)
-  (let ((port (*out*)))
-    (if (pair? items)
-      (let ((x (car items))
-            (more (cdr items)))
-        (print-on x port)
-        (let loop ((rest more))
-          (when (pair? rest)
-            (display #\space port)
-            (print-on (car rest) port)
-            (loop (cdr rest)))))
-      (display "" port))))
+  (show-all items print-on (*out*)))
 
 (define (println . args)
   (apply print args)
@@ -186,20 +241,12 @@
       (apply print args))))
 
 (define (pr . items)
-  (let ((port (*out*)))
-    (when (pair? items)
-      (let ((x (car items))
-            (more (cdr items)))
-        (pr-on x port)
-        (let loop ((rest more))
-          (when (pair? rest)
-            (pr-on (car rest) port)
-            (loop (cdr rest))))))))
+  (show-all items pr-on (*out*)))
 
 (define (pr-str . args)
   (with-output-to-string
     (lambda ()
-      (apply pr  args))))
+      (apply pr args))))
 
 (define (str . args)
   (string-concatenate (map print-str args)))
