@@ -4,4 +4,4 @@ export GUILE_LOAD_PATH="${GUILE_LOAD_PATH:+$GUILE_LOAD_PATH:}$(pwd)/mod"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$(pwd)/lib/.libs"
 
 # The .sls is for pfds
-exec guile-2.2 -x .sls "$@"
+exec guile-@GUILE_EFFECTIVE_VERSION@ -x .sls "$@"

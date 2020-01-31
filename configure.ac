@@ -35,5 +35,6 @@ GUILE_PKG([2.2])
 GUILE_FLAGS
 
 AC_CONFIG_FILES([Makefile gnulib/Makefile])
+AC_CONFIG_FILES([guile], [chmod +x guile])
 
 AC_OUTPUT
