@@ -31,7 +31,7 @@ AC_CHECK_FUNCS([strchr strstr])
 
 LT_INIT
 
-GUILE_PKG([2.2])
+GUILE_PKG([3.0 2.2])
 GUILE_FLAGS
 
 AC_CONFIG_FILES([Makefile gnulib/Makefile])
