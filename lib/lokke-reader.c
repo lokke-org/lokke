@@ -42,6 +42,10 @@ SCM_SYMBOL (lokke_sym_reader_vector, "/lokke/reader-vector");
 SCM_SYMBOL (sym_syntax_quote, "syntax-quote");
 SCM_SYMBOL (sym_ISO_8859_1, "ISO-8859-1");
 
+static SCM sym_quote = SCM_ELISP_NIL;
+static SCM sym_unquote = SCM_ELISP_NIL;
+static SCM sym_uq_splicing = SCM_ELISP_NIL;
+
 struct char_and_c_name_t {
   char *name;
   SCM chr;
@@ -936,7 +940,7 @@ scm_read_quote (int chr, SCM port, scm_t_read_opts *opts)
       break;
 
     case '\'':
-      p = scm_sym_quote;
+      p = sym_quote;
       break;
 
     case '~':
@@ -945,11 +949,11 @@ scm_read_quote (int chr, SCM port, scm_t_read_opts *opts)
 
 	c = scm_getc (port);
 	if ('@' == c)
-	  p = scm_sym_uq_splicing;
+	  p = sym_uq_splicing;
 	else
 	  {
 	    scm_ungetc (c, port);
-	    p = scm_sym_unquote;
+	    p = sym_unquote;
 	  }
 	break;
       }
@@ -1629,8 +1633,11 @@ set_port_case_insensitive_p (SCM port, scm_t_read_opts *opts, int value)
 void
 init_lokke_reader ()
 {
-  SCM read_hash_procs = scm_make_fluid_with_default (SCM_EOL);
+  sym_quote = scm_from_utf8_symbol("quote");
+  sym_unquote = scm_from_utf8_symbol("unquote");
+  sym_uq_splicing = scm_from_utf8_symbol("unquote-splicing");
 
+  SCM read_hash_procs = scm_make_fluid_with_default (SCM_EOL);
   scm_i_read_hash_procedures =
     SCM_VARIABLE_LOC (scm_c_define ("%read-hash-procedures", read_hash_procs));
 
