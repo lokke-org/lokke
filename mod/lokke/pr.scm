@@ -31,7 +31,7 @@
             *out*
             module-name->ns-str
             module-name->ns-sym
-            pr pr-str print print-str prn println str)
+            pr pr-on pr-str print print-on print-str prn println str with-out-str)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (defdyn *in* (current-input-port))  ;; also binds /lokke/dynamic-*in*
@@ -70,26 +70,25 @@
 (define (read-only-str s) (substring/read-only s 0))
 
 (define (str-somehow x details)
-  (clj-cond
-   (eq? x *unspecified*)
-   ""
-   (eq? x #nil)
-   "nil"
-   (null? x)
-   "()"
-   (read-only-str
-    (string-append
-     "#object["
-     (if (tree-il? x)
-       (%scm-format #f "~s" x)
-       ;; This may not be the preferred rep for structs/records/etc.
-       (apply %scm-format #f "~s 0x~x~a~a"
-              (class-name (class-of x))
-              (object-address x)
-              (if details
-                (list " " details)
-                '("" ""))))
-     "]"))))
+  (if (eq? x *unspecified*)
+    ""
+    (if (eq? x #nil)
+      "nil"
+      (if (null? x)
+        "()"
+        (read-only-str
+         (string-append
+          "#object["
+          (if (tree-il? x)
+            (%scm-format #f "~s" x)
+            ;; This may not be the preferred rep for structs/records/etc.
+            (apply %scm-format #f "~s 0x~x~a~a"
+                   (class-name (class-of x))
+                   (object-address x)
+                   (if details
+                     (list " " details)
+                     '("" ""))))
+          "]"))))))
 
 (define-method (pr-on x port)
   (print-on x port)

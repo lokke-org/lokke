@@ -34,7 +34,7 @@
                           update))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke compare) #:select (clj= compare))
-  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke scm vector)
                 #:select (<lokke-vector>
                           list->lokke-vector
@@ -64,8 +64,8 @@
                first
                get
                nth
-               pr
-               print
+               pr-on
+               print-on
                rest
                seq
                update)
