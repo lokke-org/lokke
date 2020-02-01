@@ -42,10 +42,6 @@
   ;; NOTE: this cannot be redefined since it's cached in the C code.
   (make-foreign-object-type* 'lokke-vector '(data) #:supers (list <sequential>)))
 
-;; Avoid undefined warnings
-(define lokke-empty-vector #f)
-(define lokke-vector-assoc-1 #f)
-(define lokke-vector-conj-1 #f)
 (load-extension "lokke-vector.so" "init_lokke_vector")
 
 (define (lokke-vector? x) (is-a? x <lokke-vector>))

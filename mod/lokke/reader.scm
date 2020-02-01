@@ -39,8 +39,6 @@
 (define debug-reader? #f)
 (define debug-conditionals? (or debug-reader? #f))
 
-;; Avoid undefined warnings
-(define read-primitively #f)
 (load-extension "lokke-reader.so" "init_lokke_reader")
 
 (define (expand-ref sym ns-str aliases)
