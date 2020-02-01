@@ -16,6 +16,7 @@
 #endif
 
 #include <assert.h>
+#include <string.h>
 
 #include <libguile.h>
 
