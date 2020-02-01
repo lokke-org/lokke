@@ -424,7 +424,6 @@ init_lokke_vector()
     empty_vector = make_empty_vector();
     does_not_exist = scm_make_symbol (scm_from_utf8_string ("lokke-vector-missing-canary"));
 
-    scm_c_define("<lokke-vector>", vector_type_scm);
     scm_c_define("lokke-empty-vector", empty_vector);
 
 #ifndef SCM_MAGIC_SNARFER
