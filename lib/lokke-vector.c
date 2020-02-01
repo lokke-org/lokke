@@ -63,9 +63,9 @@ typedef struct {
     // ...
 } vector_t;
 
-static SCM empty_vector;
-static SCM does_not_exist;
-static SCM vector_type_scm;
+static SCM empty_vector = SCM_BOOL_F;
+static SCM does_not_exist = SCM_BOOL_F;
+static SCM vector_type_scm = SCM_BOOL_F;
 
 SCM_DEFINE (lokke_vector_length, "lokke-vector-length", 1, 0, 0,
             (SCM vector),
