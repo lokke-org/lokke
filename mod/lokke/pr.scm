@@ -85,10 +85,8 @@
 ;; No args
 (define-method (pr-str) "")
 (define-method (pr) #nil)
-(define-method (prn) #nil)
 (define-method (print-str) "")
 (define-method (print) #nil)
-(define-method (println) #nil)
 
 ;; Single arg (fallback)
 (define-method (pr-str x) (str-somehow x #f))
@@ -114,13 +112,15 @@
   (for-each (lambda (z) (display " " (*out*)) (print z))
             (cons y rest)))
 
-(define (prn . items)
+(define-method (prn . items)
   (apply pr items)
-  (newline (*out*)))
+  (newline (*out*))
+  #nil)
 
 (define (println . items)
   (apply print items)
-  (newline (*out*)))
+  (newline (*out*))
+  #nil)
 
 (define (str . args)
   (string-concatenate (map print-str args)))
