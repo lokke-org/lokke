@@ -105,10 +105,6 @@
     ((#nil) "nil")
     (else (error "impossible boolean" x))))
 
-(define-method (pr-on x port)
-  (print-on x port)
-  #nil)
-
 (define-method (pr-on (x <class>) port)
   (display (class-name x) port)
   #nil)
@@ -222,8 +218,12 @@
   (display (module-name->ns-str (module-name x)) port)
   #nil)
 
-(define-method (print-on x port)
+(define-method (pr-on x port)
   (display (str-somehow x #f) port)
+  #nil)
+
+(define-method (print-on x port)
+  (pr-on x port)
   #nil)
 
 (define (show-all items emit port)
