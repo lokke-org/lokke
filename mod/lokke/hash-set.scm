@@ -27,7 +27,7 @@
                           rest seq))
   #:use-module ((lokke invoke) #:select (invoke))
   #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (oop goops)
   #:use-module ((pfds hamts) #:prefix hamts/)
@@ -48,10 +48,8 @@
                get
                into
                invoke
-               pr
-               pr-str
-               print
-               print-str)
+               pr-on
+               print-on)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: implement (lokke set) operations, here, or more generically

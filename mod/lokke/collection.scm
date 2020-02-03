@@ -64,7 +64,7 @@
   #:use-module ((lokke scm vector) #:select (<lokke-vector>))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke invoke) #:select (invoke))
-  #:use-module ((lokke pr) #:select (*out*  pr print))
+  #:use-module ((lokke pr) #:select (pr-on print-on))
   #:export (doall
             dorun
             empty?
@@ -110,8 +110,8 @@
                nfirst
                nnext
                nth
-               pr
-               print
+               pr-on
+               print-on
                rest
                second
                select-keys

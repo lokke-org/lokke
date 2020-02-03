@@ -19,7 +19,7 @@
   #:use-module (oop goops)
   #:use-module ((lokke base collection)
                 #:select (<sequential> cons first nth rest second seq))
-  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke pr) #:select (pr pr-str print print-str))
   #:export (<map-entry> key map-entry map-entry? val)
   #:re-export (first nth second)
   #:duplicates (merge-generics replace warn-override-core warn last))

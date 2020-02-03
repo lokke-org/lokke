@@ -37,7 +37,7 @@
   #:use-module ((lokke base map) #:select (<map> select-keys))
   #:use-module ((lokke base map-entry) #:select (key map-entry val))
   #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke pr) #:select (*out* pr pr-str print print-str))
+  #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module (oop goops)
   #:use-module ((pfds hamts) #:prefix hamts/)
   #:use-module ((srfi srfi-1) #:select (fold))
@@ -61,10 +61,8 @@
                empty
                equal?
                get
-               pr
-               pr-str
-               print
-               print-str
+               pr-on
+               print-on
                select-keys
                seq
                update)
