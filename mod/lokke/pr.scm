@@ -78,6 +78,7 @@
 
 (define (read-only-str s) (substring/read-only s 0))
 
+
 (define (str-somehow x details)
   (cond
    ((eq? x *unspecified*) "")
@@ -98,6 +99,18 @@
                      '("" ""))))
       "]")))))
 
+(define-method (pr-on x port)
+  (display (str-somehow x #f) port) #nil)
+
+(define-method (print-on x port)
+  (pr-on x port) #nil)
+
+
+(define-method (pr-on (x <class>) port)
+  (display (class-name x) port)
+  #nil)
+
+
 (define (boolean->string x)
   (case x
     ((#t) "true")
@@ -105,82 +118,78 @@
     ((#nil) "nil")
     (else (error "impossible boolean" x))))
 
-(define-method (pr-on (x <class>) port)
-  (display (class-name x) port)
+(define-inlinable (show-boolean x port)
+  (display (boolean->string x) port)
   #nil)
 
 (define-method (pr-on (x <boolean>) port)
-  (display (boolean->string x) port)
-  #nil)
-
-(define-method (pr-on (x <null>) port)
-  (display "()" port)
-  #nil)
-
-(define-method (pr-on (x <number>) port)
-  (display x port)
-  #nil)
-
-;; ;; FIXME: symbols...
-(define-method (pr-on (x <symbol>) port)
-  (display (symbol->string x) port)
-  #nil)
-
-;; FIXME: keywords...
-(define-method (pr-on (x <keyword>) port)
-  (display #\: port)
-  (display (keyword->string x) port)
-  #nil)
-
-(define-method (pr-on (x <char>) port)
-  (display (string #\\ x) port)
-  #nil)
-
-(define-method (pr-on (x <string>) port)
-  (write x port)
-  #nil)
-
-(define-method (pr-on (x <syntax>) port)
-  (write x port)
-  #nil)
-
-(define-method (pr-str . args)
-  (with-output-to-string
-    (lambda ()
-      (apply pr args))))
+  (show-boolean x port))
 
 (define-method (print-on (x <boolean>) port)
-  (display (boolean->string x) port)
-  #nil)
+  (show-boolean x port))
+
+
+(define-inlinable (show-null x port)
+  (display "()" port) #nil)
+
+(define-method (pr-on (x <null>) port)
+  (show-null x port))
 
 (define-method (print-on (x <null>) port)
-  (display "()" port)
-  #nil)
+  (show-null x port))
+
+
+(define-inlinable (show-num x port)
+  (display x port) #nil)
+
+(define-method (pr-on (x <number>) port)
+  (show-num x port))
 
 (define-method (print-on (x <number>) port)
-  (display x port)
-  #nil)
+  (show-num x port))
 
-;; ;; FIXME: symbols...
+
+;; FIXME: ensure correct clj format
+(define-inlinable (show-sym x port)
+  (display (symbol->string x) port) #nil)
+
+(define-method (pr-on (x <symbol>) port)
+  (show-sym x port))
+
 (define-method (print-on (x <symbol>) port)
-  (display x port)
-  #nil)
+  (show-sym x port))
 
-;; FIXME: keywords...
-(define-method (print-on (x <keyword>) port)
+
+;; FIXME: ensure correct clj format
+(define-inlinable (show-keyword x port)
   (display #\: port)
   (display (keyword->string x) port)
   #nil)
 
+(define-method (pr-on (x <keyword>) port)
+  (show-keyword x port))
+
+(define-method (print-on (x <keyword>) port)
+  (show-keyword x port))
+
+
+;; FIXME: ensure correct clj format
+(define-method (pr-on (x <char>) port)
+  (display (string #\\ x) port))
+
 (define-method (print-on (x <char>) port)
-  (display x port)
-  #nil)
+  (display x port) #nil)
+
+
+;; FIXME: ensure correct clj format
+(define-method (pr-on (x <string>) port)
+  (write x port) #nil)
 
 (define-method (print-on (x <string>) port)
-  (display x port)
-  #nil)
+  (display x port) #nil)
 
-(define (show-pair p emit port)
+
+(define-inlinable (show-pair p emit port)
   (display "(" port)
   (let loop ((items p))
     (when (pair? items)
@@ -190,15 +199,15 @@
         (when (pair? more)
           (emit #\space port)
           (loop more)))))
-  (display ")" port))
-
-(define-method (print-on (x <pair>) port)
-  (show-pair x print-on port)
+  (display ")" port)
   #nil)
 
 (define-method (pr-on (x <pair>) port)
-  (show-pair x pr-on port)
-  #nil)
+  (show-pair x pr-on port))
+
+(define-method (print-on (x <pair>) port)
+  (show-pair x print-on port))
+
 
 (define (module-name->ns-str m)
   (string-join (map symbol->string
@@ -208,7 +217,8 @@
 			(cons 'guile m)))
                "."))
 
-(define (module-name->ns-sym m) (string->symbol (module-name->ns-str m)))
+(define (module-name->ns-sym m)
+  (string->symbol (module-name->ns-str m)))
 
 (define-method (pr-on (x <module>) port)
   (display (str-somehow x (pr-str (module-name->ns-str (module-name x)))) port)
@@ -218,13 +228,10 @@
   (display (module-name->ns-str (module-name x)) port)
   #nil)
 
-(define-method (pr-on x port)
-  (display (str-somehow x #f) port)
-  #nil)
 
-(define-method (print-on x port)
-  (pr-on x port)
-  #nil)
+(define-method (pr-on (x <syntax>) port)
+  (write x port) #nil)
+
 
 (define (show-all items emit port)
   (if (pair? items)
@@ -238,26 +245,29 @@
           (loop (cdr rest)))
         #nil))))
 
+(define (pr . items)
+  (show-all items pr-on (*out*)))
+
 (define (print . items)
   (show-all items print-on (*out*)))
 
-(define (println . args)
-  (apply print args)
-  (newline (*out*))
-  #nil)
+
+(define (prn . items)
+  (apply pr items) (newline (*out*)) #nil)
+
+(define (println . items)
+  (apply print items) (newline (*out*)) #nil)
+
+
+(define-method (pr-str . args)
+  (with-output-to-string
+    (lambda ()
+      (apply pr args))))
 
 (define (print-str . args)
   (with-output-to-string
     (lambda ()
       (apply print args))))
-
-(define (pr . items)
-  (show-all items pr-on (*out*)))
-
-(define (prn . items)
-  (apply pr items)
-  (newline (*out*))
-  #nil)
 
 (define (str . args)
   (string-concatenate (map print-str args)))
