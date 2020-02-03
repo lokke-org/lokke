@@ -153,11 +153,6 @@
     (lambda ()
       (apply pr args))))
 
-(define-method (pr-str (x <module>))
-  (display (str-somehow x (pr-str (module-name->ns-str (module-name x))))
-           port)
-  #nil)
-
 (define-method (print-on (x <boolean>) port)
   (display (boolean->string x) port)
   #nil)
@@ -218,6 +213,10 @@
                "."))
 
 (define (module-name->ns-sym m) (string->symbol (module-name->ns-str m)))
+
+(define-method (pr-on (x <module>) port)
+  (display (str-somehow x (pr-str (module-name->ns-str (module-name x)))) port)
+  #nil)
 
 (define-method (print-on (x <module>) port)
   (display (module-name->ns-str (module-name x)) port)
