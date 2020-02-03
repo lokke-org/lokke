@@ -254,5 +254,10 @@
 (define (pr . items)
   (show-all items pr-on (*out*)))
 
+(define (prn . items)
+  (apply pr items)
+  (newline (*out*))
+  #nil)
+
 (define (str . args)
   (string-concatenate (map print-str args)))
