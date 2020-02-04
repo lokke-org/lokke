@@ -17,6 +17,7 @@
 (use-modules
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke pr) #:prefix t/)
+ ((lokke pr) #:select (*out*))
  ((lokke compare) #:prefix c/)
  ((lokke vector) #:select (vector))
  ((srfi srfi-1) #:select (iota))

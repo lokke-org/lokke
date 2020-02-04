@@ -21,7 +21,7 @@
 (define-module (lokke pr)
   #:use-module ((ice-9 format) #:select ((format . %scm-format)))
   #:use-module ((language tree-il) #:prefix tree-il/)
-  #:use-module ((lokke base dynamic) #:select (defdyn))
+  #:use-module ((lokke base dynamic) #:select (binding defdyn))
   #:use-module ((lokke base util)
                 #:select (keyword->string
                           module-name->ns-str
@@ -44,7 +44,7 @@
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (defdyn *in* (current-input-port))
-(define (*out*) (current-output-port))
+(defdyn *out* (current-output-port))
 (defdyn *err* (current-error-port))
 
 ;; For now, guile doesn't have one...
@@ -70,8 +70,9 @@
    (tree-il/letrec? x)))
 
 (define-syntax-rule (with-out-str e ...)
-  (with-output-to-string
-    (lambda () e ...)))
+  (call-with-output-string
+      (lambda (port)
+        (binding (*out* port) e ...))))
 
 (define (format . args) (apply %scm-format #f args))
 
@@ -234,28 +235,24 @@
         #nil))))
 
 (define (pr . items)
-  (show-all items pr-on (*out*)))
+  (show-all items pr-on *out*))
 
 (define (print . items)
-  (show-all items print-on (*out*)))
+  (show-all items print-on *out*))
 
 
 (define (prn . items)
-  (apply pr items) (newline (*out*)) #nil)
+  (apply pr items) (newline *out*) #nil)
 
 (define (println . items)
-  (apply print items) (newline (*out*)) #nil)
+  (apply print items) (newline *out*) #nil)
 
 
 (define-method (pr-str . args)
-  (with-output-to-string
-    (lambda ()
-      (apply pr args))))
+  (with-out-str (apply pr args)))
 
 (define (print-str . args)
-  (with-output-to-string
-    (lambda ()
-      (apply print args))))
+  (with-out-str (apply print args)))
 
 (define (str . args)
   (string-concatenate (map print-str args)))
