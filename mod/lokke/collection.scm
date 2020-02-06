@@ -194,6 +194,7 @@
 (define-method (write (s <seq>) port)
   (show s
         (lambda (x) (write x port))
+        port
         (format #f "#<<class> ~s ~x ("
                 (class-name (class-of s)) (object-address s))
         ")>"))
@@ -201,6 +202,7 @@
 (define-method (display (s <seq>) port)
   (show s
         (lambda (x) (display x port))
+        port
         (format #f "#<<class> ~s ~x ("
                 (class-name (class-of s)) (object-address s))
         ")>"))
