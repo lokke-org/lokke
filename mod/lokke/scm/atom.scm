@@ -17,6 +17,7 @@
                           atomic-box-compare-and-swap!
                           atomic-box-ref
                           make-atomic-box))
+  #:use-module ((ice-9 threads) #:select (yield))
   #:use-module ((srfi srfi-11) #:select (let-values))
   #:use-module ((lokke hash-map)
                 #:select (assoc contains? dissoc hash-map reduce-kv))
