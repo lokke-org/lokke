@@ -12,13 +12,10 @@
 ;;;      option) any later version.
 
 (define-module (lokke core)
-  #:use-module ((guile)
-                #:select ((apply . %scm-apply)
-                          (begin . %scm-begin)
-                          (let . %scm-let)))
+  #:use-module ((guile) #:select ((begin . %scm-begin) (let . %scm-let)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) #:select (drop-right iota last))
+  #:use-module ((srfi srfi-1) #:select (iota))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base syntax)
                 #:select (and
@@ -156,7 +153,7 @@
             num
             short
             some?)
-  #:replace (= apply instance? nil? do)
+  #:replace (= instance? nil? do)
   #:re-export (*
                *err*
                *in*
@@ -179,6 +176,7 @@
                add-watch
                alias
                and
+               apply
                assoc
                atom
                atom?
@@ -363,17 +361,6 @@
 
 (define = clj=)
 (define (not= . args) (not (apply = args)))
-
-(define (apply f . args)
-  ;; FIXME: tolerable?
-  (if (null? args)
-      (f)
-      (let (final (last args))
-        (if (list? final)
-            (%scm-apply f (append (drop-right args 1)
-                                  final))
-            (%scm-apply f (append (drop-right args 1)
-                                  (seq->scm-list final)))))))
 
 (define *command-line-args* (cdr (program-arguments)))
 

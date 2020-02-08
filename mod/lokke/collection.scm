@@ -28,6 +28,7 @@
                           <seq>
                           <sequential>
                           <vector-seq>
+                          apply
                           assoc
                           bounded-count
                           coll?
@@ -53,6 +54,7 @@
                           rest
                           second
                           seq
+                          seq->scm-list
                           seq?
                           seqable?
                           sequential?
@@ -74,7 +76,6 @@
             reduce
             repeat
             repeatedly
-            seq->scm-list
             some)
   #:replace (merge)
   #:re-export (<coll>
@@ -83,6 +84,7 @@
                <seq>
                <sequential>
                assoc
+               apply
                bounded-count
                clj=
                coll?
@@ -116,6 +118,7 @@
                second
                select-keys
                seq
+               seq->scm-list
                seq?
                seqable?
                sequential?
@@ -164,13 +167,6 @@
 (define-method (clj= (s <sequential>) x)
   (when (sequential? x)
     (clj-sequential= s x)))
-
-(define (seq->scm-list s)
-  (let loop ((s s)
-             (result '()))
-    (if-let [s (seq s)]
-            (loop (next s) (%scm-cons (first s) result))
-            (reverse! result))))
 
 (define (show coll emit port open close)
   (display open port)

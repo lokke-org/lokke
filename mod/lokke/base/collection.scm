@@ -23,10 +23,10 @@
 
 (define-module (lokke base collection)
   #:version (0 0 0)
-  #:use-module ((guile) :select ((cons . %scm-cons)))
+  #:use-module ((guile) :select ((apply . %scm-apply) (cons . %scm-cons)))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) #:select (proper-list?))
+  #:use-module ((srfi srfi-1) #:select (drop-right last proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-append))
   #:export (<coll>
             <lazy-seq>
@@ -60,13 +60,14 @@
             rseq
             second
             seq
+            seq->scm-list
             seq?
             seqable?
             sequential?
             take
             update)
   #:re-export (cons)
-  #:replace (assoc first)
+  #:replace (apply assoc first)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: should these implmentations of rest actually be next?
@@ -89,6 +90,25 @@
 
 ;; ;; FIXME: double-check
 (define-generic cons)
+
+(define (seq->scm-list s)
+  (let loop ((s s)
+             (result '()))
+    (let ((s (seq s)))
+      (if s
+          (loop (next s) (%scm-cons (first s) result))
+          (reverse! result)))))
+
+(define (apply f . args)
+  ;; FIXME: tolerable?
+  (if (null? args)
+      (f)
+      (let ((final (last args)))
+        (if (list? final)
+            (%scm-apply f (append (drop-right args 1)
+                                  final))
+            (%scm-apply f (append (drop-right args 1)
+                                  (seq->scm-list final)))))))
 
 (define-method (cons obj1 obj2)
   (unless (proper-list? rest)
