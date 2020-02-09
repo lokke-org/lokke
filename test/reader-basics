@@ -35,6 +35,9 @@
             test-runner-current
             test-runner-fail-count)))
 
+(define (scm-read-string s)
+  (call-with-input-string s (lambda (p) (read p))))
+
 ;; FIXME: test edn and non-edn reads
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
@@ -49,9 +52,7 @@
 (test-equal 1 (t/read-string "1"))
 (test-equal 0 (t/read-string "0"))
 (test-equal -1 (t/read-string "-1"))
-(test-equal 1.1 (t/read-string "1.1"))
-(test-equal 0.0 (t/read-string "0.0"))
-(test-equal -1.1 (t/read-string "-1.1"))
+
 (test-equal 3 (t/read-string "2r11"))
 (test-equal 8 (t/read-string "8r10"))
 (test-equal 8 (t/read-string "010"))
@@ -67,8 +68,35 @@
 (test-equal +inf.0 (t/read-string "##Inf"))
 (test-equal -inf.0 (t/read-string "##-Inf"))
 (test-equal +nan.0 (t/read-string "##NaN"))
-(test-equal 1e3 (t/read-string "1e3"))
-(test-equal -1e3 (t/read-string "-1e3"))
+
+;; float cases where scm and clj should match exactly
+(for-each
+ (lambda (s) (test-equal (scm-read-string s) (t/read-string s)))
+ '("0.0"
+   "1."
+   "-1."
+   "+1."
+   "1.e1"
+   "+1.e1"
+   "-1.e1"
+   "1.e+1"
+   "+1.e+1"
+   "-1.e+1"
+   "1.e-1"
+   "+1.e-1"
+   "-1.e-1"
+   "1.1"
+   "-1.1"
+   "+1.1"
+   "1.1e1"
+   "+1.1e1"
+   "-1.1e1"
+   "1.1e+1"
+   "+1.1e+1"
+   "-1.1e+1"
+   "1.1e-1"
+   "+1.1e-1"
+   "-1.1e-1"))
 
 (test-equal #\newline (t/read-string "\\newline"))
 

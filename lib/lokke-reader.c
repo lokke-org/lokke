@@ -764,34 +764,13 @@ SCM_DEFINE (cljg_string_to_integer, "string->integer", 1, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (cljg_string_to_float, "string->float", 1, 0, 0,
-            (SCM string), "...")
-#define FUNC_NAME s_cljg_string_to_float
+static int
+skip_integer_prefix(SCM string, size_t i, size_t len)
 {
-  SCM_VALIDATE_STRING(1, string);
-  const size_t len = scm_c_string_length (string);
-  int seen_dot = 0;
-  int seen_e = 0;
-  size_t i = 0;
-  if (!len)
-    return SCM_BOOL_F;
-  const SCM first_char = scm_c_string_ref(string, 0);
-  if (first_char == SCM_MAKE_CHAR('+') || first_char == SCM_MAKE_CHAR('-'))
-    i++;
+  size_t skip = 0;
   for (; i < len; i++) {
     switch (SCM_UNPACK(scm_c_string_ref(string, i)))
       {
-      case SCM_UNPACK(SCM_MAKE_CHAR ('.')):
-        if (seen_dot)
-          return SCM_BOOL_F;
-        seen_dot = 1;
-        break;
-      case SCM_UNPACK(SCM_MAKE_CHAR ('E')):
-      case SCM_UNPACK(SCM_MAKE_CHAR ('e')):
-        if (seen_e)
-          return SCM_BOOL_F;
-        seen_e = 1;
-        break;
       case SCM_UNPACK(SCM_MAKE_CHAR ('0')):
       case SCM_UNPACK(SCM_MAKE_CHAR ('1')):
       case SCM_UNPACK(SCM_MAKE_CHAR ('2')):
@@ -802,12 +781,64 @@ SCM_DEFINE (cljg_string_to_float, "string->float", 1, 0, 0,
       case SCM_UNPACK(SCM_MAKE_CHAR ('7')):
       case SCM_UNPACK(SCM_MAKE_CHAR ('8')):
       case SCM_UNPACK(SCM_MAKE_CHAR ('9')):
+        skip++;
         break;
       default:
-        return SCM_BOOL_F;
+        return skip;
       }
   }
-  return scm_string_to_number(string, SCM_UNDEFINED);
+  return skip;
+}
+
+SCM_DEFINE (cljg_string_to_float, "string->float", 1, 0, 0,
+            (SCM string), "...")
+#define FUNC_NAME s_cljg_string_to_float
+{
+  SCM_VALIDATE_STRING(1, string);
+  // FIXME: safer?
+  const size_t len = scm_c_string_length (string);
+  size_t i = 0;
+  if (!len)
+    return SCM_BOOL_F;
+  SCM c = scm_c_string_ref(string, 0);
+  if (c == SCM_MAKE_CHAR('+') || c == SCM_MAKE_CHAR('-'))
+    i++;
+  size_t skip = skip_integer_prefix(string, i, len);
+  if (!skip)
+    return SCM_BOOL_F;
+  i += skip;
+  if (i >= len)
+    return scm_string_to_number(string, SCM_UNDEFINED);
+  c = scm_c_string_ref(string, i);
+  // optional decimal point
+  if (c == SCM_MAKE_CHAR('.')) {
+    i++;
+    if (i >= len)
+      return scm_string_to_number(string, SCM_UNDEFINED);
+    skip = skip_integer_prefix(string, i, len);
+    i += skip;
+    if (i >= len)
+      return scm_string_to_number(string, SCM_UNDEFINED);
+    c = scm_c_string_ref(string, i);
+  }
+  if (c != SCM_MAKE_CHAR('e') && c != SCM_MAKE_CHAR('E'))
+    return SCM_BOOL_F;
+  i++;
+  if (i >= len)
+    return SCM_BOOL_F;
+  c = scm_c_string_ref(string, i);
+  if (c == SCM_MAKE_CHAR('+') || c == SCM_MAKE_CHAR('-')) {
+    i++;
+    if (i >= len)
+      return SCM_BOOL_F;
+  }
+  skip = skip_integer_prefix(string, i, len);
+  if (!skip)
+    return SCM_BOOL_F;
+  i += skip;
+  if (i >= len)
+    return scm_string_to_number(string, SCM_UNDEFINED);
+  return SCM_BOOL_F;
 }
 #undef FUNC_NAME
 
