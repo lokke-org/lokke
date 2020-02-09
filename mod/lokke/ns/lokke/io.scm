@@ -20,12 +20,15 @@
   #:use-module ((ice-9 rdelim) #:select ((read-line . %scm-read-line)))
   #:use-module ((ice-9 textual-ports) #:select (get-string-all))
   #:use-module (oop goops)
+  #:use-module ((lokke base syntax) #:select (when-not))
+  #:use-module ((lokke collection) #:select (cons lazy-seq))
   #:use-module ((lokke exception) #:select (with-open))
   #:use-module ((lokke hash-map) #:select (get hash-map))
   #:use-module ((lokke pr) #:select (*in* str))
   #:duplicates (merge-generics replace warn-override-core warn last)
   #:re-export (delete-file)
   #:export (copy
+            line-seq
             mkstemp
             read-line
             reader
@@ -114,3 +117,10 @@ exactly like slurp."
 not modified.  The filename will be available via
 guile.ice-9.ports/port-filename until the port is closed."
   (mkstemp! (string-copy template)))
+
+(define (line-seq rdr)
+  (let loop ()
+    (lazy-seq
+     (let ((l (%scm-read-line rdr)))
+       (when-not (eof-object? l)
+         (cons l (loop)))))))

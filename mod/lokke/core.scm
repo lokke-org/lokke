@@ -76,7 +76,7 @@
                           require
                           use))
   #:use-module ((lokke invoke) #:select (invoke))
-  #:use-module ((lokke ns lokke io) #:select (read-line slurp spit))
+  #:use-module ((lokke ns lokke io) #:select (line-seq read-line slurp spit))
   #:use-module ((lokke pr)
                 #:select (*err*
                           *in*
@@ -269,6 +269,7 @@
                lazy-seq
                let
                letfn
+               line-seq
                list
                load-file
                loop
