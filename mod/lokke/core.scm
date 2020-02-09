@@ -295,6 +295,7 @@
                ns-aliases
                ns-name
                nth
+               odd?
                or
                partial
                pos?
@@ -327,6 +328,7 @@
                seq?
                seqable?
                sequential?
+               set
                set-meta!
                set-validator!
                slurp
