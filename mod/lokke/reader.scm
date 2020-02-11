@@ -27,7 +27,9 @@
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
   #:use-module ((lokke transmogrify)
-                #:select (literals->clj-instances preserve-meta-if-new!))
+                #:select (literals->clj-instances
+                          preserve-meta-if-new!
+                          quote-empty-lists))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (concatenate iota fold))
   #:export (read read-for-compiler read-string read-string-for-compiler)
@@ -456,8 +458,9 @@
 (define (read-for-compiler port env)
   ;; Don't use str because it needs binding via print-str, which isn't
   ;; availble during early compilation, which needs this function.
-  (uninstantiated-read port (module-name->ns-str (module-name env))
-                       (ns-aliases env)))
+  (let ((expr (uninstantiated-read port (module-name->ns-str (module-name env))
+                                   (ns-aliases env))))
+    (quote-empty-lists expr)))
 
 (define (read-string-for-compiler s env)
   (call-with-input-string s
