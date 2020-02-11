@@ -107,6 +107,7 @@ Clojure reference like clojure.string/join to the corresponding Guile
 <modulle-ref>."
   (let ((name (tree-il/toplevel-ref-name top)))
     (cond
+     ((eq? '/ name) top)
      ((string-prefix? "/lokke/" (symbol->string name)) top)
      ((simple-symbol? name) top)
      (else
