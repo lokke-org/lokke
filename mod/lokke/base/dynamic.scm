@@ -16,7 +16,7 @@
 
 (define-module (lokke base dynamic)
   #:use-module ((ice-9 match) #:select (match-lambda))
-  #:use-module ((lokke base util) #:select (pairify vec-tag?))
+  #:use-module ((lokke base util) #:select (vec-tag?))
   #:export (binding defdyn defdynloc))
 
 
@@ -26,6 +26,11 @@
    (string->symbol (string-append "/lokke/dynamic-"
                                   (symbol->string (syntax->datum syn))))))
 
+(define dynamic-fluid (make-object-property))
+
+(define (remember-fluid! name-sym fluid)
+  (set! (dynamic-fluid (module-variable (current-module) name-sym)) fluid))
+
 (define-syntax defdyn
   (lambda (x)
     (syntax-case x ()
@@ -33,7 +38,9 @@
        (let ((fluid (secret-dynfluid-name x #'name)))
          #`(begin
              (define #,fluid (make-fluid value))
-             (define-syntax name (identifier-syntax (fluid-ref #,fluid)))))))))
+             (define-syntax name (identifier-syntax (fluid-ref #,fluid)))
+             (remember-fluid! 'name #,fluid)
+             (export name)))))))
 
 (define-syntax defdynloc
   (lambda (x)
@@ -42,7 +49,9 @@
        (let ((fluid (secret-dynfluid-name x #'name)))
          #`(begin
              (define #,fluid (make-thread-local-fluid value))
-             (define-syntax name (identifier-syntax (fluid-ref #,fluid)))))))))
+             (define-syntax name (identifier-syntax (fluid-ref #,fluid)))
+             (remember-fluid! 'name #,fluid)
+             (export name)))))))
 
 (define-syntax binding
   (lambda (x)
@@ -51,8 +60,14 @@
        #'(binding (rest ...) body ...))
       ((_ () body ...) #'(begin #nil body ...))
       ((_ (name init rest ...) body ...)
-       (let* ((bindings (map (match-lambda
-                               ((n i) (list (secret-dynfluid-name x n) i)))
-                             (pairify #'(name init rest ...)))))
-         #`(with-fluids #,bindings
-             body ...))))))
+       #'(let* ((mod (current-module))
+                (f (dynamic-fluid (module-variable mod 'name))))
+           (unless f
+             (error
+              (format #f
+                      "binding: unable to resolve dynamic variable ~a in ns ~a"
+                      'name
+                      (module-name->ns-str mod))))
+           (with-fluid*
+               f init
+               (lambda () (binding (rest ...) body ...))))))))

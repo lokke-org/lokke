@@ -26,6 +26,10 @@
 (define-method (invoke (f <generic>) . args)
   (apply f args))
 
+(define pws-class (class-of (make-procedure-with-setter identity identity)))
+(define-method (invoke (f pws-class) . args)
+  (apply f args))
+
 ;; FIXME: do we want this?
 (define parameter-class (class-of (make-parameter #f)))
 (define-method (invoke (f parameter-class) . args)

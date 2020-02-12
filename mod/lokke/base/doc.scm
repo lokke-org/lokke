@@ -13,7 +13,8 @@
 
 (define-module (lokke base doc)
   #:use-module ((ice-9 threads) #:select (with-mutex))
-  #:use-module ((lokke base util) #:select (global-identifier?))
+  #:use-module ((lokke base util)
+                #:select (global-identifier? module-name->ns-str))
   #:use-module ((srfi srfi-1) #:select (drop take))
   #:use-module ((texinfo string-utils) #:select (make-text-wrapper))
   #:export (clear-def-doc! doc maybe-set-def-doc!))
@@ -70,15 +71,6 @@ procedure-documentation if the value is a procedure."
           (or (procedure-documentation value)
               #nil)
           #nil)))
-
-;; FIXME: duplicated with pr
-(define (module-name->ns-str m)
-  (string-join (map symbol->string
-                    (if (and (> (length m) 2)
-                             (equal? '(lokke ns) (take m 2)))
-                        (drop m 2)
-                        (cons 'guile m)))
-               "."))
 
 (define show-doc
   (let ((wrap (make-text-wrapper #:initial-indent "  " #:subsequent-indent "  ")))

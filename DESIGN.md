@@ -87,13 +87,23 @@ expander will handle expansions normally.  The intention is for any
 quoted lists to end up compiled to normal Guile const lists (which are
 immutable, though possibly only when compiled right now).
 
-When a dynamic variable `foo` is defined, it is actually represented
-by a "hidden" top-level definition `(define /lokke/dynamic-foo
-(make-fluid ...))` in the current Guile module.  Then `foo` itself is
-made an identifier-syntax that expands into `(fluid-ref
-/lokke/dynamic-foo)`.
+When a dynamic variable `*out*` is defined via `defdyn`, it is
+actually represented by a "hidden" top-level definition `(define
+/lokke/dynamic-*out* (make-fluid ...))` in the current Guile module.
+Then `foo` itself is made an identifier-syntax that expands into
+`(fluid-ref /lokke/dynamic-foo)`.
 [Bindingconveyance](https://clojure.org/reference/vars#conveyance) is
 provided by transferring Guile's `current-dynamic-state`.
+
+This raises a question.  How does a form like `binding` locate the
+original fluid during expansion when it only sees a variable name like
+`*out*` which is bound to the identifier syntax?  Currently, when a
+dynamic variable is defined, the fluid is also associated with the
+module variable holding the identifier-syntax definition via an
+object-property.  That variable is what is imported into other modules
+via say `use-modules`, so `binding` can look up the module-variable
+associated with `*out*` by calling `module-variable`, and can then
+call `(dynamic-fluid var)` on the variable to get the fluid itself.
 
 Modules and namespaces
 ----------------------

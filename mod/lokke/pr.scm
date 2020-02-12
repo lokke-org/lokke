@@ -22,15 +22,15 @@
   #:use-module ((ice-9 format) #:select ((format . %scm-format)))
   #:use-module ((language tree-il) #:prefix tree-il/)
   #:use-module ((lokke base dynamic) #:select (defdyn))
-  #:use-module ((lokke base util) #:select (keyword->string))
+  #:use-module ((lokke base util)
+                #:select (keyword->string
+                          module-name->ns-str
+                          module-name->ns-sym))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) #:select (drop take))
   #:replace (format)
   #:export (*err*
             *in*
             *out*
-            module-name->ns-str
-            module-name->ns-sym
             pr
             pr-on
             pr-str
@@ -43,10 +43,9 @@
             with-out-str)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(defdyn *in* (current-input-port))  ;; also binds /lokke/dynamic-*in*
-;; FIXME: just using (*out*) so it'll be easy to find/fix later.
+(defdyn *in* (current-input-port))
 (define (*out*) (current-output-port))
-(defdyn *err* (current-error-port))  ;; also binds /lokke/dynamic-*err*
+(defdyn *err* (current-error-port))
 
 ;; For now, guile doesn't have one...
 (define (tree-il? x)
@@ -208,17 +207,6 @@
 (define-method (print-on (x <pair>) port)
   (show-pair x print-on port))
 
-
-(define (module-name->ns-str m)
-  (string-join (map symbol->string
-                    (if (and (> (length m) 2)
-                             (equal? '(lokke ns) (take m 2)))
-			(drop m 2)
-			(cons 'guile m)))
-               "."))
-
-(define (module-name->ns-sym m)
-  (string->symbol (module-name->ns-str m)))
 
 (define-method (pr-on (x <module>) port)
   (display (str-somehow x (pr-str (module-name->ns-str (module-name x)))) port)

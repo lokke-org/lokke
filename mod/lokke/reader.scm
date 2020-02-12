@@ -15,13 +15,15 @@
   #:use-module ((ice-9 pretty-print) #:select (pretty-print))
   #:use-module ((ice-9 receive) #:select (receive))
   #:use-module ((lokke base util)
-                #:select (keyword->string pairify string->keyword))
+                #:select (keyword->string
+                          module-name->ns-str
+                          pairify
+                          string->keyword))
   #:use-module ((lokke collection) #:select (empty? merge))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke hash-set) #:select (hash-set))
   #:use-module ((lokke metadata) #:select (with-meta set-meta!))
   #:use-module ((lokke ns) #:select (ns-aliases))
-  #:use-module ((lokke pr) #:select (str))
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
   #:use-module ((lokke transmogrify)
@@ -53,7 +55,10 @@
               (ref (symbol->string (parsed-sym-ref parsed))))
           (unless mod
             (error "Unknown namespace alias in" sym))
-          (string-append (str mod) "/" ref)))))
+          ;; Don't use str because it needs binding via print-str,
+          ;; which isn't availble during early compilation, which
+          ;; needs this function.
+          (string-append (module-name->ns-str (module-name mod)) "/" ref)))))
 
 (define (expand-keyword-aliases kw ns-str aliases)
   ;; Always expand a keyword with a double-colon prefix
@@ -449,7 +454,10 @@
         result)))))
 
 (define (read-for-compiler port env)
-  (uninstantiated-read port (str env) (ns-aliases env)))
+  ;; Don't use str because it needs binding via print-str, which isn't
+  ;; availble during early compilation, which needs this function.
+  (uninstantiated-read port (module-name->ns-str (module-name env))
+                       (ns-aliases env)))
 
 (define (read-string-for-compiler s env)
   (call-with-input-string s
@@ -457,7 +465,9 @@
 
 ;; FIXME: read always just grabs current-module?
 (define (read port)
-  (let ((expr (uninstantiated-read port (str (current-module)) #f)))
+  (let ((expr (uninstantiated-read port
+                                   (module-name->ns-str
+                                    (module-name (current-module))) #f)))
     (if (eof-object? expr)
         expr
         (literals->clj-instances expr))))

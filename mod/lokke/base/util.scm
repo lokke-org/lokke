@@ -13,10 +13,12 @@
 
 (define-module (lokke base util)
   #:use-module ((ice-9 receive) #:select (receive))
-  #:use-module ((srfi srfi-1) #:select (take))
+  #:use-module ((srfi srfi-1) #:select (drop take))
   #:use-module ((system syntax) #:select (syntax-local-binding))
   #:export (global-identifier?
             keyword->string
+            module-name->ns-str
+            module-name->ns-sym
             pairify
             require-nil
             string->keyword
@@ -24,6 +26,17 @@
 
 (define (string->keyword x) (symbol->keyword (string->symbol x)))
 (define (keyword->string x) (symbol->string (keyword->symbol x)))
+
+(define (module-name->ns-str m)
+  (string-join (map symbol->string
+                    (if (and (> (length m) 2)
+                             (equal? '(lokke ns) (take m 2)))
+			(drop m 2)
+			(cons 'guile m)))
+               "."))
+
+(define (module-name->ns-sym m)
+  (string->symbol (module-name->ns-str m)))
 
 (define (global-identifier? syn)
   (receive (type _)
