@@ -236,6 +236,7 @@
                ex-message
                false?
                ffirst
+               filterv
                find
                find-ns
                first
@@ -275,6 +276,7 @@
                map?
                map-entry
                map-entry?
+               mapv
                max
                merge
                meta

@@ -70,7 +70,9 @@
   #:export (doall
             dorun
             empty?
+            filterv
             into
+            mapv
             not-any?
             not-every?
             reduce
@@ -314,3 +316,24 @@
 
 (define (not-any? pred coll)
   (not (some pred coll)))
+
+(define (mapv f . colls)
+  (when (null? colls)
+    (scm-error 'wrong-number-of-args
+               "mapv"
+               "Wrong number of arguments" '() #f))
+  (let loop ((result (vector))
+             (nexts colls))
+    (if (some nil? nexts)
+        result
+        (loop (conj result (apply f (map first nexts)))
+              (map next nexts)))))
+
+(define (filterv pred coll)
+  (let loop ((result (vector))
+             (rst coll))
+    (if-let (s (seq rst))
+            (let ((x (first s)))
+              (loop (if (pred x) (conj result x) result)
+                    (rest s)))
+            result)))
