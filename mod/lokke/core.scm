@@ -75,7 +75,7 @@
                           refer-clojure
                           require
                           use))
-  #:use-module ((lokke invoke) #:select (invoke))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke ns lokke io) #:select (line-seq read-line slurp spit))
   #:use-module ((lokke pr)
                 #:select (*err*

@@ -11,7 +11,7 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(define-module (lokke invoke)
+(define-module (lokke base invoke)
   #:use-module (oop goops)
   #:export (invoke)
   #:duplicates (merge-generics replace warn-override-core warn last))

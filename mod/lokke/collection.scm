@@ -60,12 +60,12 @@
                           sequential?
                           take
                           update))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map) #:select (<map> map? select-keys))
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke scm vector) #:select (<lokke-vector>))
   #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke invoke) #:select (invoke))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:export (doall
             dorun

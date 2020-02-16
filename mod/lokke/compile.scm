@@ -80,7 +80,7 @@
     (clj-instances->literals form)))
 
 (define (make-invoke-ref src)
-  (tree-il/make-module-ref src '(lokke invoke) 'invoke #t))
+  (tree-il/make-module-ref src '(lokke base invoke) 'invoke #t))
 
 (define (make-vector-fn-ref src)
   (tree-il/make-module-ref src '(lokke scm vector) 'lokke-vector #t))

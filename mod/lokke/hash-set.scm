@@ -13,6 +13,7 @@
 
 (define-module (lokke hash-set)
   #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke collection)
                 #:select (conj
                           cons
@@ -25,7 +26,6 @@
                           lazy-seq
                           reduce
                           rest seq))
-  #:use-module ((lokke invoke) #:select (invoke))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke set) #:select (<set>))
