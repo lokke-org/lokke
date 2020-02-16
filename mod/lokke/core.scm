@@ -117,8 +117,10 @@
                           dec
                           dec'
                           doto
+                          double
                           double?
                           false?
+                          float
                           float?
                           identical?
                           inc
@@ -223,6 +225,7 @@
                dorun
                dotimes
                doto
+               double
                double?
                drop
                empty
@@ -240,6 +243,7 @@
                find
                find-ns
                first
+               float
                float?
                fn
                fnext

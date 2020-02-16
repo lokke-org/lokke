@@ -24,6 +24,8 @@
                (1+ . inc)
                (1- . dec')
                (1- . dec)
+               (exact->inexact . double)
+               (exact->inexact . float)
                (eq? . identical?)
                (fixnum? . int?)
                (modulo . mod)
