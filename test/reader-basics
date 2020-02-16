@@ -109,6 +109,8 @@
 
 (test-equal (eof-object) (t/read-string ""))
 
+(test-equal '() (t/read-string "()"))
+
 (test-equal (hash-map) (t/read-string "{}"))
 (test-equal (hash-map 1 2) (t/read-string "{1 2}"))
 

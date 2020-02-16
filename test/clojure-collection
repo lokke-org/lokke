@@ -21,7 +21,7 @@
 
 (testing "rest behavior"
   (is (= '(2) (rest (list 1 2))))
-  (is (= '() (rest (list 1))))
+  (is (= () (rest (list 1))))
   (is (= [2] (rest [1 2])))
   (is (= (list 2) (rest [1 2])))
   (is (= '(2) (rest [1 2])))
@@ -29,20 +29,20 @@
   (is (= (list 2) (rest (list 1 2))))
   (is (= '(2) (rest (list 1 2))))
   (is (empty? (rest [1])))
-  (is (= (list)  (rest [1])))
-  (is (= '()  (rest [1]))))
+  (is (= (list) (rest [1])))
+  (is (= () (rest [1]))))
 
 (testing "empty list/vector tests"
-  (is (= '() '()))
+  (is (= () ()))
   (is (= [] []))
-  (is (= '() []))
-  (is (empty? '()))
-  (is (empty? (seq '())))
+  (is (= () []))
+  (is (empty? ()))
+  (is (empty? (seq ())))
   (is (empty? []))
   (is (empty? (seq [])))
-  (is (not= '() false))
+  (is (not= () false))
   (is (not= '(1) true))
-  (is (not= '() nil))
+  (is (not= () nil))
 
   (is (not (empty? '(1))))
   (is (not (empty? [1]))))
@@ -58,7 +58,7 @@
 
 (testing "counted?"
   (is (not (counted? nil)))
-  (is (counted? '()))
+  (is (counted? ()))
   ;; FIXME: These differ from clojure/jvm right now because '(...) is
   ;; actually just a guile pair.  Still have to decide if that's OK,
   ;; but this begins to suggest more strongly it might not be, i.e. we
@@ -67,8 +67,8 @@
   (is (not (counted? '(cons 1 (cons 2 nil))))))
 
 (testing "bounded-count"
-  (is (= 0 (bounded-count 0 '())))
-  (is (= 0 (bounded-count 1 '())))
+  (is (= 0 (bounded-count 0 ())))
+  (is (= 0 (bounded-count 1 ())))
   (is (= 0 (bounded-count 0 '(1 2))))
   (is (= 1 (bounded-count 1 '(1 2))))
   (is (= 2 (bounded-count 2 '(1 2))))
@@ -82,12 +82,12 @@
   (is (= 2 (bounded-count 3 [1 2]))))
 
 (testing "filterv"
-  (is (= [] (filterv identity '())))
+  (is (= [] (filterv identity ())))
   (is (= [1] (filterv identity '(1))))
   (is (= [1 3] (filterv odd? '(1 2 3 4)))))
 
 (testing "mapv"
-  (is (= [] (mapv identity '())))
+  (is (= [] (mapv identity ())))
   (is (= [1] (mapv identity '(1))))
   (is (= [2] (mapv inc '(1))))
   (is (= [2 3] (mapv inc '(1 2))))

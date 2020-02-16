@@ -23,7 +23,8 @@
   #:export (clj-instances->literals
             literals->clj-instances
             literals->scm-instances
-            preserve-meta-if-new!)
+            preserve-meta-if-new!
+            quote-empty-lists)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define debug-transmogrify? #f)
@@ -109,3 +110,15 @@
       (format (current-error-port) "  =>\n")
       (pretty-print result (current-error-port)))
     result))
+
+(define (quote-empty-lists expr)
+  ;; Handle clojure's ().  Convert it to '() when compiling so it's
+  ;; not interpreted as an empty procedure call (i.e. syntax error).
+  (define (convert expr)
+    (preserve-meta-if-new!
+     expr
+     (cond
+      ((eq? '() expr) '(quote ()))
+      ((list? expr) (if (nil? expr) expr (map convert expr)))
+      (else expr))))
+  (convert expr))
