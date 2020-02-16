@@ -196,7 +196,8 @@ scm_i_read_hash_procedures_set_x (SCM value)
   (CHAR_IS_BLANK (c)						\
    || (c) == ')' || (c) == '(' || (c) == ';' || (c) == '"'      \
    || (c) == ']' || (c) == '['                                  \
-   || (c) == '}' || (c) == '{')
+   || (c) == '}' || (c) == '{')                                 \
+   || (c) == ','
 
 #define CHAR_IS_EXPONENT_MARKER(_chr) ((_chr) == 'e')
 
@@ -339,6 +340,7 @@ flush_ws (SCM port, scm_t_read_opts *opts, const char *eoferr)
       case SCM_LINE_INCREMENTORS:
       case SCM_SINGLE_SPACES:
       case '\t':
+      case ',':
 	break;
 
       default:
