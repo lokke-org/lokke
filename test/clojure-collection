@@ -81,6 +81,14 @@
   (is (= 2 (bounded-count 2 [1 2])))
   (is (= 2 (bounded-count 3 [1 2]))))
 
+(testing "reduce"
+  (is (= 0 (reduce + [])))
+  (is (= :fine (reduce (fn [] :crash) [:fine])))
+  (is (= 3 (reduce + [1 2])))
+  (is (= 6 (reduce + [1 2 3])))
+  (is (= :default (reduce + :default [])))
+  (is (= 6 (reduce + 1 [2 3]))))
+
 (testing "filterv"
   (is (= [] (filterv identity ())))
   (is (= [1] (filterv identity '(1))))
