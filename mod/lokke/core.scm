@@ -167,13 +167,15 @@
                ->
                ->>
                /
-               ==
+               <
                <atom>
                <coll>
                <map>
                <map-entry>
                <seq>
                <set>
+               ==
+               >
                ExceptionInfo
                add-watch
                alias
