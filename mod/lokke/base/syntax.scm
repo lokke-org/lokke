@@ -46,6 +46,7 @@
   #:export (->
             ->>
             cond
+            declare
             def
             defn
             dotimes
@@ -62,6 +63,11 @@
 (eval-when (expand load eval)
   (define debug-fn? #f)
   (define debug-let? #f))
+
+(define-syntax declare
+  (syntax-rules ()
+    ((_ name) (define name))
+    ((_ name name* ...) (begin (define name) (declare name* ...)))))
 
 (define-syntax ->
   (syntax-rules ()

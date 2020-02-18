@@ -21,6 +21,7 @@
                 #:select (and
                           binding
                           (cond . clj-cond)
+                          declare
                           def
                           defn
                           defdyn
@@ -215,6 +216,7 @@
                counted?
                dec
                dec'
+               declare
                def
                defdyn
                defdynloc
