@@ -13,9 +13,11 @@
 
 (define-module (lokke base map)
   #:use-module ((lokke base collection) #:select (<coll> count every? get seq))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map-entry) #:select (key val))
   #:use-module (oop goops)
   #:export (<map> map? select-keys)
+  #:re-export (get invoke)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; Define the <map> basics here.  They can't go in anything that
@@ -37,3 +39,6 @@
                  (equal? (get y (key entry) sentinel)
                          (val entry)))
                (seq x))))
+
+(define-method (invoke (m <map>) . args)
+  (apply get m args))
