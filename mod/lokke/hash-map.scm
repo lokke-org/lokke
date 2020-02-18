@@ -83,19 +83,6 @@
 
 (define (read-only-str s) (substring/read-only s 0))
 
-(define (render-str m render)
-  (let* ((first? #t)
-         (content (hamts/hamt-fold (lambda (k v result)
-                                     (when first? (set! first? #f))
-                                     (cons (string-append (if first? "" ", ")
-                                                          (render k) " " (render v))
-                                           result))
-                                   '()
-                                   (map-hamt m)))
-         (content (reverse! content)))
-    (read-only-str
-     (apply string-append "{" (append content '("}"))))))
-
 (define (show m emit port)
   (display "{" port)
   (let ((first? #t))
