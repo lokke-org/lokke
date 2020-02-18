@@ -59,6 +59,7 @@
                           seqable?
                           sequential?
                           take
+                          take-while
                           update))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map) #:select (<map> map? select-keys))
@@ -125,6 +126,7 @@
                seqable?
                sequential?
                take
+               take-while
                update
                val)
   #:duplicates (merge-generics replace warn-override-core warn last))

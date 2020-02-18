@@ -65,6 +65,7 @@
             seqable?
             sequential?
             take
+            take-while
             update)
   #:re-export (cons)
   #:replace (apply assoc first)
@@ -417,6 +418,16 @@
              #nil
              (cons (first s)
                    (take (1- n) (next s))))))))
+
+(define (take-while pred coll)
+  (lazy-seq
+   (let ((s (seq coll)))
+     (if (nil? s)
+         #nil
+         (let ((x (first s)))
+           (if (pred x)
+               (cons x (take-while pred (rest s)))
+               #nil))))))
 
 (define (drop n coll)
   (lazy-seq

@@ -110,4 +110,13 @@
   (is (= nil (get {1 2} 3)))
   (is (= :something (get {1 2} 3 :something))))
 
+(testing "take-while"
+  (is (= nil (get {} 1)))
+  (is (= :something (get {} 1 :something)))
+  (is (= nil (get nil 1)))
+  (is (= :something (get nil 1 :something)))
+  (is (= 2 (get {1 2} 1)))
+  (is (= nil (get {1 2} 3)))
+  (is (= :something (get {1 2} 3 :something))))
+
 (end-tests (ns-name *ns*) :exit? true)

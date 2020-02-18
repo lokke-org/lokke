@@ -354,6 +354,7 @@
                symbol
                symbol?
                take
+               take-while
                throw
                true?
                try
