@@ -53,13 +53,13 @@ struct char_and_c_name_t {
 
 static struct char_and_c_name_t aliased_characters[] =
   {
-   {"\\newline", SCM_MAKE_CHAR('\n')},
-   {"\\space", SCM_MAKE_CHAR(' ')},
-   {"\\tab", SCM_MAKE_CHAR('\t')},
-   {"\\formfeed", SCM_MAKE_CHAR('\f')},
-   {"\\backspace", SCM_MAKE_CHAR('\b')},
-   {"\\return", SCM_MAKE_CHAR('\r')},
-   {0,}
+   {"newline", SCM_MAKE_CHAR('\n')},
+   {"space", SCM_MAKE_CHAR(' ')},
+   {"tab", SCM_MAKE_CHAR('\t')},
+   {"formfeed", SCM_MAKE_CHAR('\f')},
+   {"backspace", SCM_MAKE_CHAR('\b')},
+   {"return", SCM_MAKE_CHAR('\r')},
+   {0, 0}
 };
 
 scm_t_option scm_read_opts[] =
@@ -1156,9 +1156,10 @@ scm_read_character (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
 
   /* aliased characters like \newline \return, etc. */
   static struct char_and_c_name_t *alias = aliased_characters;
-  while (alias->name++) {
+  while (alias->name) {
     if (strcmp(buffer, alias->name) == 0)
       return alias->chr;
+    alias++;
   }
   scm_i_input_error (FUNC_NAME, port, "unknown character name ~a",
 		     scm_list_1 (charname));

@@ -99,6 +99,11 @@
    "-1.1e-1"))
 
 (test-equal #\newline (t/read-string "\\newline"))
+(test-equal #\space (t/read-string "\\space"))
+(test-equal #\tab (t/read-string "\\tab"))
+(test-equal #\page (t/read-string "\\formfeed"))
+(test-equal #\backspace (t/read-string "\\backspace"))
+(test-equal #\return (t/read-string "\\return"))
 
 (test-equal "foo" (t/read-string "\"foo\""))
 (test-equal '(read-only . #t)
