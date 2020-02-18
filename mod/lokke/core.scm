@@ -92,6 +92,7 @@
                           prn
                           str
                           with-out-str))
+  #:use-module ((lokke reader) #:select (read read-string))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
@@ -157,7 +158,7 @@
             num
             short
             some?)
-  #:replace (= instance? nil? do)
+  #:replace (= do instance? nil? read)
   #:re-export (*
                *err*
                *in*
@@ -327,6 +328,7 @@
                rand-int
                range
                read-line
+               read-string
                reduce
                reduce-kv
                refer
