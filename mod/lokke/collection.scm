@@ -73,6 +73,7 @@
             empty?
             filterv
             into
+            iterate
             mapv
             not-any?
             not-every?
@@ -312,6 +313,9 @@
        (lazy-seq
         (when-not (zero? n)
           (cons (f) (loop (1- n)))))))))
+
+(define (iterate f x)
+  (cons x (lazy-seq (iterate f (f x)))))
 
 (define (not-every? pred coll)
   (not (every? pred coll)))
