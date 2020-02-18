@@ -324,6 +324,7 @@
                quote
                rand
                rand-int
+               range
                read-line
                reduce
                reduce-kv

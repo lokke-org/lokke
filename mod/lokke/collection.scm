@@ -77,6 +77,7 @@
             mapv
             not-any?
             not-every?
+            range
             reduce
             repeat
             repeatedly
@@ -316,6 +317,16 @@
 
 (define (iterate f x)
   (cons x (lazy-seq (iterate f (f x)))))
+
+;; FIXME: optimize?
+(define range
+  (match-lambda*
+    (() (iterate 1+ 0))
+    ((end) (take end (iterate 1+ 0)))
+    ((start end) (take (- end start) (iterate 1+ start)))
+    ((start end step)
+     (take-while (lambda (x) (< x end))
+                 (iterate (lambda [x] (+ x step)) start)))))
 
 (define (not-every? pred coll)
   (not (every? pred coll)))

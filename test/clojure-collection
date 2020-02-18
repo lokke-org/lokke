@@ -122,4 +122,10 @@
 (testing "iterate"
   (is (= [0 1 2] (take 3 (iterate inc 0)))))
 
+(testing "range"
+  (is (= [0 1 2] (take 3 (range))))
+  (is (= [0 1 2] (range 3)))
+  (is (= [3 4 5 6 7 8] (range 3 9)))
+  (is (= [0 5 10 15] (range 0 20 5))))
+
 (end-tests (ns-name *ns*) :exit? true)
