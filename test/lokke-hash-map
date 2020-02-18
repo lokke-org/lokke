@@ -67,6 +67,7 @@
 (test-assert (t/contains? (t/hash-map 1 2 3 4 5 6) 3))
 
 (test-eq #nil (t/get (t/hash-map) 1))
+(test-equal 1 (t/get (t/hash-map (t/hash-map) 1) (t/hash-map)))
 (test-equal 2 (t/get (t/hash-map 1 2) 1))
 (test-equal 4 (t/get (t/hash-map 1 2 3 4) 3))
 (test-eq 'not-found (t/get (t/hash-map) 1 'not-found))
