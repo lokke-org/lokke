@@ -36,11 +36,6 @@
 (define-method (key (entry <map-entry>)) (slot-ref entry 'k))
 (define-method (val (entry <map-entry>)) (slot-ref entry 'v))
 
-(define (read-only-str s) (substring/read-only s 0))
-
-(define (render-str m render)
-  (read-only-str (string-append "[" (render (key m)) " " (render (val m)) "]")))
-
 (define (show m emit port)
   (display "[" port)
   (emit (key m) port)
