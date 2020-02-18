@@ -35,6 +35,7 @@
             pr-on
             pr-str
             print
+            printf
             print-on
             print-str
             println
@@ -239,6 +240,9 @@
 
 (define (print . items)
   (show-all items print-on *out*))
+
+(define (printf fmt . args)
+  (print (apply format fmt args)))
 
 
 (define (prn . items)

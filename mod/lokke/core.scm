@@ -86,6 +86,7 @@
                           pr
                           pr-str
                           print
+                          printf
                           print-str
                           println
                           prn
@@ -314,6 +315,7 @@
                pr
                pr-str
                print
+               printf
                print-str
                println
                prn
