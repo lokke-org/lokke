@@ -444,3 +444,14 @@
       (if (not keys)
           src
           (loop (get src (first keys) not-found) (next keys))))))
+
+(define-method (assoc associative k1 v1 k2 . v2-kvs)
+  ;; Fall back for cases where there's no advantage to a bulk method
+  (when (null? v2-kvs)
+    (error "No value for key:" k2))
+  (let loop ((kvs (cdr v2-kvs))
+             (result (assoc (assoc associative k1 v1) k2 (car v2-kvs))))
+    (cond
+     ((null? kvs) result)
+     ((null? (cdr kvs)) (error "No value for key:" (car kvs)))
+     (else (loop (cddr kvs) (assoc result (car kvs) (cadr kvs)))))))

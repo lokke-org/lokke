@@ -103,14 +103,8 @@
 
 (define (hash-map? x) (is-a? x <hash-map>))
 
-(define-method (assoc (m <hash-map>) . alternating-keys-and-values)
-  (let loop ((kvs alternating-keys-and-values)
-             (result (map-hamt m)))
-    (cond
-     ((null? kvs) (make-map result))
-     ((null? (cdr kvs)) (error "No value for key:" (car kvs)))
-     (else (loop (cddr kvs)
-                 (hamts/hamt-set result (car kvs) (cadr kvs)))))))
+(define-method (assoc (m <hash-map>) k v)
+  (make-map (hamts/hamt-set (map-hamt m) k v)))
 
 (define empty-hash-map (make-map (hamts/make-hamt hash/hash eqv?)))
 
