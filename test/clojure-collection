@@ -128,4 +128,7 @@
   (is (= [3 4 5 6 7 8] (range 3 9)))
   (is (= [0 5 10 15] (range 0 20 5))))
 
+(testing "assoc"
+  (is (= {:x 1} (assoc nil :x 1))))
+
 (end-tests (ns-name *ns*) :exit? true)

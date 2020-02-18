@@ -65,6 +65,7 @@
   #:use-module ((lokke base map) #:select (<map> map? select-keys))
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
+  #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module ((lokke scm vector) #:select (<lokke-vector>))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke pr) #:select (pr-on print-on))
@@ -132,6 +133,10 @@
                update
                val)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(define-method (assoc (x <boolean>) k v)
+  (require-nil 'get x)
+  (hash-map k v))
 
 (define-method (invoke (key <keyword>) map) (get map key))
 (define-method (invoke (key <keyword>) map not-found) (get map key not-found))
