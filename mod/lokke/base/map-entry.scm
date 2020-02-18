@@ -19,9 +19,9 @@
   #:use-module (oop goops)
   #:use-module ((lokke base collection)
                 #:select (<sequential> cons first nth rest second seq))
-  #:use-module ((lokke pr) #:select (pr pr-str print print-str))
+  #:use-module ((lokke pr) #:select (pr-on print-on))
   #:export (<map-entry> key map-entry map-entry? val)
-  #:re-export (first nth second)
+  #:re-export (first nth pr-on print-on second)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <map-entry> (<sequential>)
