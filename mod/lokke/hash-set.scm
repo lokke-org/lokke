@@ -59,6 +59,12 @@
 
 (define-syntax-rule (set-hamt s) (slot-ref s 'internals))
 
+(define-method (get (s <hash-set>) x)
+  (hamts/hamt-ref (set-hamt s) x #nil))
+
+(define-method (get (s <hash-set>) x not-found)
+  (hamts/hamt-ref (set-hamt s) x not-found))
+
 (define (read-only-str s) (substring/read-only s 0))
 
 (define (render-str s render)
