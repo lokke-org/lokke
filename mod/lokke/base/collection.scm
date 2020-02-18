@@ -182,27 +182,6 @@
       coll
       #nil))
 
-(define-method (nth (coll <coll>) (n <integer>))
-  (when (negative? n)
-    (scm-error 'out-of-range 'nth "Negative index: ~a"
-               (list n) (list n)))
-  (let loop ((i 0) (rst coll))
-    (let ((s (seq rst)))
-      (unless s
-        (scm-error 'out-of-range 'nth "Vector index out of range: ~a"
-                   (list i) (list i)))
-      (if (= i n) (first s) (loop (1+ i) (next s))))))
-
-(define-method (nth (coll <coll>) (n <integer>) not-found)
-  (when (negative? n)
-    (scm-error 'out-of-range 'nth "Negative index: ~a"
-               (list n) (list n)))
-  (let loop ((i 0) (rst coll))
-    (let ((s (seq rst)))
-      (if s
-          (if (= i n) (first s) (loop (1+ i) (next s)))
-          not-found))))
-
 
 (define-class <sequential> (<coll>))
 
@@ -218,6 +197,27 @@
                   (equal? (first x) (first y))
                   (loop (next x) (next y)))
              (not (seq y))))))
+
+(define-method (nth (coll <sequential>) (n <integer>))
+  (when (negative? n)
+    (scm-error 'out-of-range 'nth "Negative index: ~a"
+               (list n) (list n)))
+  (let loop ((i 0) (rst coll))
+    (let ((s (seq rst)))
+      (unless s
+        (scm-error 'out-of-range 'nth "Vector index out of range: ~a"
+                   (list i) (list i)))
+      (if (= i n) (first s) (loop (1+ i) (next s))))))
+
+(define-method (nth (coll <sequential>) (n <integer>) not-found)
+  (when (negative? n)
+    (scm-error 'out-of-range 'nth "Negative index: ~a"
+               (list n) (list n)))
+  (let loop ((i 0) (rst coll))
+    (let ((s (seq rst)))
+      (if s
+          (if (= i n) (first s) (loop (1+ i) (next s)))
+          not-found))))
 
 
 (define-class <seq> (<sequential>))
