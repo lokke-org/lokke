@@ -111,6 +111,15 @@
             (%scm-apply f (append (drop-right args 1)
                                   (seq->scm-list final)))))))
 
+;; e.g. (get nil :x)
+(define-method (get (x <boolean>) key)
+  (require-nil 'get x)
+  #nil)
+
+(define-method (get (x <boolean>) key not-found)
+  (require-nil 'get x)
+  not-found)
+
 (define-method (cons obj1 obj2)
   (unless (proper-list? rest)
     (error "Second argument to cons is an improper list:" obj2))
