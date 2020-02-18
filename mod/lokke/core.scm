@@ -184,6 +184,7 @@
                and
                apply
                assoc
+               assoc-in
                atom
                atom?
                (begin . %scm-begin)

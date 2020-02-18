@@ -30,6 +30,7 @@
                           <vector-seq>
                           apply
                           assoc
+                          assoc-in
                           bounded-count
                           coll?
                           conj
@@ -90,6 +91,7 @@
                <seq>
                <sequential>
                assoc
+               assoc-in
                apply
                bounded-count
                clj=

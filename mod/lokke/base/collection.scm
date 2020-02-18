@@ -34,6 +34,7 @@
             <seq>
             <sequential>
             <vector-seq>
+            assoc-in
             bounded-count
             coll?
             conj
@@ -455,3 +456,12 @@
      ((null? kvs) result)
      ((null? (cdr kvs)) (error "No value for key:" (car kvs)))
      (else (loop (cddr kvs) (assoc result (car kvs) (cadr kvs)))))))
+
+(define (assoc-in associative ks v)
+  ;; Match jvm semantics for now
+  (let* ((s (seq ks))
+         (k (first s))
+         (ks (next s)))
+    (if ks
+        (assoc associative k (assoc-in (get associative k) ks v))
+        (assoc associative k v))))
