@@ -13,7 +13,7 @@
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
 
-(ns test.clojure-collection
+(ns test.clojure-vector
   (:require
    [clojure.test :refer [begin-tests end-tests is testing]]))
 
