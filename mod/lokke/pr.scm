@@ -175,8 +175,16 @@
 
 
 ;; FIXME: ensure correct clj format
-(define-method (pr-on (x <char>) port)
-  (display (string #\\ x) port))
+(define-method (pr-on (c <char>) port)
+  (case c
+    ((#\newline) (display "\\newline" port))
+    ((#\space) (display "\\space" port))
+    ((#\tab) (display "\\tab" port))
+    ((#\page) (display "\\formfeed" port))
+    ((#\backspace) (display "\\backspace" port))
+    ((#\return) (display "\\return" port))
+    ;; FIXME: adjust to match the jvm (or edn) more precisely
+    (else (display (display (string #\\ c) port)))))
 
 (define-method (print-on (x <char>) port)
   (display x port) #nil)
