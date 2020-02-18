@@ -12,8 +12,8 @@
 ;;;      option) any later version.
 
 (define-module (lokke hash-set)
-  #:use-module ((ice-9 control) #:select (call/ec))
   #:use-module ((lokke base invoke) #:select (invoke))
+  #:use-module ((ice-9 control) #:select (call/ec))
   #:use-module ((lokke collection)
                 #:select (conj
                           cons
@@ -47,7 +47,6 @@
                empty
                get
                into
-               invoke
                pr-on
                print-on)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -134,9 +133,6 @@
 
 (define-method (get (s <hash-set>) x not-found)
   (hamts/hamt-ref (set-hamt s) x not-found))
-
-(define-method (invoke (s <hash-set>) item)
-  (get s item))
 
 (define (hash-set-equal? s1 s2)
   (let ((h1 (set-hamt s1))

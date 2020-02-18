@@ -13,7 +13,8 @@
 
 (define-module (lokke set)
   #:version (0 0 0)
-  #:use-module ((lokke base collection) #:select (<coll>))
+  #:use-module ((lokke base collection) #:select (<coll> get))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke collection) #:select (contains? count every? seq))
   #:use-module (oop goops)
   #:export (<set>
@@ -30,6 +31,7 @@
             subset?
             superset?
             union)
+  #:re-export (invoke)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <set> (<coll>))
@@ -54,3 +56,6 @@
   (and (= (count x) (count y))
        (every? (lambda (elt) (contains? y elt))
                (seq x))))
+
+(define-method (invoke (s <set>) item)
+  (get s item))
