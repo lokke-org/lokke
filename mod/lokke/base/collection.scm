@@ -24,6 +24,7 @@
 (define-module (lokke base collection)
   #:version (0 0 0)
   #:use-module ((guile) :select ((apply . %scm-apply) (cons . %scm-cons)))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (drop-right last proper-list?))
@@ -68,7 +69,7 @@
             take
             take-while
             update)
-  #:re-export (cons)
+  #:re-export (cons invoke)
   #:replace (apply assoc first)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -218,6 +219,9 @@
       (if s
           (if (= i n) (first s) (loop (1+ i) (next s)))
           not-found))))
+
+(define-method (invoke (s <sequential>) (i <integer>))
+  (nth s i))
 
 
 (define-class <seq> (<sequential>))
