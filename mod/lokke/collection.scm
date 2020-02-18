@@ -261,12 +261,12 @@
 
 (define-method (reduce f val coll)
   (if-let (s (seq coll))
-          (reduce f (f val (first s)) (next s))
+          (reduce f (f val (first s)) (rest s))
           val))
 
 (define-method (reduce f coll)
   (if-let (s (seq coll))
-          (reduce f (first s) (next s))
+          (reduce f (first s) (rest s))
           (f)))
 
 (define-method (into to from)
