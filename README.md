@@ -391,6 +391,7 @@ Any files covered by another license include a suitable disclaimer
 describing the applicable terms, including, but not limited to:
 
   - The file lib/lokke-reader.c
+  - The file mod/fhash.scm
   - Any file named epl.clj
 
 Copyright © 2015-2019 Rob Browning <rlb@defaultvalue.org>
