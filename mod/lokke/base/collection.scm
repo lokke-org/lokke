@@ -72,6 +72,7 @@
 
 ;; FIXME: should these implmentations of rest actually be next?
 
+(set! assoc #f)  ;; We do not want the guile assoc as the fallback
 (define-generic assoc)
 (define-generic contains)
 (define-generic empty)
