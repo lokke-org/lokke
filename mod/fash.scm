@@ -25,6 +25,7 @@
   #:use-module (srfi srfi-9 gnu)
   #:use-module (srfi srfi-11)
   #:use-module (ice-9 match)
+  #:use-module (ice-9 threads)
   #:export (fash?
             make-fash
             make-transient-fash
