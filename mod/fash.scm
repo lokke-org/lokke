@@ -323,13 +323,13 @@
                          root
                          (let ((array* (vector-copy array)))
                            (vector-set! array* (1+ i) v)
-                           (collision-branch array* #f)))
+                           (values (collision-branch array* #f) #f)))
                      (lp (+ i 2)))
                  (let ((array* (make-vector (+ len 2) #f)))
                    (vector-move-left! array 0 len array* 0)
                    (vector-set! array* len k)
                    (vector-set! array* (1+ len) v)
-                   (collision-branch array* #f))))))
+                   (values (collision-branch array* #f) #t))))))
         (#f (values (sparse-branch (bitpos h shift) (vector k v) #f)
                     #t)))))
   (match fash
