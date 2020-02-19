@@ -2,26 +2,4 @@
 
 set -xe
 
-pfds_src='https://github.com/rlbdv/pfds.git'
-pfds_ref=tmp/exp
-pfds_hash=1fa268b36e8c61d6349c3ce542cbd691cc42f9de
-
-# For now we don't attempt updates
-if test -d mod/pfds; then
-    echo error: pfds directory already exists 1>&2
-    exit 2
-fi
-
-tmpdir="$(mktemp -d "tmp-pfds-XXXXXXX")"
-trap "$(printf "rm -rf %q" "$tmpdir")" EXIT
-
-git clone -n "$pfds_src" "$tmpdir/pfds"
-git -C "$tmpdir/pfds" checkout "$pfds_ref"
-
-actual_hash="$(git -C "$tmpdir/pfds" rev-parse "$pfds_ref^{}")"
-if test "$actual_hash" != "$pfds_hash"; then
-    echo "error: clone of $pfds_ref has unexpected hash $pfds_hash" 1>&2
-    exit 2
-fi
-
-mv "$tmpdir/pfds" mod/pfds
+exit 0

@@ -271,8 +271,11 @@ TODO
   to cause guile to set the reader to lokke universally, which
   breaks (use-modules ...), etc.
 
+- Add a delete operation to fash, use it in hash-map dissoc and
+  hash-set disj, and then remove the not-empty hacks.
+
 - Improve hash-map and hash-set seqs, which may require improvements
-  to pfds or...
+  to fash or...
 
 - Replace all pr, prn, print, and println defs with pr-to, ... and
   then make pr and prn normal functions that (pr-to *out* obj), etc.

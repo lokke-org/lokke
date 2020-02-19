@@ -12,8 +12,15 @@
 ;;;      option) any later version.
 
 (define-module (lokke hash-set)
-  #:use-module ((lokke base invoke) #:select (invoke))
+  #:use-module ((fash)
+                #:select (make-fash
+                          fash-fold
+                          fash-ref
+                          fash-set
+                          fash-size))
   #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((ice-9 format) #:select (format))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke collection)
                 #:select (conj
                           cons
@@ -30,7 +37,6 @@
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (oop goops)
-  #:use-module ((pfds hamts) #:prefix hamts/)
   #:use-module ((srfi srfi-41) #:select (stream-lambda))
   #:use-module ((srfi srfi-69) #:prefix hash/)
   #:use-module ((rnrs) :prefix rnrs/)
@@ -54,27 +60,38 @@
 ;; FIXME: implement (lokke set) operations, here, or more generically
 ;; when appropriate, there.
 
+;; Until/unless fash has a delete method, also store this for dissocs
+(define not-found (make-symbol "not-found"))
+
+(define* (ref m key #:optional (nope #nil))
+  (let ((result (fash-ref m key (lambda (k) not-found))))
+    (if (eq? result not-found)
+        nope
+        result)))
+
 (define-class <hash-set> (<set>)
   (internals #:init-keyword #:internals))
 
-(define-syntax-rule (set-hamt s) (slot-ref s 'internals))
+(define-syntax-rule (make-set fm) (make <hash-set> #:internals fm))
+(define-syntax-rule (set-fm s) (slot-ref s 'internals))
 
 (define-method (get (s <hash-set>) x)
-  (hamts/hamt-ref (set-hamt s) x #nil))
+  (ref (set-fm s) x))
 
 (define-method (get (s <hash-set>) x not-found)
-  (hamts/hamt-ref (set-hamt s) x not-found))
+  (ref (set-fm s) x not-found))
 
 (define (show s emit port)
   (display "#{" port)
   (let ((first? #t))
-    (hamts/hamt-fold (lambda (k _ result)
-                       (if first?
-                           (set! first? #f)
-                           (display " " port))
-                       (emit k port))
-                     #t
-                     (set-hamt s)))
+    (fash-fold (lambda (k v result)
+                 (unless (eq? v not-found)
+                   (if first?
+                       (set! first? #f)
+                       (display " " port))
+                   (emit k port)))
+               (set-fm s)
+               #t))
   (display "}" port))
 
 (define-method (pr-on (s <hash-set>) port)
@@ -83,84 +100,95 @@
 (define-method (print-on (s <hash-set>) port)
   (show s print-on port))
 
+(define-method (write (m <hash-set>) port)
+  (format port "#<~s ~x " (class-name (class-of m)) (object-address m))
+  (display (set-fm m) port)
+  (display ">" port))
+
 (define (hash-set? x) (is-a? x <hash-set>))
 
+(define empty-hash-set
+  (make-set (make-fash #:hash hash/hash #:equal clj=)))
+
 (define (set coll)
-  (make <hash-set>
-    #:internals (reduce (lambda (result x)
-                          (hamts/hamt-set result x x))
-                        (hamts/make-hamt hash/hash eqv?)
-                        coll)))
+  (make-set (reduce (lambda (result x) (fash-set result x x))
+                    (set-fm empty-hash-set)
+                    coll)))
 
 (define (hash-set . xs) (set xs))
 
 (define-method (conj (s <hash-set>) . xs)
-  (make <hash-set>
-    #:internals (reduce (lambda (result x) (hamts/hamt-set result x x))
-                        (set-hamt s)
-                        xs)))
+  (make-set (reduce (lambda (result x) (fash-set result x x))
+                    (set-fm s)
+                    xs)))
 
 (define-method (disj (s <hash-set>) . xs)
-  (make <hash-set>
-    #:internals (reduce (lambda (result x) (hamts/hamt-delete result x))
-                        (set-hamt s)
-                        xs)))
+  (make-set (reduce (lambda (result x) (fash-set result x not-found))
+                    (set-fm s)
+                    xs)))
 
 (define-method (count (x <hash-set>))
-  (hamts/hamt-size (set-hamt x)))
+  (fash-fold (lambda (k v size) (if (eq? v not-found) size (1+ size)))
+             (set-fm x)
+             0))
 
 (define-method (counted? (x <hash-set>))
   #t)
 
 (define-method (empty (x <hash-set>))
-  (hash-set))
+  empty-hash-set)
 
 ;; not-empty - generic default is correct
 
 (define-method (contains? (s <hash-set>) x)
-  (hamts/hamt-contains? (set-hamt s) x))
+  (not (eq? not-found (ref (set-fm s) x not-found))))
 
 (define-method (get (s <hash-set>) x)
-  (hamts/hamt-ref (set-hamt s) x #nil))
+  (ref (set-fm s) x))
 
 (define-method (get (s <hash-set>) x not-found)
-  (hamts/hamt-ref (set-hamt s) x not-found))
+  (ref (set-fm s) x not-found))
 
 (define (hash-set-equal? s1 s2)
-  (let ((h1 (set-hamt s1))
-        (h2 (set-hamt s2))
-        (exit (make-symbol "exit")))
-    (and (= (hamts/hamt-size h1) (hamts/hamt-size h2))
-         (catch exit
-           (lambda ()
-             (hamts/hamt-fold (lambda (k _ result)
-                                (unless (hamts/hamt-contains? h2 k)
-                                  (throw exit #f))
-                                #t)
-                              #t
-                              h1))
-           (lambda args
-             #f)))))
+  (let* ((h1 (set-fm s1))
+         (h2 (set-fm s2))
+         (exit (make-symbol "exit"))
+         (subset? (lambda (m of-m)
+                    (fash-fold (lambda (k v result)
+                                 (let ((v2 (ref of-m k not-found)))
+                                   (unless (clj= v v2)
+                                     (throw exit #f)))
+                                 #t)
+                               m
+                               #t))))
+    ;; Can't use the size check until fash supports delete and we
+    ;; don't have to ignore the not-found tokens.
+    ;; (= (fash-size h1) (fash-size h2))
+    (catch exit
+      (lambda () (and (subset? h1 h2) (subset? h2 h1)))
+      (lambda args #f))))
 
 (define-method (equal? (s1 <hash-set>) (s2 <hash-set>)) (hash-set-equal? s1 s2))
 
 ;; specialize this so that we'll bypass the generic <sequential> flavor
 (define-method (clj= (s1 <hash-set>) (s2 <hash-set>)) (hash-set-equal? s1 s2))
 
-;; FIXME: adapt hamt-fold or move to some other data structure...
+;; FIXME: add iterator to map?
 
-(define (some-item hamt not-found)
+(define (some-item fm)
   (call/ec
    (lambda (return)
-     (hamts/hamt-fold (lambda (k _ result) (return k)) #t hamt)
+     (fash-fold (lambda (k v result)
+                  (unless (eq? v not-found)
+                    (return k)))
+                fm #t)
      not-found)))
 
-(let ((not-found (make-symbol "hash-set-not-found")))
-  (define-method (seq (s <hash-set>))
-    (let ((item (some-item (set-hamt s) not-found)))
-      (if (eq? item not-found)
-          #nil
-          (lazy-seq (cons item (disj s item)))))))
+(define-method (seq (s <hash-set>))
+  (let ((item (some-item (set-fm s))))
+    (if (eq? item not-found)
+        #nil
+        (lazy-seq (cons item (disj s item))))))
 
 (define-method (rest (s <hash-set>)) (rest (seq s)))
 

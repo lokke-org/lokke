@@ -18,6 +18,7 @@
 (define-module (lokke hash-map)
   ;; FIXME: first and second should be together
   #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base collection)
                 #:select (<coll>
                           assoc
@@ -34,12 +35,17 @@
                           second
                           seq
                           update))
+  #:use-module ((fash)
+                #:select (make-fash
+                          fash-fold
+                          fash-ref
+                          fash-set
+                          fash-size))
   #:use-module ((lokke base map) #:select (<map> select-keys))
   #:use-module ((lokke base map-entry) #:select (key map-entry val))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module (oop goops)
-  #:use-module ((pfds hamts) #:prefix hamts/)
   #:use-module ((srfi srfi-1) #:select (fold))
   #:use-module ((srfi srfi-69) #:prefix hash/)
   #:export (<hash-map>
@@ -73,26 +79,32 @@
 ;; Q: wonder if we might want to match clojure in clojure.lang,
 ;; i.e. PersistentArrayMap
 
+;; Until/unless fash has a delete method, also store this for dissocs
 (define not-found (make-symbol "not-found"))
+
+(define* (ref m key #:optional (nope #nil))
+  (let ((result (fash-ref m key (lambda (k) not-found))))
+    (if (eq? result not-found)
+        nope
+        result)))
 
 (define-class <hash-map> (<map>)
   (internals #:init-keyword #:internals))
 
-(define-syntax-rule (make-map hamt) (make <hash-map> #:internals hamt))
-(define-syntax-rule (map-hamt m) (slot-ref m 'internals))
-
-(define (read-only-str s) (substring/read-only s 0))
+(define-syntax-rule (make-map fm) (make <hash-map> #:internals fm))
+(define-syntax-rule (map-fm m) (slot-ref m 'internals))
 
 (define (show m emit port)
   (display "{" port)
   (let ((first? #t))
-    (hamts/hamt-fold (lambda (k v result)
-                       (if first?
-                           (set! first? #f)
-                           (display ", " port))
-                       (emit k port) (display #\space port) (emit v port))
-                     #t
-                     (map-hamt m)))
+    (fash-fold (lambda (k v result)
+                 (unless (eq? v not-found)
+                   (if first?
+                       (set! first? #f)
+                       (display ", " port))
+                   (emit k port)) (display #\space port) (emit v port))
+               (map-fm m)
+               #t))
   (display "}" port))
 
 (define-method (pr-on (m <hash-map>) port)
@@ -101,12 +113,18 @@
 (define-method (print-on (m <hash-map>) port)
   (show m print-on port))
 
+(define-method (write (m <hash-map>) port)
+  (format port "#<~s ~x " (class-name (class-of m)) (object-address m))
+  (display (map-fm m) port)
+  (display ">" port))
+
 (define (hash-map? x) (is-a? x <hash-map>))
 
 (define-method (assoc (m <hash-map>) k v)
-  (make-map (hamts/hamt-set (map-hamt m) k v)))
+  (make-map (fash-set (map-fm m) k v)))
 
-(define empty-hash-map (make-map (hamts/make-hamt hash/hash eqv?)))
+(define empty-hash-map
+  (make-map (make-fash #:hash hash/hash #:equal clj=)))
 
 (define (hash-map . alternating-keys-and-values)
   (if (null? alternating-keys-and-values)
@@ -116,53 +134,61 @@
              alternating-keys-and-values)))
 
 (define-method (kv-list (m <hash-map>))
-  (hamts/hamt-fold (lambda (k v result) (cons k (cons v result)))
-                   '()
-                   (map-hamt m)))
+  (fash-fold (lambda (k v result)
+               (if (eq? v not-found)
+                   result
+                   (cons k (cons v result))))
+             (map-fm m)
+             '()))
 
 (define-method (conj (m <hash-map>) . kvs)
   (make-map (fold (lambda (kv result)
-                    (hamts/hamt-set result (first kv) (second kv)))
-                  (map-hamt m)
+                    (fash-set result (first kv) (second kv)))
+                  (map-fm m)
                   kvs)))
 
 (define-method (dissoc (m <hash-map>) . xs)
-  (make-map (fold (lambda (x result) (hamts/hamt-delete result x))
-                  (map-hamt m)
+  (make-map (fold (lambda (x result)
+                    (fash-set result x not-found))
+                  (map-fm m)
                   xs)))
 
 (define-method (count (m <hash-map>))
-  (hamts/hamt-size (map-hamt m)))
+  (fash-fold (lambda (k v size) (if (eq? v not-found) size (1+ size)))
+             (map-fm m)
+             0))
 
 (define-method (counted? (m <hash-map>)) #t)
 (define-method (empty (m <hash-map>)) empty-hash-map)
 ;; not-empty - generic default is correct
 
 (define-method (contains? (m <hash-map>) x)
-  (hamts/hamt-contains? (map-hamt m) x))
+  (not (eq? not-found (ref (map-fm m) x not-found))))
 
 (define-method (get (m <hash-map>) x)
-  (hamts/hamt-ref (map-hamt m) x #nil))
+  (ref (map-fm m) x))
 
 (define-method (get (m <hash-map>) x not-found)
-  (hamts/hamt-ref (map-hamt m) x not-found))
+  (ref (map-fm m) x not-found))
 
 (define (hash-map-equal? m1 m2)
-  (let ((h1 (map-hamt m1))
-        (h2 (map-hamt m2))
-        (exit (make-symbol "exit")))
-    (and (= (hamts/hamt-size h1) (hamts/hamt-size h2))
-         (catch exit
-           (lambda ()
-             (hamts/hamt-fold (lambda (k v result)
-                                (let ((v2 (hamts/hamt-ref h2 k not-found)))
-                                  (when (or (eq? not-found v2)
-                                            (not (equal? v v2)))
-                                    (throw exit #f)))
-                                #t)
-                              #t
-                              h1))
-           (lambda args #f)))))
+  (let* ((h1 (map-fm m1))
+         (h2 (map-fm m2))
+         (exit (make-symbol "exit"))
+         (subset? (lambda (m of-m)
+                    (fash-fold (lambda (k v result)
+                                 (let ((v2 (ref of-m k not-found)))
+                                   (unless (clj= v v2)
+                                     (throw exit #f)))
+                                 #t)
+                               m
+                               #t))))
+    ;; Can't use the size check until fash supports delete and we
+    ;; don't have to ignore the not-found tokens.
+    ;; (= (fash-size h1) (fash-size h2))
+    (catch exit
+      (lambda () (and (subset? h1 h2) (subset? h2 h1)))
+      (lambda args #f))))
 
 (define-method (equal? (m1 <hash-map>) (m2 <hash-map>)) (hash-map-equal? m1 m2))
 
@@ -173,30 +199,38 @@
 ;; be able to do better with respect to seq traversal.  Need similar
 ;; changes for keys, etc.
 
-(define (some-item hamt not-found)
+(define (some-item fm)
   (call/ec
    (lambda (return)
      ;; FIXME: vector...
-     (hamts/hamt-fold (lambda (k v result) (return (map-entry k v))) #t hamt)
+     (fash-fold (lambda (k v result)
+                  (unless (eq? v not-found)
+                    (return (map-entry k v))))
+                fm #t)
      not-found)))
 
-(let ((not-found (make-symbol "hash-map-not-found")))
-  (define-method (seq (m <hash-map>))
-    (let ((item (some-item (map-hamt m) not-found)))
-      (if (eq? item not-found)
-          #nil
-          (lazy-seq (cons item (dissoc m (first item))))))))
+(define-method (seq (m <hash-map>))
+  (let ((item (some-item (map-fm m))))
+    (if (eq? item not-found)
+        #nil
+        (lazy-seq (cons item (dissoc m (first item)))))))
 
 ;; FIXME: not lazy
 (define-method (keys (m <hash-map>))
-  (hamts/hamt-fold (lambda (k v result) (cons k result))
-                   '()
-                   (map-hamt m)))
+  (fash-fold (lambda (k v result)
+               (if (eq? v not-found)
+                   result
+                   (cons k result)))
+             (map-fm m)
+             '()))
 
 (define-method (vals (m <hash-map>))
-  (hamts/hamt-fold (lambda (k v result) (cons v result))
-                   '()
-                   (map-hamt m)))
+  (fash-fold (lambda (k v result)
+               (if (eq? v not-found)
+                   result
+                   (cons v result)))
+             (map-fm m)
+             '()))
 
 (define-method (find (m <hash-map>) k)
   (let ((v (get map k)))
@@ -204,19 +238,24 @@
       (map-entry k v))))
 
 (define (update map m k f . args)
-  (make-map (hamts/hamt-update (map-hamt m)
-                               k
-                               (lambda (x) (apply x args))
-                               #nil)))
+  (let* ((fm (map-fm m))
+         (v (ref fm k)))
+    (make-map (fash-set fm k (apply v args)))))
 
 (define-method (reduce-kv f init (m <hash-map>))
-  (hamts/hamt-fold (lambda (k v result) (f result k v))
-                   init
-                   (map-hamt m)))
+  (fash-fold (lambda (k v result)
+               (if (eq? v not-found)
+                   result
+                   (f result k v)))
+             (map-fm m)
+             init))
 
 (define-method (select-keys (m <hash-map>) keys)
-  (hamts/hamt-fold (lambda (k v result) (assoc result k v))
-                   empty-hash-map
-                   (map-hamt m)))
+  (fash-fold (lambda (k v result)
+               (if (eq? v not-found)
+                   result
+                   (assoc result k v)))
+             (map-fm m)
+             empty-hash-map))
 
 ;; FIXME: custom merge?
