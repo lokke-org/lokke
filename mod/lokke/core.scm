@@ -77,7 +77,8 @@
                           require
                           use))
   #:use-module ((lokke base invoke) #:select (invoke))
-  #:use-module ((lokke ns lokke io) #:select (line-seq read-line slurp spit))
+  #:use-module ((lokke ns lokke io)
+                #:select (flush line-seq read-line slurp spit))
   #:use-module ((lokke pr)
                 #:select (*err*
                           *in*
@@ -252,6 +253,7 @@
                first
                float
                float?
+               flush
                fn
                fnext
                format

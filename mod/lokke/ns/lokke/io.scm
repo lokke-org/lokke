@@ -24,10 +24,11 @@
   #:use-module ((lokke collection) #:select (cons lazy-seq))
   #:use-module ((lokke exception) #:select (with-open))
   #:use-module ((lokke hash-map) #:select (get hash-map))
-  #:use-module ((lokke pr) #:select (*in* str))
+  #:use-module ((lokke pr) #:select (*in* *out* str))
   #:duplicates (merge-generics replace warn-override-core warn last)
   #:re-export (delete-file)
   #:export (copy
+            flush
             line-seq
             mkstemp
             read-line
@@ -124,3 +125,6 @@ guile.ice-9.ports/port-filename until the port is closed."
      (let ((l (%scm-read-line rdr)))
        (when-not (eof-object? l)
          (cons l (loop)))))))
+
+(define (flush)
+  (force-output))
