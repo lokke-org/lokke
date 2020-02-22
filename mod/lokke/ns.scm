@@ -227,14 +227,16 @@
      ((lokke-vector? x) (lokke-vector->list x))
      (else #f)))
 
+(define (strip-reader-vec x)
+  (cond
+   ((null? x) x)
+   ((eq? '/lokke/reader-vector (car x)) (cdr x))
+   (else x)))
 
 (define (refer-spec->list x)
   ;; FIXME: did we intend for this to support scm vectors?
   (let* ((lst (cond
-               ((proper-list? x) (cond
-                                  ((null? x) x)
-                                  ((eq? '/lokke/reader-vector (car x)) (cdr x))
-                                  (else x)))
+               ((proper-list? x) (strip-reader-vec x))
                ((lokke-vector? x) (lokke-vector->list x))
                ((vector? x) (vector->list x))
                (else #f))))
@@ -257,7 +259,7 @@
   ;; Some of this possibly easier with guile match?
   (let ((it (cond  ;; FIXME: similar to dep-sec-coll->list?  And is this what we want?
              ((symbol? item) (list item))
-             ((list? item) item)
+             ((proper-list? item) (strip-reader-vec item))
              ((lokke-vector? item) (lokke-vector->list item))
              ((vector? item) (vector->list item))
              (else
