@@ -148,6 +148,7 @@
   #:use-module ((system base compile)
                 #:select (compile-file compiled-file-name))
   #:export (*command-line-args* ;; this is wrong...
+            *file*
             byte
             (do . %scm-do)
             distinct?
@@ -159,7 +160,7 @@
             num
             short
             some?)
-  #:replace (= do instance? nil? read)
+  #:replace (= do instance? nil?)
   #:re-export (*
                *err*
                *in*
@@ -380,7 +381,11 @@
                with-out-str
                with-meta
                zero?)
+  #:re-export-and-replace (read)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(define-syntax *file*
+  (identifier-syntax (or (current-filename) #nil)))
 
 (define = clj=)
 (define (not= . args) (not (apply = args)))
