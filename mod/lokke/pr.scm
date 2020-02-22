@@ -206,7 +206,7 @@
             (more (cdr items)))
         (emit item port)
         (when (pair? more)
-          (emit #\space port)
+          (display " " port)
           (loop more)))))
   (display ")" port)
   #nil)
