@@ -42,7 +42,7 @@
                           fash-set
                           fash-size))
   #:use-module ((lokke base map) #:select (<map> select-keys))
-  #:use-module ((lokke base map-entry) #:select (key map-entry val))
+  #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module (oop goops)
