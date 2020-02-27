@@ -393,7 +393,7 @@
 (define = clj=)
 (define (not= . args) (not (apply = args)))
 
-(define *command-line-args* (cdr (program-arguments)))
+(defdyn *command-line-args* (cdr (program-arguments)))
 
 (define (nil? x) (eq? #nil x))
 (define some? (complement nil?))
