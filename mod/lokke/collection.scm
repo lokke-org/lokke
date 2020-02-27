@@ -140,6 +140,18 @@
   (require-nil 'get x)
   (hash-map k v))
 
+(define-method (conj (m <map>) (s <sequential>))
+  (unless (= 2 (bounded-count 3 s))
+    (scm-error 'wrong-type-arg 'conj
+               "sequential collection not length 2 in conj" (list) (list)))
+  (assoc m (first s) (second s)))
+
+(define-method (conj (m <map>) (v <vector>))
+  (unless (= 2 (vector-length v))
+    (scm-error 'wrong-type-arg 'conj
+               "Scheme vector not length 2 in conj" (list) (list)))
+  (assoc m (vector-ref v 0) (vector-ref v 1)))
+
 (define-method (invoke (key <keyword>) map) (get map key))
 (define-method (invoke (key <keyword>) map not-found) (get map key not-found))
 
