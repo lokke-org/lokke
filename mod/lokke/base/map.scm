@@ -16,8 +16,9 @@
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map-entry) #:select (key val))
   #:use-module (oop goops)
-  #:export (<map> map? select-keys)
+  #:export (<map> map?)
   #:re-export (get invoke)
+  #:replace (assoc)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; Define the <map> basics here.  They can't go in anything that
@@ -29,7 +30,6 @@
 
 (define-class <map> (<coll>))
 (define (map? x) (is-a? x <map>))
-(define-generic select-keys)
 
 (define-method (equal? (x <map>) (y <map>))
   ;; Fallback for heterogeneous comparisons.  Assume for now they're

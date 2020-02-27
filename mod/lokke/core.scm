@@ -17,6 +17,7 @@
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
   #:use-module ((lokke base doc) #:select (doc))
+  #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base syntax)
                 #:select (and
                           binding
@@ -40,6 +41,7 @@
                           when-not))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke compile) #:select (clj-defmacro load-file))
   #:use-module ((lokke concurrent)
                 #:select (<atom>
@@ -62,7 +64,7 @@
                           throw
                           try
                           with-open))
-  #:use-module (lokke hash-map)
+  #:use-module ((lokke hash-map) #:select (hash-map hash-map?))
   #:use-module (lokke hash-set)
   #:use-module ((lokke ns)
                 #:select (*ns*
@@ -381,8 +383,9 @@
                with-out-str
                with-meta
                zero?)
-  #:re-export-and-replace (read)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))

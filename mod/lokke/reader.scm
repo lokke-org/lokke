@@ -20,6 +20,7 @@
                           pairify
                           string->keyword))
   #:use-module ((lokke collection) #:select (empty? merge))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke hash-set) #:select (hash-set))
   #:use-module ((lokke metadata) #:select (with-meta set-meta!))
@@ -32,7 +33,8 @@
                           quote-empty-lists))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (concatenate iota fold))
-  #:export (read read-for-compiler read-string read-string-for-compiler)
+  #:export (read-for-compiler read-string read-string-for-compiler)
+  #:replace (read)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: perhaps we can improve some of the tree traversals via walk

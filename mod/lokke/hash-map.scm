@@ -27,23 +27,26 @@
                           contains?
                           count
                           counted?
+                          dissoc
                           empty
                           find
                           first
                           get
                           lazy-seq
                           second
+                          select-keys
                           seq
                           update))
+  #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((fash)
                 #:select (make-fash
                           fash-fold
                           fash-ref
                           fash-set
                           fash-size))
-  #:use-module ((lokke base map) #:select (<map> select-keys))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (fold))
@@ -57,8 +60,7 @@
             merge
             reduce-kv
             vals)
-  #:re-export (assoc
-               clj=
+  #:re-export (clj=
                conj
                cons
                contains?
@@ -73,6 +75,8 @@
                seq
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'apply 'assoc)
 
 ;; FIXME: move rest of common map generics to (lokke map)
 

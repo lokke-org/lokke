@@ -34,6 +34,7 @@
                           update))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke compare) #:select (clj= compare))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke scm vector)
                 #:select (<lokke-vector>
@@ -51,8 +52,7 @@
   #:use-module ((srfi srfi-67) #:select (vector-compare))
   #:replace (vector vector?)
   #:export (vec)
-  #:re-export (assoc
-               clj=
+  #:re-export (clj=
                compare
                conj
                contains?
@@ -70,6 +70,8 @@
                seq
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'assoc)
 
 (define vector? lokke-vector?)
 

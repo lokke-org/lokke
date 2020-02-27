@@ -42,6 +42,7 @@
             contains?
             count
             counted?
+            dissoc
             drop
             empty
             every?
@@ -51,6 +52,7 @@
             fnext
             get
             get-in
+            keys
             lazy-seq
             make-pair-seq
             next
@@ -58,9 +60,11 @@
             nnext
             not-empty
             nth
+            reduce-kv
             rest
             rseq
             second
+            select-keys
             seq
             seq->scm-list
             seq?
@@ -68,7 +72,8 @@
             sequential?
             take
             take-while
-            update)
+            update
+            vals)
   #:re-export (cons invoke)
   #:replace (apply assoc first)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -77,20 +82,25 @@
 
 (set! assoc #f)  ;; We do not want the guile assoc as the fallback
 (define-generic assoc)
+(define-generic dissoc)
 (define-generic contains)
 (define-generic empty)
 (define-generic find)
 (define-generic first)
 (define-generic get)
+(define-generic keys)
 (define-generic into)
 (define-generic next)
 (define-generic not-empty)
+(define-generic reduce-kv)
 (define-generic rest)
 (define-generic rseq)
 (define-generic second)
+(define-generic select-keys)
 (define-generic seq)
 (define-generic sequential?)
 (define-generic update)
+(define-generic vals)
 
 ;; ;; FIXME: double-check
 (define-generic cons)

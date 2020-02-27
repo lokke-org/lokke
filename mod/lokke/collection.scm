@@ -38,6 +38,7 @@
                           contains?
                           count
                           counted?
+                          dissoc
                           drop
                           empty
                           every?
@@ -47,13 +48,16 @@
                           fnext
                           get
                           get-in
+                          keys
                           lazy-seq
                           next
                           nfirst
                           nnext
                           nth
+                          reduce-kv
                           rest
                           second
+                          select-keys
                           seq
                           seq->scm-list
                           seq?
@@ -61,14 +65,16 @@
                           sequential?
                           take
                           take-while
-                          update))
+                          update
+                          vals))
   #:use-module ((lokke base invoke) #:select (invoke))
-  #:use-module ((lokke base map) #:select (<map> map? select-keys))
+  #:use-module ((lokke base map) #:select (<map> map?))
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module ((lokke scm vector) #:select (<lokke-vector>))
   #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:export (doall
             dorun
@@ -90,9 +96,7 @@
                <map-entry>
                <seq>
                <sequential>
-               assoc
                assoc-in
-               apply
                bounded-count
                clj=
                coll?
@@ -101,6 +105,7 @@
                contains?
                count
                counted?
+               dissoc
                drop
                empty
                every?
@@ -112,6 +117,7 @@
                get-in
                invoke
                key
+               keys
                lazy-seq
                map?
                map-entry
@@ -122,6 +128,7 @@
                nth
                pr-on
                print-on
+               reduce-kv
                rest
                second
                select-keys
@@ -133,8 +140,11 @@
                take
                take-while
                update
-               val)
+               val
+               vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'apply 'assoc)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)
