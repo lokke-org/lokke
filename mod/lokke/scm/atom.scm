@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -24,8 +24,10 @@
   #:export (atom?
             atom
             atom-add-watch
+            atom-alter-meta!
             atom-compare-and-set!
             atom-deref
+            atom-meta
             atom-remove-watch
             atom-reset!
             atom-set-validator!
@@ -47,33 +49,67 @@
 (define (atom? x) (atomic-box? x))
 
 ;; Must never modify the state, always make a new one.
-(define-syntax-rule (atom-state atom) (atomic-box-ref atom))
-(define-syntax-rule (state-val state) (car state))
-(define-syntax-rule (state-validator state)
-  (if (pair? (cdr state)) (cadr state) (cdr state)))
-(define-syntax-rule (state-watchers state)
-  (and (pair? (cdr state))
-       (cddr state)))
+(define-inlinable (atom-state atom)
+  (atomic-box-ref atom))
 
-(define (make-state val validator watchers)
-  (cons val (if watchers
-                (cons validator watchers)
-                validator)))
+(define-inlinable (state-val state)
+  (vector-ref state 0))
 
-(define* (atom value #:optional validator)
-  (make-atomic-box (make-state value validator #f)))
+(define-inlinable (state-validator state)
+  (and (> (vector-length state) 1) (vector-ref state 1)))
 
-(define (atom-deref atom) (state-val (atomic-box-ref atom)))
+(define-inlinable (state-watchers state)
+  (and (> (vector-length state) 2) (vector-ref state 2)))
+
+(define-inlinable (state-meta state)
+  (if (> (vector-length state) 3)
+      (vector-ref state 3)
+      #nil))
+
+(define (make-state val validator watchers meta)
+  (cond
+   (meta (vector val validator watchers meta))
+   (watchers (vector val validator watchers))
+   (validator (vector val validator))
+   (else (vector val))))
+
+(define* (assoc-state state
+                      #:key
+                      (val (state-val state))
+                      (validator (state-validator state))
+                      (watchers (state-watchers state))
+                      (meta (state-meta state)))
+  (make-state val validator watchers meta))
+
+(define* (atom value #:key (validator #f) (meta #nil))
+  (make-atomic-box (make-state value validator #f meta)))
+
+(define (atom-deref atom)
+  (state-val (atomic-box-ref atom)))
+
+(define (atom-meta atom)
+  (state-meta (atomic-box-ref atom)))
+
+(define (atom-alter-meta! atom f . args)
+  ;; Don't worry about garbage generation; assume this rarely races.
+  (let loop ((cur-state (atom-state atom)))
+    (let* ((meta (state-meta cur-state))
+           (new-meta (apply f meta args))
+           (new (assoc-state cur-state #:meta new-meta)))
+      (if (eq? cur-state (atomic-box-compare-and-swap! atom cur-state new))
+          new-meta
+          (begin
+            (yield)
+            (loop (atom-state atom)))))))
 
 (define (atom-add-watch atom key f)
   ;; Don't worry about garbage generation; assume this rarely races.
   (let loop ((cur-state (atom-state atom)))
     (let* ((watchers (state-watchers cur-state))
-           (new (make-state (state-val cur-state)
-                            (state-validator cur-state)
-                            (if watchers
-                                (assoc watchers key f)
-                                (hash-map key f)))))
+           (new (assoc-state cur-state
+                             #:watchers (if watchers
+                                            (assoc watchers key f)
+                                            (hash-map key f)))))
       (unless (eq? cur-state (atomic-box-compare-and-swap! atom cur-state new))
         (yield)
         (loop (atom-state atom))))))
@@ -83,9 +119,7 @@
   (let loop ((cur-state (atom-state atom)))
     (let ((watchers (state-watchers cur-state)))
       (when (and watchers (contains? watchers key))
-        (let ((new (make-state (state-val cur-state)
-                               (state-validator cur-state)
-                               (dissoc watchers key))))
+        (let ((new (assoc-state cur-state #:watchers (dissoc watchers key))))
           (unless (eq? cur-state (atomic-box-compare-and-swap! atom cur-state new))
             (yield)
             (loop (atom-state atom))))))))
@@ -106,7 +140,7 @@
       (or (eq? old-validate validator)
           (let ((val (state-val cur-state)))
             (validate-val atom validator val)
-            (let ((new (make-state val validator (state-watchers cur-state))))
+            (let ((new (assoc-state cur-state #:validator validator)))
               (unless (eq? cur-state
                            (atomic-box-compare-and-swap! atom cur-state new))
                 ;; (yield)?
@@ -119,11 +153,12 @@
                  #f
                  watchers))))
 
-(define (state-stale? existing newval validate watchers)
+(define (state-stale? existing newval validate watchers meta)
   (not (and existing
             (eq? newval (state-val existing))
             (eq? validate (state-validator existing))
-            (eq? watchers (state-watchers existing)))))
+            (eq? watchers (state-watchers existing))
+            (eq? meta (state-meta existing)))))
 
 (define (adjust-value! atom ignore-oldval? oldval get-newval)
   (let loop ((cur-state (atom-state atom))
@@ -139,9 +174,11 @@
                 (let ((validate (state-validator cur-state)))
                   (validate-val atom validate newval)
                   (let* ((watchers (state-watchers cur-state))
+                         (meta (state-meta cur-state))
                          ;; Generate less garbage during races.
-                         (new (if (state-stale? new-state newval validate watchers)
-                                  (make-state newval validate watchers)
+                         (new (if (state-stale? new-state newval validate
+                                                watchers meta)
+                                  (make-state newval validate watchers meta)
                                   new-state))
                          (result (atomic-box-compare-and-swap! atom cur-state new)))
                     (if (eq? cur-state result)
@@ -153,7 +190,8 @@
                         ;; try again if anything but the value changed.
                         (if (or (not (eq? val (state-val result)))
                                 (and (eq? validate (state-validator result))
-                                     (eq? watchers (state-watchers result))))
+                                     (eq? watchers (state-watchers result))
+                                     (eq? meta (state-meta result))))
                             (values #f #f)
                             (begin
                               ;; (yield)?
