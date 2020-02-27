@@ -42,7 +42,7 @@ exec ./guile "$0" "$@"
 (define usage
   (string-append
    "Usage:\n"
-   "  lokke --help\n"
+   "  lokke (--help | -h | -?)\n"
    "  lokke OPTS\n"
    "  lokke OPTS -- CLOJURE_PROGRAM_ARG...\n"
    "OPTS:\n"
@@ -94,7 +94,7 @@ exec ./guile "$0" "$@"
               (quit (format #f "No argument for ~a\n" arg) not-even-started))
             (hash-table-update! result 'actions (add-evaluator (cadr args)))
             (loop (cddr args) result))
-           ((equal? "--help" arg) (quit usage 0))
+           ((member arg '("-?" "-h" "--help")) (quit usage 0))
            ((equal? "--" arg)
             (hash-table-set! result 'args (cdr args))
             result)
