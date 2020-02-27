@@ -141,11 +141,13 @@
              (map-fm m)
              '()))
 
-(define-method (conj (m <hash-map>) . kvs)
-  (make-map (fold (lambda (kv result)
-                    (fash-set result (first kv) (second kv)))
-                  (map-fm m)
-                  kvs)))
+(define-method (conj (m1 <hash-map>) (m2 <hash-map>))
+  (make-map (fash-fold (lambda (k v result)
+                         (if (eq? v not-found)
+                             result
+                             (fash-set result k v)))
+                       (map-fm m2)
+                       (map-fm m1))))
 
 (define-method (dissoc (m <hash-map>) . xs)
   (make-map (fold (lambda (x result)

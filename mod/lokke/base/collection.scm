@@ -27,7 +27,7 @@
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) #:select (drop-right last proper-list?))
+  #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-append))
   #:export (<coll>
             <lazy-seq>
@@ -94,6 +94,13 @@
 
 ;; ;; FIXME: double-check
 (define-generic cons)
+
+(define-method (conj coll . xs)
+  (if (null? xs)
+      coll
+      (fold (lambda (x result) (conj result x))
+            coll
+            xs)))
 
 (define (seq->scm-list s)
   (let loop ((s s)
