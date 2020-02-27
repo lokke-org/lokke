@@ -40,6 +40,7 @@ SCM_SYMBOL (lokke_sym_reader_hash_map, "/lokke/reader-hash-map");
 SCM_SYMBOL (lokke_sym_reader_hash_set, "/lokke/reader-hash-set");
 SCM_SYMBOL (lokke_sym_reader_vector, "/lokke/reader-vector");
 SCM_SYMBOL (sym_syntax_quote, "syntax-quote");
+SCM_SYMBOL (sym_var, "var");
 SCM_SYMBOL (sym_ISO_8859_1, "ISO-8859-1");
 
 static SCM sym_quote = SCM_ELISP_NIL;
@@ -1393,6 +1394,15 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
       return scm_read_sharp_sharp(port, opts);
     case '?':
       return scm_read_reader_conditional(port, opts);
+    case '\'':
+      {
+        SCM exp = scm_read_expression (port, opts);
+        if (!scm_is_symbol (exp))
+          scm_i_input_error ("scm_read_sharp", port,
+                             "#' var syntax not followed by a symbol: #'~s",
+                             scm_list_1 (exp));
+        return scm_list_2(sym_var, exp);
+      }
     default:
       scm_i_input_error (FUNC_NAME, port, "Unknown # object: ~S",
                          scm_list_1 (SCM_MAKE_CHAR (chr)));

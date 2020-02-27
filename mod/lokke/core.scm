@@ -161,7 +161,8 @@
             not=
             num
             short
-            some?)
+            some?
+            var)
   #:replace (= do instance? nil?)
   #:re-export (*
                *err*
@@ -459,3 +460,6 @@
              (if (contains? seen item)
                  #f
                  (recur (cdr rst) (conj seen item)))))))))
+
+(define-syntax-rule (var name)
+  (module-variable (current-module) 'name))
