@@ -23,7 +23,8 @@
 
 (define-module (lokke base collection)
   #:version (0 0 0)
-  #:use-module ((guile) :select ((apply . %scm-apply) (cons . %scm-cons)))
+  #:use-module ((guile)
+                :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module (oop goops)
@@ -76,7 +77,7 @@
             update
             vals)
   #:re-export (cons invoke)
-  #:replace (apply assoc first merge)
+  #:replace (apply assoc first list? merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: should these implmentations of rest actually be next?
@@ -126,7 +127,7 @@
   (if (null? args)
       (f)
       (let ((final (last args)))
-        (if (list? final)
+        (if (%scm-list? final)
             (%scm-apply f (append (drop-right args 1)
                                   final))
             (%scm-apply f (append (drop-right args 1)
@@ -264,6 +265,11 @@
 
 (eval-when (expand compile)
   (define make-pair-seq %scm-cons))
+
+(define-method (list? x) #f)
+(define-method (list? (s <pair-seq>)) #t)
+(define-method (list? (s <null>)) #t)
+(define-method (list? (s <pair>)) (proper-list? s))
 
 (define-method (first (s <pair-seq>)) (pair-seq-first s))
 (define-method (rest (s <pair-seq>)) (pair-seq-rest s))

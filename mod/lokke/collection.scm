@@ -50,6 +50,7 @@
                           get-in
                           keys
                           lazy-seq
+                          list?
                           merge
                           next
                           nfirst
@@ -145,7 +146,7 @@
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'merge)
+(re-export-and-replace! 'apply 'assoc 'list? 'merge)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)
