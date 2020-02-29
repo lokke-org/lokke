@@ -16,7 +16,8 @@
 (define-module (lokke ns)
   #:use-module ((ice-9 threads) #:select (make-mutex))
   #:use-module ((lokke base util) #:select (module-name->ns-sym))
-  #:use-module ((lokke hash-map) #:select (assoc get hash-map))
+  #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
+  #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke pr) #:select (pr-str))
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
   #:use-module ((lokke symbol)
@@ -28,6 +29,7 @@
                 #:select (lokke-vector? lokke-vector->list))
   #:use-module ((lokke symbol) #:select (simple-symbol?))
   #:use-module ((lokke transmogrify) #:select (literals->scm-instances))
+  #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (every find proper-list? take drop))
   #:use-module ((srfi srfi-9 gnu) #:select (define-immutable-record-type))
   #:use-module ((system base compile) #:select (compile-file compiled-file-name))
@@ -47,6 +49,7 @@
             require
             resolve-sym-aliases
             use)
+  #:re-export (alter-meta!)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: assuming we need to, does guile handle locking/blocking wrt
@@ -432,6 +435,9 @@
 (define (clj-syntax->scm syn)
   (literals->scm-instances (syntax->datum syn)))
 
+(define (ns-meta-atom)
+  (atom #nil #:validator (lambda (x) (or (eq? #nil x) (hash-map? x)))))
+
 (define (create-ns name)
   (require-ns-sym name)
   (let* ((mod (ns-sym->mod-name name))
@@ -446,7 +452,15 @@
           (module-define! m '/lokke/doc-lock (make-mutex))
           (module-define! m '/lokke/doc (make-hash-table))
           (module-define! m '/lokke/ns-aliases (atom (hash-map)))
+          (module-define! m '/lokke/ns-metadata (ns-meta-atom))
           m))))
+
+(define-method (alter-meta! (m <module>) f . args)
+  (atom-swap! (module-ref m '/lokke/ns-metadata)
+              (lambda (prev-map) (apply f prev-map args))))
+
+(define-method (meta (m <module>))
+  (atom-deref (module-ref m '/lokke/ns-metadata)))
 
 (define (in-ns name)
   (let ((ns (create-ns name)))
@@ -490,7 +504,8 @@
              (let ((m (current-module)))
                (module-define! m '/lokke/doc-lock (make-mutex))
                (module-define! m '/lokke/doc (make-hash-table))
-               (module-define! m '/lokke/ns-aliases (atom (hash-map))))
+               (module-define! m '/lokke/ns-aliases (atom (hash-map)))
+               (module-define! m '/lokke/ns-metadata (ns-meta-atom)))
              ;; FIXME: minimze this set
              (require 'guile.language.lokke.spec)  ;; FIXME: may not be needed
              (use 'guile.lokke.boot)

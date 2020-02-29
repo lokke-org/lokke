@@ -19,13 +19,27 @@
 
 (begin-tests (ns-name *ns*))
 
-(def meta-test-var nil)
-(is (= nil (meta #'meta-test-var)))
+(testing "variables"
+  (def meta-test-var nil)
+  (is (= nil (meta #'meta-test-var)))
 
-(alter-meta! #'meta-test-var assoc :x 1)
-(is (= {:x 1} (meta #'meta-test-var)))
+  (alter-meta! #'meta-test-var assoc :x 1)
+  (is (= {:x 1} (meta #'meta-test-var)))
 
-(alter-meta! #'meta-test-var (constantly nil))
-(is (= nil (meta #'meta-test-var)))
+  (alter-meta! #'meta-test-var (constantly nil))
+  (is (= nil (meta #'meta-test-var))))
+
+(testing "ns"
+  (let [cur (ns-name *ns*)]
+    (ns meta-test-ns)
+    (in-ns cur))
+  (let [test-ns (find-ns 'meta-test-ns)]
+    (is (= nil (meta test-ns)))
+
+    (alter-meta! test-ns assoc :x 1)
+    (is (= {:x 1} (meta test-ns)))
+
+    (alter-meta! test-ns (constantly nil))
+    (is (= nil (meta test-ns)))))
 
 (end-tests (ns-name *ns*) :exit? true)
