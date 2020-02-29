@@ -396,6 +396,7 @@ describing the applicable terms, including, but not limited to:
   - The file mod/fhash.scm
   - Any file named epl.clj
   - mod/lokke/clojure/ns/walk.clj
+  - test/clojure-walk
 
 Copyright © 2015-2019 Rob Browning <rlb@defaultvalue.org>
 
