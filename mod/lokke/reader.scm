@@ -23,7 +23,7 @@
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke hash-set) #:select (hash-set))
-  #:use-module ((lokke metadata) #:select (with-meta set-meta!))
+  #:use-module ((lokke metadata) #:select (with-meta))
   #:use-module ((lokke ns) #:select (ns-aliases))
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
@@ -452,7 +452,7 @@
                   (format (current-error-port) "reader finishing up: ~s\n" result)))
              (result (if (empty? pending-meta)
                          result
-                         (set-meta! result pending-meta))))
+                         (with-meta result pending-meta))))
         (when debug-reader?
           (format (current-error-port) "reader returning: ~s\n" result))
         result)))))

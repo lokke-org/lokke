@@ -15,7 +15,6 @@
   #:use-module (oop goops)
   #:export (*print-meta*
             meta
-            set-meta!
             vary-meta
             with-meta)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -39,18 +38,14 @@
 
 (define *print-meta* (make-parameter #nil))
 
-(define meta-prop (make-object-property))
-
-(define (set-meta! obj map)
-  (set! (meta-prop obj) map)
-  obj)
-
-(define (meta obj) (meta-prop obj))
-
-;; For now, be restrictive...
+(define-method (meta obj) #nil)
 
 (define-method (with-meta obj map)
-  (error "Persistent metadata not supported for " (class-of obj)))
+  (scm-error 'wrong-type-arg
+             "with-meta"
+             "Persistent metadata not supported for ~a: ~s"
+             (list (class-of obj) obj)
+             (list obj)))
 
 (define (vary-meta obj f . args)
   (with-meta obj (apply f (meta obj) args)))

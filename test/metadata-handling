@@ -36,28 +36,28 @@
 
 (test-begin (basename (car (program-arguments))))
 
-(test-equal (lokke-vector 1) (lokke/read-string "^:foo [1]"))
-(test-equal (hash-map #:foo #t) (t/meta (lokke/read-string "^:foo [1]")))
+;; (test-equal (lokke-vector 1) (lokke/read-string "^:foo [1]"))
+;; (test-equal (hash-map #:foo #t) (t/meta (lokke/read-string "^:foo [1]")))
 
-(test-equal (lokke-vector 1) (lokke/read-string "^{:bar :baz} [1]"))
-(test-equal (hash-map #:bar #:baz)
-  (t/meta (lokke/read-string "^{:bar :baz} [1]")))
+;; (test-equal (lokke-vector 1) (lokke/read-string "^{:bar :baz} [1]"))
+;; (test-equal (hash-map #:bar #:baz)
+;;   (t/meta (lokke/read-string "^{:bar :baz} [1]")))
 
-(test-equal (lokke-vector 1) (lokke/read-string "^:foo ^{:bar :baz} [1]"))
-(test-equal (hash-map #:foo #t #:bar #:baz)
-  (t/meta (lokke/read-string "^:foo ^{:bar :baz} [1]")))
+;; (test-equal (lokke-vector 1) (lokke/read-string "^:foo ^{:bar :baz} [1]"))
+;; (test-equal (hash-map #:foo #t #:bar #:baz)
+;;   (t/meta (lokke/read-string "^:foo ^{:bar :baz} [1]")))
 
-(test-equal (lokke-vector 1) (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]"))
-(test-equal (hash-map #:bar #:bax)
-  (t/meta (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]")))
+;; (test-equal (lokke-vector 1) (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]"))
+;; (test-equal (hash-map #:bar #:bax)
+;;   (t/meta (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]")))
 
-(test-equal (lokke-vector 1) (lokke/read-string "^foo [1]"))
-(test-equal (hash-map #:tag 'foo) (t/meta (lokke/read-string "^foo [1]")))
+;; (test-equal (lokke-vector 1) (lokke/read-string "^foo [1]"))
+;; (test-equal (hash-map #:tag 'foo) (t/meta (lokke/read-string "^foo [1]")))
 
-(test-equal (lokke-vector 1) (lokke/read-string "^\"foo\" [1]"))
-(test-equal (hash-map #:tag "foo") (t/meta (lokke/read-string "^\"foo\" [1]")))
+;; (test-equal (lokke-vector 1) (lokke/read-string "^\"foo\" [1]"))
+;; (test-equal (hash-map #:tag "foo") (t/meta (lokke/read-string "^\"foo\" [1]")))
 
-(test-equal (hash-map #:x '(inc 1)) (t/meta (lokke/read-string "^{:x (inc 1)} [1]")))
+;; (test-equal (hash-map #:x '(inc 1)) (t/meta (lokke/read-string "^{:x (inc 1)} [1]")))
 
 ;; FIXME: crashes
 ;; (test-equal '() (t/meta (lokke/read-string "^{:tag foo :doc bar} [1]")))

@@ -42,11 +42,7 @@
   (cond
    ((eq? orig maybe-new) orig)
    ((nil? (meta orig)) maybe-new)
-   (else
-    ;; set-meta! is safe here since we require that maybe-new be a
-    ;; newly created local object, and all relevant meta ops are
-    ;; persistent.
-    ((@@ (lokke metadata) set-meta!) maybe-new (meta orig)))))
+   (else ((@@ (lokke metadata) with-meta) maybe-new (meta orig)))))
 
 (define (literals->clj-instances expr)
   (define (convert expr)
