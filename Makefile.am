@@ -50,7 +50,8 @@ TESTS = \
   test/reader-basics \
   test/clojure-collection \
   test/clojure-fn \
-  test/clojure-math
+  test/clojure-math \
+  test/clojure-metadata
 
 # FIXME...
 clean-local:

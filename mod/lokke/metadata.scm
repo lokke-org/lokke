@@ -12,6 +12,9 @@
 ;;;      option) any later version.
 
 (define-module (lokke metadata)
+  #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
+  #:use-module ((lokke pr) #:select (pr-str))
+  #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
   #:use-module (oop goops)
   #:export (*print-meta*
             alter-meta!
@@ -53,3 +56,34 @@
 
 (define-method (alter-meta! obj f . args)
   (error "Mutable metadata not supported for " (class-of obj)))
+
+
+;; module variables (var)
+
+;; As an optimization, we might be able to subclass guile variables to
+;; add a metadata atom containing a hash map, and then we'd need to
+;; create a suitable define derivative to create them, and then use it
+;; "everywhere".
+
+;; For now, assume that it's acceptable to keep the metadata forever
+;; (variables aren't "dropped" often enough to matter, etc., i.e. we
+;; don't need a weak mapping.
+
+(define variable-metadata
+  (atom (hash-map)))
+
+;; GOOPS doesn't define <variable>
+(define var-class (class-of (module-variable (current-module) 'define)))
+
+(define-method (meta (v var-class))
+  (get (atom-deref variable-metadata) v #nil))
+
+(define-method (alter-meta! (v var-class) f . args)
+  (atom-swap! variable-metadata
+              (lambda [prev-vars-meta]
+                (let ((new-v-meta (apply f (get prev-vars-meta v (hash-map)) args)))
+                  (unless (or (hash-map? new-v-meta) (eq? #nil new-v-meta))
+                    (scm-error 'wrong-type-arg 'alter-meta!
+                               "New metadata is not a map: ~a"
+                               (list (pr-str new-v-meta)) (list new-v-meta)))
+                  (assoc prev-vars-meta v new-v-meta)))))

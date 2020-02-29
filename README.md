@@ -182,14 +182,13 @@ Differences from Clojure/JVM (an incomplete list)
 * `(alias ...)` calls only take full effect at the end of the
   enclosing top level form (because at the moment, the compiler works
   from a snapshot of the alias map, cf. `rewrite-il-calls`).
+* Metadata support is very limited.  It currently only works for vars.
 * Dynamic variables must be declared via `(defdyn name init-expr)`
   rather than via metadata, and they are always inherited by
   sub-threads, unlike on the JVM, where only some forms provide
   "binding conveyance".
 * You can define dynamic variables that do not convey via `defdynloc`.
 * Whether or not `bindings` are established in parallel is undefined.
-* Metadata is currently more or less broken/ignored, but some of the
-  initial pieces are in place to support improved handling.
 * `.indexOf` is `index-of`
 * `.lastIndexOf` is `last-index-of`
 * regex support is provided by guile's facilities on the current host
@@ -204,7 +203,6 @@ Differences from Clojure/JVM (an incomplete list)
   actually modify them via slot-set!.  We may eventually pursue
   immutable GOOPS classes in Guile, but of course you can modify
   anything on the JVM too if you really set your mind to it.
-* atoms don't yet support metadata.
 * In addition to nil, the `lokke` command's `-e` option doesn't print
   unspecified values (Guile's `*unspecified*`).
 * `lokke.io` is the parallel of `clojure.java.io`.
