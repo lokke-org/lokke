@@ -100,7 +100,7 @@
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
-                #:select (*print-meta* meta vary-meta with-meta))
+                #:select (*print-meta* alter-meta! meta vary-meta with-meta))
   #:use-module ((lokke scm bit)
                 #:select (bit-and
                           bit-clear
@@ -187,6 +187,7 @@
                ExceptionInfo
                add-watch
                alias
+               alter-meta!
                and
                apply
                assoc

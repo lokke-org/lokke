@@ -14,6 +14,7 @@
 (define-module (lokke metadata)
   #:use-module (oop goops)
   #:export (*print-meta*
+            alter-meta!
             meta
             vary-meta
             with-meta)
@@ -50,8 +51,5 @@
 (define (vary-meta obj f . args)
   (with-meta obj (apply f (meta obj) args)))
 
-;; FIXME: ok for alter-meta! to race?
-
-;; FIXME: do we want to redirect :doc, etc. to
-;; procedure-documentation, etc.?  If so, we'll definitely need
-;; locking.
+(define-method (alter-meta! obj f . args)
+  (error "Mutable metadata not supported for " (class-of obj)))
