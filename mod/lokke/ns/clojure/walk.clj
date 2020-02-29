@@ -43,8 +43,8 @@
    (list? form) (outer (apply list (map inner form)))
    (map-entry? form) (outer (map-entry (inner (key form)) (inner (val form))))
    (seq? form) (outer (doall (map inner form)))
-   (instance? clojure.lang.IRecord form)
-     (outer (reduce (fn [r x] (conj r (inner x))) form form))
+   ;; (instance? clojure.lang.IRecord form)
+   ;;   (outer (reduce (fn [r x] (conj r (inner x))) form form))
    (coll? form) (outer (into (empty form) (map inner form)))
    :else (outer form)))
 
