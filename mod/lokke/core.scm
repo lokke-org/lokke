@@ -36,6 +36,7 @@
                           letfn
                           loop
                           or
+                          var
                           when
                           when-let
                           when-not))
@@ -161,8 +162,7 @@
             not=
             num
             short
-            some?
-            var)
+            some?)
   #:replace (= do instance? nil?)
   #:re-export (*
                *err*
@@ -372,6 +372,7 @@
                use
                val
                vals
+               var
                vary-meta
                vec
                vector
@@ -459,6 +460,3 @@
              (if (contains? seen item)
                  #f
                  (recur (cdr rst) (conj seen item)))))))))
-
-(define-syntax-rule (var name)
-  (module-variable (current-module) 'name))

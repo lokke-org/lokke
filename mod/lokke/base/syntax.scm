@@ -55,6 +55,7 @@
             if-not
             letfn
             loop
+            var
             when-let
             when-not)
   ;; We leave let as let within this module.
@@ -63,6 +64,9 @@
 (eval-when (expand load eval)
   (define debug-fn? #f)
   (define debug-let? #f))
+
+(define-syntax-rule (var name)
+  (module-variable (current-module) 'name))
 
 (define-syntax declare
   (syntax-rules ()
