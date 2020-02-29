@@ -24,4 +24,39 @@
 (is (= 'test.clojure-ns (ns-name *ns*)))
 (is (= clojure.string/join str/join))
 
+(ns test-ns-behavior-simple
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+;; FIXME: why does this cause the tests to crash?
+;;(require '[clojure.test :refer [begin-tests end-tests is testing]])
+(is (= 'test-ns-behavior-simple (ns-name *ns*)))
+(prn (meta *ns*))
+(is (= nil (meta *ns*)))
+(ns test.clojure-ns)
+
+(ns test-ns-behavior-doc
+  "doc"
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+(is (= 'test-ns-behavior-doc (ns-name *ns*)))
+(is (= {:doc "doc"} (meta *ns*)))
+(ns test.clojure-ns)
+
+(ns test-ns-behavior-attr
+  {:x 1}
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+(is (= 'test-ns-behavior-attr (ns-name *ns*)))
+(is (= {:x 1} (meta *ns*)))
+(ns test.clojure-ns)
+
+(ns test-ns-behavior-doc-and-attr
+  "doc"
+  {:x 1}
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+(is (= 'test-ns-behavior-doc-and-attr (ns-name *ns*)))
+(is (= {:doc "doc" :x 1} (meta *ns*)))
+(ns test.clojure-ns)
+
 (end-tests (ns-name *ns*) :exit? true)

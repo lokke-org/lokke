@@ -15,7 +15,7 @@
 
 (define-module (lokke ns)
   #:use-module ((ice-9 threads) #:select (make-mutex))
-  #:use-module ((lokke base util) #:select (module-name->ns-sym))
+  #:use-module ((lokke base util) #:select (map-tag? module-name->ns-sym))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke pr) #:select (pr-str))
@@ -486,7 +486,35 @@
 ;; relevant/true...)
 (define-syntax ns
   (lambda (x)
+    ;; On the jvm, ns metadata appears to be restricted to literals,
+    ;; i.e. (ns foo {:x (inc 1)}) is an error.
     (syntax-case x ()
+      ;; doc and attrs
+      ((_ name doc (map-tag attr ...) expr ...)
+       (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
+       #'(begin
+           (ns name expr ...)
+           (eval-when (expand load eval)
+             (alter-meta! (current-module)
+                          (lambda (prev) (hash-map #:doc doc attr ...))))
+           #nil))
+      ;; just attrs
+      ((_ name (map-tag attr ...) expr ...) (map-tag? #'map-tag)
+       #'(begin
+           (ns name expr ...)
+           (eval-when (expand load eval)
+             (alter-meta! (current-module)
+                          (lambda (prev) (hash-map attr ...))))
+           #nil))
+      ;; just doc
+      ((_ name doc expr ...) (string? (syntax->datum #'doc))
+       #'(begin
+           (ns name expr ...)
+           (eval-when (expand load eval)
+             (alter-meta! (current-module)
+                          (lambda (prev) (hash-map #:doc doc))))
+           #nil))
+      ;; none
       ((_ name specs ...)
        (let* ((mod (ns-sym->mod-name (require-ns-sym (syntax->datum #'name))))
               (core? (core-module? mod))
@@ -513,4 +541,4 @@
              ;; FIXME: drop after debugging...
              (require '(guile.guile #:refer (format current-error-port)))
              #,@ref-cmds
-             *unspecified*))))))
+             #nil))))))
