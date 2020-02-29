@@ -194,6 +194,8 @@ Differences from Clojure/JVM (an incomplete list)
 * regex support is provided by guile's facilities on the current host
 * regex "Matcher" semantics are not supported yet.
 * Many of the coercions haven't been included: float double
+* Persistent lists are currently not `counted`, so `count` must
+  traverse the list.
 * No agents or refs yet.
 * No BigDecimal (decimal?, bigdec, etc.).
 * No support for BASErNUM bases over 16.
