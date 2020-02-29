@@ -60,6 +60,7 @@
             nnext
             not-empty
             nth
+            reduce
             reduce-kv
             rest
             rseq
@@ -75,7 +76,7 @@
             update
             vals)
   #:re-export (cons invoke)
-  #:replace (apply assoc first)
+  #:replace (apply assoc first merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: should these implmentations of rest actually be next?
@@ -486,3 +487,30 @@
     (if ks
         (assoc associative k (assoc-in (get associative k) ks v))
         (assoc associative k v))))
+
+;; Generic implementation -- may be able to do better for any given
+;; class.
+
+(define-method (reduce f val coll)
+  (let ((s (seq coll)))
+    (if s
+        (reduce f (f val (first s)) (rest s))
+        val)))
+
+(define-method (reduce f coll)
+  (let ((s (seq coll)))
+    (if s
+        (reduce f (first s) (rest s))
+        (f))))
+
+(define (merge . xs)
+  (if (null? xs)
+      #nil
+      (let loop ((xs xs)
+                 (result (car xs)))
+        (if (null? xs)
+            result
+            (loop (cdr xs)
+                  (reduce (lambda (result x) (conj result x))
+                          result
+                          (car xs)))))))

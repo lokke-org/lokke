@@ -50,10 +50,12 @@
                           get-in
                           keys
                           lazy-seq
+                          merge
                           next
                           nfirst
                           nnext
                           nth
+                          reduce
                           reduce-kv
                           rest
                           second
@@ -86,11 +88,9 @@
             not-any?
             not-every?
             range
-            reduce
             repeat
             repeatedly
             some)
-  #:replace (merge)
   #:re-export (<coll>
                <map>
                <map-entry>
@@ -128,6 +128,7 @@
                nth
                pr-on
                print-on
+               reduce
                reduce-kv
                rest
                second
@@ -144,7 +145,7 @@
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc)
+(re-export-and-replace! 'apply 'assoc 'merge)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)
@@ -278,19 +279,6 @@
   (require-nil 'empty? b)
   #t)
 
-;; Generic implementation -- may be able to do better for any given
-;; class.
-
-(define-method (reduce f val coll)
-  (if-let (s (seq coll))
-          (reduce f (f val (first s)) (rest s))
-          val))
-
-(define-method (reduce f coll)
-  (if-let (s (seq coll))
-          (reduce f (first s) (rest s))
-          (f)))
-
 (define-method (into to from)
   (reduce conj to from))
 
@@ -314,17 +302,6 @@
               (if-let (v (invoke f (first s)))
                       v
                       (loop (rest s))))))
-
-(define (merge . xs)
-  (when-not (null? xs)
-    (let loop ((xs xs)
-               (result (car xs)))
-      (if (null? xs)
-          result
-          (loop (cdr xs)
-                (reduce (lambda (result x) (conj result x))
-                        result
-                        (car xs)))))))
 
 (define repeat
   (match-lambda*

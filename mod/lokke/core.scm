@@ -298,7 +298,6 @@
                map-entry?
                mapv
                max
-               merge
                meta
                min
                mod
@@ -387,7 +386,7 @@
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'read)
+(re-export-and-replace! 'merge 'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))
