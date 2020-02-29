@@ -12,6 +12,7 @@
 ;;;      option) any later version.
 
 (define-module (lokke metadata)
+  #:use-module ((lokke base syntax) #:select (defdyn))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke pr) #:select (pr-str))
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
@@ -40,7 +41,7 @@
 ;; Clojure objects (i.e. they're "immutable") can base the latter on
 ;; shallow-clone if nothing else.
 
-(define *print-meta* (make-parameter #nil))
+(defdyn *print-meta* #nil)
 
 (define-method (meta obj) #nil)
 
