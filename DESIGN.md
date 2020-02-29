@@ -137,21 +137,18 @@ Modules and namespaces
 Metadata
 --------
 
-- ...is currently quite broken.  But the current plan is to support
-  it, but not any more than is really useful at any given point.
+- ...is currently quite broken, particularly reader metadata, but the
+  plan is to continue to incrementally improve it.
 
-- What we have so far begins to handle metadata as Scheme
-  [parameters](https://srfi.schemers.org/srfi-39/srfi-39.html)
-
-- We're currently planning to see if we can just avoid ever supporting
-  metadata on some things, symbols being a clear example, or at least
-  making support optional, since doing so would introduce overhead,
-  and it would add a substantial impedence mismatch with the Scheme
-  side.  The former because symbols could no longer be simple unique
-  pointers (because immutability requires a new object every time the
-  metadat changes), and the latter because Clojure and Scheme symbols
-  wouldn't have the same representation anymore, affecting all kinds
-  of things, likely including the compler.
+- We're also planning to see if we can avoid supporting metadata for
+  some things, symbols being a clear example, or at least making
+  support optional, since doing so would introduce overhead, and it
+  would add a substantial impedence mismatch with the Scheme side.
+  The former because symbols could no longer be simple unique pointers
+  (because immutability requires a new object every time the metadata
+  changes), and the latter because Clojure and Scheme symbols wouldn't
+  have the same representation anymore, affecting all kinds of things,
+  likely including the compler.
 
 Concurrency
 -----------
@@ -209,9 +206,8 @@ TODO
 - Investigate GOOPS read-only slots -- daviid mentioned that GNOME
   uses them, e.g. <read-only-slot> in gobject/gtype.scm.
 
-- Fix metadata at least enough for now.
-
-- Implement dynamic variables, binding, etc. (cf. Guile parameters).
+- Continue adding metadata support as-needed.  e.g. consider adding it
+  to vector, hash-map, hash-set, etc.
 
 - Examine (srfi srfi-45) wrt lazy seqs.
 
