@@ -395,6 +395,7 @@ describing the applicable terms, including, but not limited to:
   - The file lib/lokke-reader.c
   - The file mod/fhash.scm
   - Any file named epl.clj
+  - mod/lokke/clojure/ns/walk.clj
 
 Copyright © 2015-2019 Rob Browning <rlb@defaultvalue.org>
 
