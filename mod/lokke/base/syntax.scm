@@ -37,10 +37,12 @@
                           drop-right
                           last
                           take-right))
+  #:use-module ((lokke base collection) #:select (merge))
   #:use-module ((lokke base destructure) #:select (destructure-binding-syntax))
   #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
-  #:use-module ((lokke base util) #:select (global-identifier? pairify vec-tag?))
+  #:use-module ((lokke base util)
+                #:select (global-identifier? map-tag? pairify vec-tag?))
   #:use-module (oop goops)
   #:re-export (binding defdyn defdynloc)
   #:export (->
@@ -399,8 +401,25 @@
 (define-syntax defn
   (lambda (x)
     (syntax-case x ()
+      ;; doc and attrs
+      ((_ name doc (map-tag attr ...) expr ...)
+       (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
+       #'(begin
+           (def name doc (fn expr ...))
+           (alter-meta! (module-variable (current-module) 'name)
+                        (lambda (prev) (map-tag attr ...)))
+           (var name)))
+      ;; just attrs
+      ((_ name (map-tag attr ...) expr ...) (map-tag? #'map-tag)
+       #'(begin
+           (def name (fn expr ...))
+           (alter-meta! (module-variable (current-module) 'name)
+                        (lambda (prev) (map-tag attr ...)))
+           (var name)))
+      ;; just doc
       ((_ name doc expr ...) (string? (syntax->datum #'doc))
        #'(def name doc (fn expr ...)))
+      ;; none
       ((_ name expr ...)
        #'(def name (fn expr ...))))))
 

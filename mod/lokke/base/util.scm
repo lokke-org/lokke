@@ -17,6 +17,7 @@
   #:use-module ((system syntax) #:select (syntax-local-binding))
   #:export (global-identifier?
             keyword->string
+            map-tag?
             module-name->ns-str
             module-name->ns-sym
             pairify
@@ -43,7 +44,8 @@
       (syntax-local-binding syn)
     (eq? 'global type)))
 
-;; We use this as a syntax-pattern fender to detect reader-vectors.
+;; We use these as a syntax-pattern fender to detect reader-types.
+(define (map-tag? x) (eq? '/lokke/reader-hash-map (syntax->datum x)))
 (define (vec-tag? x) (eq? '/lokke/reader-vector (syntax->datum x)))
 
 (define (pairify lst)
