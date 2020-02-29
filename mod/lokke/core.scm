@@ -189,8 +189,6 @@
                alias
                alter-meta!
                and
-               apply
-               assoc
                assoc-in
                atom
                atom?
@@ -386,7 +384,7 @@
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'list? 'merge 'read)
+(re-export-and-replace! 'apply 'assoc 'list? 'merge 'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))
