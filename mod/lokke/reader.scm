@@ -47,6 +47,28 @@
 
 (load-extension "lokke-reader.so" "init_lokke_reader")
 
+(define (expand-@-refs expr)
+  (define (expand-@-sym sym)
+    (let ((str (symbol->string sym)))
+      (if (string-prefix? "@" str)
+          (list 'clojure.core/deref (string->symbol (substring/read-only str 1)))
+          sym)))
+  (define (expand expr)
+    (cond
+     ((symbol? expr) (expand-@-sym expr))
+     ((keyword? expr) expr)
+     ((null? expr) expr)
+     ((list? expr) (map expand expr))
+     ((string? expr) expr)
+     ((number? expr) expr)
+     ((boolean? expr) expr)
+     ((char? expr) expr)
+     (else
+      (error
+       (format #f "Unexpected expression while expanding @ refs ~s:"
+               (class-of expr)) expr))))
+  (expand expr))
+
 (define (expand-ref sym ns-str aliases)
   ;; foo -> some.where/foo
   ;; str/join -> clojure.string/join
@@ -437,10 +459,13 @@
                  m)))))
      (else  ;; Not (/lokke/reader-meta ...)
       (let* ((_ (when debug-reader?
-                  (format (current-error-port) "reader expanding syms/keys: ~s\n" expr)))
-             (result (expand-sym/key-aliases expr ns-str aliases))
+                  (format (current-error-port) "reader expanding @refs: ~s\n" expr)))
+             (result (expand-@-refs expr))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader rewriting #(): ~s\n" expr)))
+                  (format (current-error-port) "reader expanding syms/keys: ~s\n" result)))
+             (result (expand-sym/key-aliases result ns-str aliases))
+             (_ (when debug-reader?
+                  (format (current-error-port) "reader rewriting #(): ~s\n" result)))
              (result (rewrite-anon-fns result))
              (_ (when debug-reader?
                   (format (current-error-port) "reader expanding syntax-quote: ~s\n" result)))
