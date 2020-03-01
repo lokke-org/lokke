@@ -48,9 +48,9 @@
 (define <atom> (class-of (make-atomic-box #t)))
 (define (atom? x) (is-a? x <atom>))
 (define-method (deref (a <atom>)) (atom-deref a))
-(define (reset! a newval) (atom-reset! a newval))
-(define (swap! a . args) (apply atom-swap! a args))
-(define (compare-and-set! a oldval newval)
+(define-method (reset! (a <atom>) newval) (atom-reset! a newval))
+(define-method (swap! (a <atom>) . args) (apply atom-swap! a args))
+(define-method (compare-and-set! (a <atom>) oldval newval)
   (apply atom-compare-and-set! a oldval newval))
 
 (define-method (add-watch (a <atom>) key fn) (atom-add-watch a key fn))
