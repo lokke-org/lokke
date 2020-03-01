@@ -22,6 +22,7 @@
                            test-runner-current
                            test-runner-fail-count))
   #:export (begin-tests
+            deftest
             end-tests
             is
             testing)
@@ -33,6 +34,17 @@
   (test-begin (if (symbol? suite-name)
                   (symbol->string suite-name)
                   suite-name)))
+
+(define-syntax testing
+  (syntax-rules ()
+    ((_ what test ...) (test-group what test ...))))
+
+;; FIXME: support *load-tests*?
+;; FIXME: deftest should of course not be executing the code immediately
+
+(define-syntax-rule (deftest name body ...)
+  (testing (symbol->string 'name)
+    body ...))
 
 (define* (end-tests #:optional suite-name #:key exit?)
   (if suite-name
@@ -55,7 +67,3 @@
     ((_ (= expected expression) msg) (test-equal msg expected expression))
     ((_ expression) (test-assert expression))
     ((_ expression msg) (test-assert msg expression))))
-
-(define-syntax testing
-  (syntax-rules ()
-    ((_ what test ...) (test-group what test ...))))

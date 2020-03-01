@@ -199,6 +199,9 @@ Differences from Clojure/JVM (an incomplete list)
 * Persistent lists are currently not `counted`, so `count` must
   traverse the list.
 * No agents or refs yet.
+* `deftest` is very little more than a `do` right now, i.e. it
+  executes immediately, there's no support for `*load-tests*`, and it
+  doesn't create a test function to run later.
 * No BigDecimal (decimal?, bigdec, etc.).
 * No support for BASErNUM bases over 16.
 * No bigint syntax, e.g. 7N, nor explicit bigints
