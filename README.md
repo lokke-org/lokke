@@ -28,7 +28,7 @@ is a generic, and implements Clojure's semantics, not Scheme's, and
 currently `(lokke core)` and `(lokke base syntax)`, will replace `let`
 and `when`, via `use-modules`, so be cautious.  We recommend following
 the Clojure practice of explicitly `#:select`ing the symbols you want
-to import, or `#:prefix`ing the entire namespace to avoid the problem
+to import, (or `#:prefix`ing the namespace) to avoid the problem
 entirely, and to make it much easier to discover the origin of a
 binding.  In some cases, Scheme vectors may be required in place of
 Clojure's immutable vectors, e.g. `(fn #(x 1 y 2) ...)`, though the
@@ -164,8 +164,8 @@ Differences from Clojure/JVM (an incomplete list)
 * Lokke's reader conditional identifier is `:cljl`, e.g. `#?(:cljl x)`.
 * At the moment reader conditionals are always supported by the reader
   functions and are not restricted to `.cljc` files.
-* Uses Scheme's `quotient`, `remainder`, and `modulus` for `quot`,
-  `rem`, and `mod`.
+* `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
+  and `mod`.
 * Number is taken to mean <number> (i.e. objects satisfying number?).
 * Clojure namespaces *are* Guile modules (which have very comparable
   semantcs), and the Clojure namespace is situatied under `(lokke ns)`
@@ -227,6 +227,9 @@ Differences from Clojure/JVM (an incomplete list)
   elements of `ex-info` exceptions via the normal accessors:
   `ex-message`, `ex-data`, etc.  The `lokke.exception` namespace
   also provides an `ex-info?` predicate.
+
+  Note however, that Guile 3.0's exception handling changes may
+  prompt a rework, perhaps away from Guile's try/catch.
 * Lokke's `ex-info` exceptions have experimental support for
   suppressing exceptions, a concept also found on the JVM and in
   Python, though the details vary.  If an exception is thrown from
@@ -322,9 +325,6 @@ Known Issues
 
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
-
-- Unimplemnted syntaxes:
-    negative exponents -1.2e-5
 
 - The code has not been evaluated with respect to the need for
   continuation barriers yet.

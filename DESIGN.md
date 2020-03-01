@@ -164,7 +164,7 @@ appropriate synchronization.  From the Guile Reference Manual:
 
 > A program might still produce nonsensical results, though.
 
-Currently Lokke intends to follow a similar approach.
+Lokke currently intends to follow a similar approach.
 
 Value comparisons
 -----------------
@@ -191,13 +191,6 @@ Currently Lokke handles equality by:
 TODO
 ----
 
-- Finish ns implementation (:as, etc.).
-
-  One relatively simple initial approach for handling :as might be to
-  just store them in a hash map in the module (ns) bound to a known
-  and possibly hidden name, i.e. /lokke/ns-aliases.  Then /lokke/@
-  might just need to be adjusted to consult that too.
-
 - Add `for` and adjust `doseq` to provide for-style bindings.
 
 - Add `sorted-set-by` and `sorted-map-by` (and then update
@@ -216,7 +209,7 @@ TODO
 
 - remove vestigial bits from the reader (syntax, synquote, etc.?)
 
-- Create clojure.string, clojure.edn, maybe some suitable File and/or
+- Create clojure.edn, maybe some suitable File and/or
   clojure.java.io, and clojure.java.shell shims, etc.
 
 - Contemplate eval-when -- do we have it where we need it, does it,
@@ -276,10 +269,8 @@ TODO
 - Improve hash-map and hash-set seqs, which may require improvements
   to fash or...
 
-- Replace all pr, prn, print, and println defs with pr-to, ... and
-  then make pr and prn normal functions that (pr-to *out* obj), etc.
-  Might also want to consider making pr-to, etc. part of clojure.core
-  and just document it as a Lokke addition.
+- Finish fixing up the pr-related functions (prn, pr-str, etc.) and
+  augment the tests.
 
 - Use SPDX license identifiers?  And can we automate copyright notice
   updates (years) via git?
@@ -319,10 +310,9 @@ TODO
 Hacking
 -------
 
-- For now, EPL licenced code ported from upstream should go in a
-  separate, nested epl namespace, e.g. (lokke ns clojure core epl),
-  and we need to figure out how we want to handle Signed-off-by for
-  that and other non-trivial cases.
+- For now, all EPL licenced code (e.g. code ported from upstream)
+  should go in separate namespaces, e.g. (lokke ns clojure walk) or
+  (lokke ns clojure core epl).
 
 - When defining syntaxes - note the use of (expand ...) functions in
   say (lokke base syntax).  The relevant cases just call a common
