@@ -70,6 +70,7 @@
                           take
                           take-while
                           update
+                          update-in
                           vals))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map) #:select (<map> map?))
@@ -144,6 +145,7 @@
                take
                take-while
                update
+               update-in
                val
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))

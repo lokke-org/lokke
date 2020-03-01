@@ -368,6 +368,7 @@
                true?
                try
                update
+               update-in
                use
                val
                vals

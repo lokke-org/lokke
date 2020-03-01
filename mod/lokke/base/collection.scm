@@ -76,6 +76,7 @@
             take
             take-while
             update
+            update-in
             vals)
   #:re-export (cons invoke)
   #:replace (apply assoc first list? merge)
@@ -494,6 +495,14 @@
     (if ks
         (assoc associative k (assoc-in (get associative k) ks v))
         (assoc associative k v))))
+
+(define (update-in associative ks f . args)
+  (let* ((s (seq ks))
+         (k (first s))
+         (ks (next s)))
+    (if ks
+        (assoc associative k (apply update-in (get associative k) ks f args))
+        (assoc associative k (apply f (get associative k) args)))))
 
 ;; Generic implementation -- may be able to do better for any given
 ;; class.
