@@ -95,12 +95,14 @@
            (define-public name value)
            (maybe-set-def-doc! (module-variable (current-module) 'name)
                                name
-                               #,(global-identifier? #'name) doc)))
+                               #,(global-identifier? #'name) doc)
+           (var name)))
       ((_ name value)
        #`(begin
            (define-public name value)
            (clear-def-doc! (module-variable (current-module) 'name)
-                           #,(global-identifier? #'name)))))))
+                           #,(global-identifier? #'name))
+           (var name))))))
 
 ;; FIXME: think we might have a redundant expansion, i.e. not sure
 ;; let** needs to cons the initial extra binding.
