@@ -227,6 +227,25 @@
   #nil)
 
 
+;; GOOPS doesn't define <variable>
+(define var-class (class-of (module-variable (current-module) 'define)))
+
+(define-inlinable (var-desc v)
+  (read-only-str
+   (%scm-format #f "#object[<variable> 0x~x]" (object-address v))))
+
+(define-method (pr-str (x var-class))
+  (var-desc x))
+
+(define-method (pr-on (x var-class) port)
+  (display (var-desc x) port)
+  #nil)
+
+(define-method (print-on (x var-class) port)
+  (display (var-desc x) port)
+  #nil)
+
+
 (define-method (pr-on (x <syntax>) port)
   (write x port) #nil)
 
