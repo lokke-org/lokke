@@ -51,7 +51,8 @@ TESTS = \
   test/clojure-collection \
   test/clojure-fn \
   test/clojure-math \
-  test/clojure-metadata
+  test/clojure-metadata \
+  test/clojure-walk
 
 # FIXME...
 clean-local:

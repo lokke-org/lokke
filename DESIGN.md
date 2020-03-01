@@ -200,6 +200,9 @@ TODO
 
 - Add `for` and adjust `doseq` to provide for-style bindings.
 
+- Add `sorted-set-by` and `sorted-map-by` (and then update
+  test/clojure-walk)..
+
 - File and line numbers are not handled properly everywhere in the
   reader, errors, etc.
 
