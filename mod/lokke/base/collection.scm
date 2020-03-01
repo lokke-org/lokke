@@ -26,7 +26,7 @@
   #:use-module ((guile)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((lokke base invoke) #:select (invoke))
-  #:use-module ((lokke base util) #:select (require-nil))
+  #:use-module ((lokke base util) #:select (require-nil vec-tag?))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-append))
@@ -44,6 +44,7 @@
             count
             counted?
             dissoc
+            doseq
             drop
             empty
             every?
@@ -520,3 +521,17 @@
                   (reduce (lambda (result x) (conj result x))
                           result
                           (car xs)))))))
+
+(define-syntax doseq
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag var init) body ...)  (vec-tag? #'vec-tag)
+       #'(doseq (var init) body ...))
+      ((_ (var init) body ...)
+       #'(let loop ((s init))
+           (let ((s (seq s)))
+             (if (not s)
+                 #nil
+                 (let ((var (first s)))
+                   body ...
+                   (loop (rest s))))))))))

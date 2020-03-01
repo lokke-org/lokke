@@ -136,4 +136,16 @@
   (is (= {:x {:y 1}} (assoc-in {} [:x :y] 1)))
   (is (= {:w {:x :z}} (assoc-in {:w {:x {:y {:z 1}}}} [:w :x] :z))))
 
+(testing "doseq"
+  (is (= nil (doseq [x []])))
+
+  (let [effects (atom [])]
+    (doseq [x [(reset! effects [1])]])
+    (is (= [1] @effects)))
+
+  (let [effects (atom 0)]
+    (doseq [x (range 3)]
+      (swap! effects inc))
+    (is (= 3 @effects))))
+
 (end-tests (ns-name *ns*) :exit? true)

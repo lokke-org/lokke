@@ -39,6 +39,7 @@
                           count
                           counted?
                           dissoc
+                          doseq
                           drop
                           empty
                           every?
@@ -107,6 +108,7 @@
                count
                counted?
                dissoc
+               doseq
                drop
                empty
                every?

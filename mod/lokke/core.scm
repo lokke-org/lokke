@@ -234,6 +234,7 @@
                doall
                doc
                dorun
+               doseq
                dotimes
                doto
                double
