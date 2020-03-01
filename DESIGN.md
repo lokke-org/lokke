@@ -303,8 +303,6 @@ TODO
 
 - Run some large structure memory tests.
 
-- Redirect the defn name to procedure-name, etc.?
-
 - Fix up source-properties, etc.
 
 - Argument lists like (fn [& xs] ...) are not lazy collections,

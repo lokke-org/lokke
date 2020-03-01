@@ -90,19 +90,23 @@
 (define-syntax def
   (lambda (x)
     (syntax-case x ()
-      ((_ name doc value) (string? (syntax->datum #'doc))
+      ((_ sym doc value) (string? (syntax->datum #'doc))
        #`(begin
-           (define-public name value)
-           (maybe-set-def-doc! (module-variable (current-module) 'name)
-                               name
-                               #,(global-identifier? #'name) doc)
-           (var name)))
-      ((_ name value)
+           (define sym value)
+           (maybe-set-def-doc! (module-variable (current-module) 'sym)
+                               sym
+                               #,(global-identifier? #'sym) doc)
+           (when (procedure? sym)
+             (set-procedure-property! sym 'name 'sym))
+           (export sym)
+           (var sym)))
+      ((_ sym value)
        #`(begin
-           (define-public name value)
-           (clear-def-doc! (module-variable (current-module) 'name)
-                           #,(global-identifier? #'name))
-           (var name))))))
+           (define sym value)
+           (clear-def-doc! (module-variable (current-module) 'sym)
+                           #,(global-identifier? #'sym))
+           (export sym)
+           (var sym))))))
 
 ;; FIXME: think we might have a redundant expansion, i.e. not sure
 ;; let** needs to cons the initial extra binding.
