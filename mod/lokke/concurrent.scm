@@ -19,17 +19,21 @@
   #:use-module ((ice-9 atomic) #:select (make-atomic-box))
   #:use-module ((ice-9 futures) #:select ((future . %scm-future) touch))
   #:use-module (oop goops)
+  #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke scm atom)
                 #:select (atom?
                           atom
                           atom-add-watch
+                          atom-alter-meta!
                           atom-compare-and-set!
                           atom-deref
+                          atom-meta
                           atom-remove-watch
                           atom-reset!
                           atom-set-validator!
                           atom-swap!))
   #:export (<atom>
+            alter-meta!
             atom?
             add-watch
             remove-watch
@@ -53,6 +57,11 @@
 (define-method (remove-watch (a <atom>) key) (atom-remove-watch a key))
 (define-method (set-validator! (a <atom>) validate)
   (atom-set-validator! a validate))
+
+(define-method (meta (a <atom>)) (atom-meta a))
+(define-method (alter-meta! (a <atom>) f . args)
+  (apply atom-alter-meta a f args))
+
 
 ;; Can't just alias guile futures because this doesn't work w/goops:
 ;;   (define <future> (@@ (ice-9 futures) <future>))
