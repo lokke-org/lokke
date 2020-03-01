@@ -32,11 +32,15 @@
                           find
                           first
                           get
+                          keys
                           lazy-seq
+                          merge
+                          reduce-kv
                           second
                           select-keys
                           seq
-                          update))
+                          update
+                          vals))
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((fash)
                 #:select (make-fash
@@ -52,31 +56,30 @@
   #:use-module ((srfi srfi-1) #:select (fold))
   #:use-module ((srfi srfi-69) #:prefix hash/)
   #:export (<hash-map>
-            dissoc
             hash-map
             hash-map?
-            keys
-            kv-list
-            merge
-            reduce-kv
-            vals)
+            kv-list)
   #:re-export (clj=
                conj
                cons
                contains?
                count
                counted?
+               dissoc
                empty
                equal?
                get
+               keys
                pr-on
                print-on
+               reduce-kv
                select-keys
                seq
-               update)
+               update
+               vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc)
+(re-export-and-replace! 'apply 'assoc 'merge)
 
 ;; FIXME: move rest of common map generics to (lokke map)
 
