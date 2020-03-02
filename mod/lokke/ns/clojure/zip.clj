@@ -9,10 +9,10 @@
 ;functional hierarchical zipper, with navigation, editing and enumeration
 ;see Huet
 
-(ns ^{:doc "Functional hierarchical zipper, with navigation, editing,
-  and enumeration.  See Huet"
-       :author "Rich Hickey"}
-  clojure.zip
+(ns clojure.zip
+  "Functional hierarchical zipper, with navigation, editing, and
+  enumeration.  See Huet"
+  {:author "Rich Hickey"}
   (:refer-clojure :exclude (replace remove next)))
 
 (defn zipper
