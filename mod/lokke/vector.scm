@@ -33,8 +33,11 @@
                           seq
                           update))
   #:use-module ((lokke base map-entry) #:select (map-entry))
+  #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
+  #:use-module ((lokke hash-map) #:select (<hash-map>))
+  #:use-module ((lokke metadata) #:select (meta with-meta))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke scm vector)
                 #:select (<lokke-vector>
@@ -46,7 +49,9 @@
                           lokke-vector-conj
                           lokke-vector-equal?
                           lokke-vector-length
+                          lokke-vector-meta
                           lokke-vector-ref
+                          lokke-vector-with-meta
                           lokke-vector?
                           vector->lokke-vector))
   #:use-module ((srfi srfi-67) #:select (vector-compare))
@@ -63,17 +68,28 @@
                find
                first
                get
+               meta
                nth
                pr-on
                print-on
                rest
                seq
+               with-meta
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'assoc)
 
 (define vector? lokke-vector?)
+
+(define-method (meta (v <lokke-vector>)) (lokke-vector-meta v))
+
+(define-method (with-meta (m <lokke-vector>) (mdata <boolean>))
+  (require-nil 'with-meta 2 mdata)
+  (lokke-vector-with-meta m mdata))
+
+(define-method (with-meta (m <lokke-vector>) (mdata <hash-map>))
+  (lokke-vector-with-meta m mdata))
 
 ;; specialize this so that we'll bypass the generic <sequential> flavor
 (define-method (clj= (v1 <lokke-vector>) (v2 <lokke-vector>))

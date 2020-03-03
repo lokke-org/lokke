@@ -40,7 +40,9 @@
 //  - OK to access small/large after checking size, i.e. -fno-strict-aliasing
 
 typedef struct {
-    uint32_t length;  // In common with large vecs
+    uint32_t length;
+    SCM meta;
+    // Fields above are in common with large vecs
     SCM elt[];
 } smaller_vec_t;
 
@@ -51,7 +53,9 @@ typedef struct tree_node_t {
 } tree_node_t;
 
 typedef struct {
-    uint32_t length;  // In common with small vecs
+    uint32_t length;
+    SCM meta;
+    // Fields above are in common with large vecs
     uint32_t tail_offset;
     SCM *tail;  // No tail length because tail length = length - tail_offset
     tree_node_t tree;
@@ -60,6 +64,7 @@ typedef struct {
 // Access to the common field(s) -- exact prefix of smaller and larger.
 typedef struct {
     uint32_t length;
+    SCM meta;
     // ...
 } vector_t;
 
@@ -90,6 +95,7 @@ make_empty_vector ()
     smaller_vec_t * const vec = scm_gc_malloc (sizeof_small_vec(0),
                                                "small lokke vector");
     vec->length = 0;
+    vec->meta = SCM_ELISP_NIL;
     return scm_make_foreign_object_1 (vector_type_scm, vec);
 }
 
@@ -103,6 +109,40 @@ smaller_vec_copy(const smaller_vec_t * const v)
     return result;
 }
 
+SCM_DEFINE (lokke_vector_meta, "lokke-vector-meta", 1, 0, 0,
+            (SCM vector),
+	    "...@code{#} @var{index}...\n")
+#define FUNC_NAME s_lokke_vector_meta
+{
+    scm_assert_foreign_object_type (vector_type_scm, vector);
+    const vector_t * const c_vec = scm_foreign_object_ref (vector, 0);
+    return c_vec->meta;
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (lokke_vector_with_meta, "%lokke-vector-with-meta", 2, 0, 0,
+            (SCM vector, SCM meta),
+	    "...@code{#} @var{index}...\n")
+#define FUNC_NAME s_lokke_vector_with_meta
+{
+    scm_assert_foreign_object_type (vector_type_scm, vector);
+    // FIXME: verify meta is map here or in parent wrapper..
+    const vector_t * const c_vec = scm_foreign_object_ref (vector, 0);
+    if (c_vec->length <= 32) {
+        const smaller_vec_t * const vs = (smaller_vec_t *) c_vec;
+        smaller_vec_t *result = smaller_vec_copy((smaller_vec_t *) vs);
+        result->meta = meta;
+        return scm_make_foreign_object_1 (vector_type_scm, result);
+    }
+    const larger_vec_t * const vl = (larger_vec_t *) c_vec;
+    larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
+                                                 "larger lokke vector");
+    memcpy (result, vl, sizeof(larger_vec_t));
+    result->meta = meta;
+    return scm_make_foreign_object_1 (vector_type_scm, result);
+}
+#undef FUNC_NAME
+
 static smaller_vec_t *
 smaller_vec_conj(const smaller_vec_t * const v, SCM elt)
 {
@@ -110,6 +150,7 @@ smaller_vec_conj(const smaller_vec_t * const v, SCM elt)
     smaller_vec_t * const result =
         scm_gc_malloc (sizeof_small_vec(v->length + 1), "small lokke vector");
     result->length = v->length + 1;
+    result->meta = v->meta;
     for (int i = 0; i < v->length; i++) result->elt[i] = v->elt[i];
     result->elt[v->length] = elt;
     return result;
@@ -329,6 +370,7 @@ SCM_DEFINE (lokke_vector_conj_1, "lokke-vector-conj-1", 2, 0, 0,
         larger_vec_t *result = scm_gc_malloc (sizeof (larger_vec_t),
                                               "larger lokke vector");
         result->length = 33;
+        result->meta = vs->meta;
         SCM * const elt = scm_gc_malloc(sizeof(SCM) * 32,
                                         "lokke vector content");
         memcpy(elt, vs->elt, sizeof(SCM) * 32);
@@ -358,6 +400,7 @@ SCM_DEFINE (lokke_vector_conj_1, "lokke-vector-conj-1", 2, 0, 0,
     larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
                                                  "larger lokke vector");
     result->length = vl->length + 1;
+    result->meta = vl->meta;
     tree_incorporating_tail(&(result->tree),
                             &(vl->tree),
                             index_depth(new_index - 32),

@@ -14,6 +14,7 @@
 (define-module (lokke scm vector)
   #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base collection) #:select (<sequential>))
+  #:use-module ((lokke hash-map) #:select (hash-map?))
   #:use-module ((lokke scm foreign-object) #:select (make-foreign-object-type*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (fold))
@@ -28,7 +29,9 @@
             lokke-vector-conj
             lokke-vector-equal?
             lokke-vector-length
+            lokke-vector-meta
             lokke-vector-ref
+            lokke-vector-with-meta
             lokke-vector?
             vector->lokke-vector)
   #:re-export (equal?))
@@ -45,6 +48,13 @@
 (load-extension "lokke-vector.so" "init_lokke_vector")
 
 (define (lokke-vector? x) (is-a? x <lokke-vector>))
+
+(define (lokke-vector-with-meta v m)
+  (unless (or (hash-map? m) (eq? #nil m))
+    (scm-error 'wrong-type-arg 'lokke-vector-with-meta
+               "Wrong type argument in position 2: ~s"
+               (list m) (list m)))
+  (%lokke-vector-with-meta v m))
 
 (define-method (lokke-vector-equal? v1 v2)
   (let ((n1 (lokke-vector-length v1))

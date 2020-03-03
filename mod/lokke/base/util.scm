@@ -59,8 +59,9 @@
 ;; Need this because #nil is a <boolean> too...
 (define-syntax require-nil
   (syntax-rules ()
-    ((_ fn-name arg)
+    ((_ fn-name arg) (require-nil fn-name 1 arg))
+    ((_ fn-name pos arg)
      (unless (eq? #nil arg)
        (scm-error 'wrong-type-arg fn-name
-                  "Wrong type argument in position 1: ~A"
-                  (list arg) (list arg))))))
+                  "Wrong type argument in position ~a: ~s"
+                  (list pos arg) (list arg))))))
