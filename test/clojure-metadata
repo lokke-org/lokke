@@ -19,6 +19,13 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "hash-map"
+  (is (= nil (meta {})))
+  (is (= nil (meta (with-meta {} nil))))
+  (is (= {} (meta (with-meta {} {}))))
+  (is (= {:x 1} (meta (with-meta {} {:x 1}))))
+  (is (= {:x 1} (meta (assoc (with-meta {} {:x 1}) 0 1) ))))
+
 (testing "vector"
   (is (= nil (meta [])))
   (is (= nil (meta (with-meta [] nil))))

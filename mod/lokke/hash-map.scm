@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -41,6 +41,7 @@
                           seq
                           update
                           vals))
+  #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((fash)
                 #:select (make-fash
@@ -49,6 +50,7 @@
                           fash-set
                           fash-size))
   #:use-module ((lokke base map-entry) #:select (map-entry))
+  #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
@@ -70,11 +72,13 @@
                equal?
                get
                keys
+               meta
                pr-on
                print-on
                reduce-kv
                select-keys
                seq
+               with-meta
                update
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -96,10 +100,23 @@
         result)))
 
 (define-class <hash-map> (<map>)
-  (internals #:init-keyword #:internals))
+  (internals #:init-keyword #:internals)
+  (meta #:init-keyword #:meta))
 
-(define-syntax-rule (make-map fm) (make <hash-map> #:internals fm))
+(define-syntax-rule (make-map fm meta)
+  (make <hash-map> #:internals fm #:meta meta))
+
 (define-syntax-rule (map-fm m) (slot-ref m 'internals))
+(define-syntax-rule (map-meta m) (slot-ref m 'meta))
+
+(define-method (meta (m <hash-map>)) (map-meta m))
+
+(define-method (with-meta (m <hash-map>) (mdata <boolean>))
+  (require-nil 'with-meta 2 mdata)
+  (make-map (map-fm m) mdata))
+
+(define-method (with-meta (m <hash-map>) (mdata <hash-map>))
+  (make-map (map-fm m) mdata))
 
 (define (show m emit port)
   (display "{" port)
@@ -128,10 +145,15 @@
 (define (hash-map? x) (is-a? x <hash-map>))
 
 (define-method (assoc (m <hash-map>) k v)
-  (make-map (fash-set (map-fm m) k v)))
+  (make-map (fash-set (map-fm m) k v)
+            (map-meta m)))
 
-(define empty-hash-map
-  (make-map (make-fash #:hash hash/hash #:equal clj=)))
+(define empty-fash (make-fash #:hash hash/hash #:equal clj=))
+(define empty-hash-map (make-map empty-fash #nil))
+(define (empty-hash-map-w-meta data)
+  (if (eq? #nil data)
+      empty-hash-map
+      (make-map empty-fash data)))
 
 (define (hash-map . alternating-keys-and-values)
   (if (null? alternating-keys-and-values)
@@ -154,13 +176,15 @@
                              result
                              (fash-set result k v)))
                        (map-fm m2)
-                       (map-fm m1))))
+                       (map-fm m1))
+            (map-meta m1)))
 
 (define-method (dissoc (m <hash-map>) . xs)
   (make-map (fold (lambda (x result)
                     (fash-set result x not-found))
                   (map-fm m)
-                  xs)))
+                  xs)
+            (map-meta m)))
 
 (define-method (count (m <hash-map>))
   (fash-fold (lambda (k v size) (if (eq? v not-found) size (1+ size)))
@@ -168,7 +192,7 @@
              0))
 
 (define-method (counted? (m <hash-map>)) #t)
-(define-method (empty (m <hash-map>)) empty-hash-map)
+(define-method (empty (m <hash-map>)) (empty-hash-map-w-meta (map-meta m)))
 ;; not-empty - generic default is correct
 
 (define-method (contains? (m <hash-map>) x)
@@ -246,10 +270,11 @@
     (when v
       (map-entry k v))))
 
-(define (update map m k f . args)
+(define (update m k f . args)
   (let* ((fm (map-fm m))
          (v (ref fm k)))
-    (make-map (fash-set fm k (apply v args)))))
+    (make-map (fash-set fm k (apply v args))
+              (map-meta m))))
 
 (define-method (reduce-kv f init (m <hash-map>))
   (fash-fold (lambda (k v result)
@@ -265,6 +290,6 @@
                    result
                    (assoc result k v)))
              (map-fm m)
-             empty-hash-map))
+             (empty-hash-map-w-meta (map-meta m))))
 
 ;; FIXME: custom merge?

@@ -12,16 +12,15 @@
 ;;;      option) any later version.
 
 (define-module (lokke metadata)
+  #:use-module ((lokke base metadata)
+                #:select (alter-meta! meta vary-meta with-meta))
   #:use-module ((lokke base syntax) #:select (defdyn))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke pr) #:select (pr-str))
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
   #:use-module (oop goops)
-  #:export (*print-meta*
-            alter-meta!
-            meta
-            vary-meta
-            with-meta)
+  #:export (*print-meta*)
+  #:re-export (alter-meta! meta vary-meta with-meta)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; We've just let metadata be broken for now, i.e. some of it may
