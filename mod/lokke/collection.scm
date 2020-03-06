@@ -35,6 +35,7 @@
                           coll?
                           conj
                           cons
+                          const-nth?
                           contains?
                           count
                           counted?
@@ -105,6 +106,7 @@
                coll?
                conj
                cons
+               const-nth?
                contains?
                count
                counted?

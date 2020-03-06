@@ -19,6 +19,7 @@
                           assoc
                           coll?
                           conj
+                          const-nth?
                           contains?
                           count
                           counted?
@@ -60,6 +61,7 @@
   #:re-export (clj=
                compare
                conj
+               const-nth?
                contains?
                count
                counted?
@@ -80,7 +82,12 @@
 
 (re-export-and-replace! 'assoc)
 
+
+;;; <lokke-vector>
+
 (define vector? lokke-vector?)
+
+(define-method (const-nth? (v <lokke-vector>)) #t)
 
 (define-method (meta (v <lokke-vector>)) (lokke-vector-meta v))
 

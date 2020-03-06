@@ -27,6 +27,7 @@
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base util) #:select (require-nil vec-tag?))
+  #:use-module ((lokke compare) #:select (clj=))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-append))
@@ -40,6 +41,7 @@
             bounded-count
             coll?
             conj
+            const-nth?
             contains?
             count
             counted?
@@ -78,7 +80,7 @@
             update
             update-in
             vals)
-  #:re-export (cons invoke)
+  #:re-export (clj= cons invoke)
   #:replace (apply assoc first list? merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -204,21 +206,54 @@
       coll
       #nil))
 
+(define-method (const-nth? x) #f)
 
 (define-class <sequential> (<coll>))
 
 (define-method (sequential? (s <sequential>)) #t)
 
-(define-method (equal? (x <sequential>) (y <sequential>))
+(define (sequential-iterator s sentinel)
+  ;; Returns a function that will return successive elements of s
+  ;; until exhausted, and then the sentinel.  Returns elements via nth
+  ;; when s is counted? and supports const-nth?.  Does not support
+  ;; concurrent use.
+  (if (and (counted? s) (const-nth? s))
+      (let ((n (count s))
+            (i 0))
+        (lambda ()
+          (if (= i n)
+              sentinel
+              (let ((result (nth s i)))
+                (set! i (1+ i))
+                result))))
+      (let ((rst s))
+        (lambda ()
+          (let ((s (seq rst)))
+            (if s
+                (let ((result (first rst)))
+                  (set! rst (rest rst))
+                  result)
+                sentinel))))))
+
+(define (sequential= x y)
   (and (or (not (and (counted? x) (counted? y)))
            (= (count x) (count y)))
-       (let loop ((x x)
-                  (y y))
-         (if (seq x)
-             (and (seq y)
-                  (equal? (first x) (first y))
-                  (loop (next x) (next y)))
-             (not (seq y))))))
+       (let* ((sentinel (make-symbol "sentinel"))
+              (next-x (sequential-iterator x sentinel))
+              (next-y (sequential-iterator y sentinel)))
+         (let loop ((x (next-x))
+                    (y (next-y)))
+           (if (eq? x sentinel)
+               (eq? y sentinel)
+               (and (not (eq? y sentinel))
+                    (equal? x y)
+                    (loop (next-x) (next-y))))))))
+
+(define-method (clj= (x <sequential>) (y <sequential>))
+  (sequential= x y))
+
+(define-method (equal? (x <sequential>) (y <sequential>))
+  (sequential= x y))
 
 (define-method (nth (coll <sequential>) (n <integer>))
   (when (negative? n)
@@ -347,6 +382,7 @@
 
 (define-method (sequential? (v <vector>)) #t)
 
+(define-method (const-nth? (v <vector>)) #t)
 (define-method (nth (v <vector>) (i <integer>)) (vector-ref v i))
 (define-method (nth (v <vector>) (i <integer>) not-found)
   (cond
