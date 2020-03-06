@@ -45,6 +45,7 @@
             contains?
             count
             counted?
+            define-nth-seq
             dissoc
             doseq
             drop
@@ -390,71 +391,83 @@
    ((>= i (vector-length v)) not-found)
    (else (vector-ref v i))))
 
+
+;; Does not define the (seq <type>) constructor
+
+(define-syntax-rule (define-nth-seq name get-count get-nth)
+  (begin
+    (define-class name (<seq>)
+      (items #:init-keyword #:items)
+      (i #:init-keyword #:i #:init-value 0))
+
+    (define-method (seq (x name))
+      (if (< (slot-ref x 'i) (get-count (slot-ref x 'items)))
+          x
+          #nil))
+
+    (define-method (first (x name))
+      (let ((i (slot-ref x 'i))
+            (items (slot-ref x 'items)))
+        (if (< i (get-count items))
+            (get-nth items i)
+            #nil)))
+
+    (define-method (rest (x name))
+      (make name
+        #:items (slot-ref x 'items)
+        #:i (1+ (slot-ref x 'i))))
+
+    (define-method (counted? (x name))
+      #t)
+
+    (define-method (count (x name))
+      (- (get-count (slot-ref x 'items))
+         (slot-ref x 'i)))
+
+    (define-method (const-nth (x name)) #t)
+
+    (define-method (nth (x name) (i <integer>))
+      (when (negative? i)
+        (scm-error 'out-of-range 'nth "Negative index: ~a"
+                   (list i) (list i)))
+      (let ((items (slot-ref x 'items))
+            (i (+ i (slot-ref x 'i))))
+        (when (>= i (get-count items))
+          (scm-error 'out-of-range 'nth "Vector index out of range: ~a"
+                     (list i) (list i)))
+        (get-nth items i)))
+
+    (define-method (nth (x name) (i <integer>) not-found)
+      (when (negative? i)
+        (scm-error 'out-of-range 'nth "Negative index: ~a"
+                   (list i) (list i)))
+      (let ((items (slot-ref x 'items))
+            (i (+ i (slot-ref x 'i))))
+        (if (>= i (get-count items))
+            not-found
+            (get-nth items i))))))
+
+
 ;;; <vector-seq>
 
-(define-class <vector-seq> (<seq>)
-  (v #:init-keyword #:v)
-  (i #:init-keyword #:i #:init-value 0))
-
-(define-method (count (x <vector-seq>))
-  (- (vector-length (slot-ref x 'v))
-     (slot-ref x 'i)))
-
-(define-method (counted? (x <vector-seq>)) #t)
-
-(define-method (first (x <vector-seq>))
-  (let* ((i (slot-ref x 'i))
-         (v (slot-ref x 'v)))
-    (if (< i (vector-length v))
-        (vector-ref v i)
-        #nil)))
-
-(define-method (rest (x <vector-seq>))
-  (let ((v (slot-ref x 'v))
-        (i (slot-ref x 'i)))
-    (if (= i (vector-length v))
-        '()
-        (make <vector-seq> #:v v #:i (1+ i)))))
-
-(define-method (seq (s <vector-seq>))
-  (let* ((i (slot-ref s 'i))
-         (v (slot-ref s 'v)))
-    (if (< i (vector-length v))
-        s
-        #nil)))
+(define-nth-seq <vector-seq> vector-length vector-ref)
 
 (define-method (seq (v <vector>))
   (if (zero? (vector-length v))
       #nil
-      (make <vector-seq> #:v v)))
+      (make <vector-seq> #:items v)))
+
 
 ;;; <vector-rseq>
 
-(define-class <vector-rseq> (<seq>)
-  (v #:init-keyword #:v)
-  (i #:init-keyword #:i))
-
-(define-method (count (x <vector-rseq>)) (1+ (slot-ref x 'i)))
-(define-method (counted? (x <vector-rseq>)) #t)
-
-(define-method (first (x <vector-rseq>))
-  (let ((i (slot-ref x 'i)))
-    (if (negative? i)
-        #nil
-        (vector-ref (slot-ref x 'v) i))))
-
-(define-method (rest (x <vector-rseq>))
-  (let ((i (slot-ref x 'i)))
-    (if (negative? i)
-        '()
-        (make <vector-seq> #:v (slot-ref x 'v) #:i (1- i)))))
-
-(define-method (seq (s <vector-rseq>)) (if (negative? (slot-ref s 'i)) #nil s))
+(define-nth-seq <vector-rseq>
+  vector-length
+  (lambda (x i) (vector-ref x (- (vector-length x) i))))
 
 (define-method (rseq (v <vector>))
   (if (zero? (vector-length v))
       #nil
-      (make <vector-rseq> #:v v #:i (vector-length v))))
+      (make <vector-rseq> #:items v)))
 
 
 ;;; <lazy-seq>
