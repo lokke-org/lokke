@@ -202,11 +202,6 @@
   (when (sequential? x)
    (eq? #nil (seq x))))
 
-(define-method (clj= (x <vector>) (y <vector>)) (equal? x y))
-(define-method (clj= (s <vector>) x)
-  (when (sequential? x)
-    (clj-sequential= s x)))
-
 (define-method (clj= (s <sequential>) x)
   (when (sequential? x)
     (clj-sequential= s x)))

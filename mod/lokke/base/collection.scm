@@ -381,8 +381,6 @@
       #nil
       v))
 
-(define-method (sequential? (v <vector>)) #t)
-
 (define-method (const-nth? (v <vector>)) #t)
 (define-method (nth (v <vector>) (i <integer>)) (vector-ref v i))
 (define-method (nth (v <vector>) (i <integer>) not-found)
