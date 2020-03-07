@@ -149,7 +149,7 @@
 (define-method (contains? (v <lokke-vector>) i)
   (valid-index? v i))
 
-(define-method (nth (v <lokke-vector>) i) (lokke-vector-ref v i #nil))
+(define-method (nth (v <lokke-vector>) i) (lokke-vector-ref v i))
 (define-method (nth (v <lokke-vector>) i not-found)
   (lokke-vector-ref v i not-found))
 
