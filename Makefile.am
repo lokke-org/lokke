@@ -49,6 +49,7 @@ TESTS = \
   test/ns-lokke-io \
   test/reader-basics \
   test/clojure-collection \
+  test/clojure-destructure \
   test/clojure-fn \
   test/clojure-math \
   test/clojure-metadata \

@@ -13,7 +13,7 @@
 
 (define-module (lokke base destructure)
   ;;((language tree-il) #:prefix tree-il/)
-  #:use-module ((lokke base collection) #:select (drop get nth seq?))
+  #:use-module ((lokke base collection) #:select (drop get nth seq seq?))
   #:use-module ((lokke base util) #:select (pairify vec-tag?))
   #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module (oop goops)
@@ -151,7 +151,7 @@
                             (1+ i)
                             (cddr rest)
                             (cons (list (cadr rest)
-                                        #`(drop #,i #,enclosing-binding))
+                                        #`(seq (drop #,i #,enclosing-binding)))
                                   result))))
            (sym
             (destruct-vec enclosing-binding
@@ -181,21 +181,6 @@
                (sym (syn-symbol item))
                (kwd (syn-keyword item)))
           (cond
-           (sym ;; {x :y ...}
-            (when (null? (cdr rest))
-              (error "No keyword for map destructuring:" rest))
-            (let ((k (syntax->datum (cadr rest))))
-              (unless (or (keyword? k) (string? k) (symbol? k))
-                (error "Invalid map destructuring key type:" rest)))
-            (let ((var (datum->syntax context sym))  ;; Introduce map key var
-                  (default-form (syn-map-refq defaults sym #nil)))
-              (destruct-map container-id
-                            defaults
-                            (cddr rest)
-                            (cons #`(#,var (get #,container-id
-                                                (quote #,(cadr rest))
-                                                #,default-form))
-                                  result))))
            ((member kwd '(#:keys #:strs #:syms))
             (when (null? (cdr rest))
               (error (format #f "No value for ~a in" kwd) rest))
@@ -232,7 +217,20 @@
                               (cddr rest)
                               (cons (list (cadr rest) container-id)
                                     result))))
-           (else (error "Unrecognized map destructuring" rest))))))
+           (else
+            (when (null? (cdr rest))
+              (error "No keyword for map destructuring:" rest))
+            (let ((k (syntax->datum (cadr rest))))
+              (unless (or (keyword? k) (string? k) (symbol? k))
+                (error "Invalid map destructuring key type:" rest)))
+            (let ((default-form (syn-map-refq defaults sym #nil)))
+              (destruct-map container-id
+                            defaults
+                            (cddr rest)
+                            (destructure item #`(get #,container-id
+                                                     (quote #,(cadr rest))
+                                                     #,default-form)
+                                         result))))))))
 
   (define (destructure binding init result)
     (let* ((tmp (car (generate-temporaries '(#t)))))
