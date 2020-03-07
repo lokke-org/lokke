@@ -117,24 +117,23 @@
 (define (vector . items) (list->lokke-vector items))
 (define (vec coll) (reduce lokke-vector-conj empty-vector coll))
 
-(define (show-vector v emit port)
-  (let ((length (lokke-vector-length v)))
-    (if (zero? length)
-        (display "[]" port)
-        (begin
-          (display "[" port)
-          (emit (lokke-vector-ref v 0) port)
-          (do ((i 1 (1+ i)))
-              ((= i length))
-            (display " " port)
-            (emit (lokke-vector-ref v i) port))
-          (display "]" port)))))
+(define (show-vector v len nth emit port)
+  (if (zero? len)
+      (display "[]" port)
+      (begin
+        (display "[" port)
+        (emit (nth v 0) port)
+        (do ((i 1 (1+ i)))
+            ((= i len))
+          (display " " port)
+          (emit (nth v i) port))
+        (display "]" port))))
 
 (define-method (pr-on (v <lokke-vector>) port)
-  (show-vector v pr-on port))
+  (show-vector v (lokke-vector-length v) lokke-vector-ref pr-on port))
 
 (define-method (print-on (v <lokke-vector>) port)
-  (show-vector v print-on port))
+  (show-vector v (lokke-vector-length v) lokke-vector-ref print-on port))
 
 (define-method (counted? (v <lokke-vector>)) #t)
 (define-method (count (v <lokke-vector>)) (lokke-vector-length v))
