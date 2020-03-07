@@ -56,7 +56,7 @@
                (list m) (list m)))
   (%lokke-vector-with-meta v m))
 
-(define-method (lokke-vector-equal? v1 v2)
+(define (lokke-vector-equal? v1 v2)
   (let ((n1 (lokke-vector-length v1))
         (n2 (lokke-vector-length v2)))
     (and (= n1 n2)
