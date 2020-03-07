@@ -117,17 +117,6 @@
 (define (vector . items) (list->lokke-vector items))
 (define (vec coll) (reduce lokke-vector-conj empty-vector coll))
 
-(define (read-only-str s) (substring/read-only s 0))
-
-;; FIXME: rewrite some of the collection -> string functions?
-
-(define (render-str v render)
-  (let ((length (lokke-vector-length v)))
-    (if (zero? length)
-        "[]"
-        (read-only-str
-         (string-append "[" (string-join (lokke-vector->list v) " ") "]")))))
-
 (define (show-vector v emit port)
   (let ((length (lokke-vector-length v)))
     (if (zero? length)
