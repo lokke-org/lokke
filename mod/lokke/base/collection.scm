@@ -26,6 +26,7 @@
   #:use-module ((guile)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((lokke base invoke) #:select (invoke))
+  #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil vec-tag?))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module (oop goops)
@@ -282,8 +283,8 @@
 
 
 (define-class <seq> (<sequential>))
-(define-method (conj (s <seq>) x) (make-pair-seq x s))
-(define-method (cons x (s <seq>)) (make-pair-seq x s))
+(define-method (conj (s <seq>) x) (make-pair-seq x s (meta s)))
+(define-method (cons x (s <seq>)) (make-pair-seq x s #nil))
 (define-method (empty x (s <seq>)) #nil)
 (define-method (seq (s <seq>)) s)
 (define-method (seq? (s <seq>)) #t)
@@ -295,14 +296,16 @@
 ;; lists should terminate with '()
 (define-class <pair-seq> (<seq>)
   (rfirst #:getter pair-seq-first #:init-keyword #:first)
-  (rrrest #:getter pair-seq-rest #:init-keyword #:rest))
+  (rrrest #:getter pair-seq-rest #:init-keyword #:rest)
+  (meta #:getter pair-seq-meta #:init-keyword #:meta))
 
 (eval-when (eval load)
-  (define (make-pair-seq first rest)
-    (make <pair-seq> #:first first #:rest rest)))
+  (define (make-pair-seq first rest meta)
+    (make <pair-seq> #:first first #:rest rest #:meta meta)))
 
 (eval-when (expand compile)
-  (define make-pair-seq %scm-cons))
+  (define (make-pair-seq first rest meta)
+    (%scm-cons first rest)))
 
 (define-method (list? x) #f)
 (define-method (list? (s <pair-seq>)) #t)
@@ -311,9 +314,14 @@
 
 (define-method (first (s <pair-seq>)) (pair-seq-first s))
 (define-method (rest (s <pair-seq>)) (pair-seq-rest s))
+(define-method (meta (s <pair-seq>)) (pair-seq-meta s))
+
+;; FIXME: split (lokke hash-map) so we can use <hash-map> here
+(define-method (with-meta (s <pair-seq>) m)
+  (make-pair-seq (pair-seq-first m) (pair-seq-rest m) m))
 
 (define-method (conj (b <boolean>) x) (require-nil 'conj b) (cons x b))
-(define-method (cons x (b <boolean>)) (require-nil 'cons b) (make-pair-seq x '()))
+(define-method (cons x (b <boolean>)) (require-nil 'cons b) (make-pair-seq x '() #nil))
 (define-method (contains? (b <boolean>) x) (require-nil 'contains? b) #f)
 (define-method (count (b <boolean>)) (require-nil 'count b) 0)
 (define-method (empty (b <boolean>)) (require-nil 'empty b) #nil)
@@ -331,7 +339,7 @@
 
 (define-method (coll? (s <null>)) #t)
 (define-method (conj (s <null>) x) (cons x s))
-(define-method (cons x (s <null>)) (make-pair-seq x s))
+(define-method (cons x (s <null>)) (make-pair-seq x s #nil))
 (define-method (count (s <null>)) 0)
 (define-method (counted? (s <null>)) #t)
 (define-method (empty (s <null>)) #nil)
@@ -358,7 +366,7 @@
         not-found
         (if (zero? i) (car more) (loop (1- i) (cdr more))))))
 (define-method (rest (x <pair>)) (cdr x))
-(define-method (seq (x <pair>)) (make-pair-seq (first x) (rest x)))
+(define-method (seq (x <pair>)) (make-pair-seq (first x) (rest x) #nil))
 (define-method (seq? (x <pair>)) #t)
 (define-method (seqable? (x <pair>)) #t)
 (define-method (sequential? (x <pair>)) #t)
