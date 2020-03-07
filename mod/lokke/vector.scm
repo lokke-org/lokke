@@ -33,6 +33,7 @@
                           rest
                           seq
                           update))
+  #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= compare))
@@ -179,39 +180,11 @@
 (define-method (update (v <lokke-vector>) i f . args)
   (lokke-vector-assoc v i (f (lokke-vector-ref v i #nil))))
 
-;; FIXME: perhaps a generic vec-seq for things with O(1) i ref?
 
-(define-class <lokke-vector-seq> (<seq>)
-  (v #:init-keyword #:v)
-  (i #:init-keyword #:i #:init-value 0))
+(define-nth-seq <lokke-vector-seq>
+  lokke-vector-length lokke-vector-ref)
 
 (define-method (seq (v <lokke-vector>))
   (if (zero? (lokke-vector-length v))
       #nil
-      (make <lokke-vector-seq> #:v v)))
-
-(define-method (seq (s <lokke-vector-seq>))
-  (let* ((i (slot-ref s 'i))
-         (v (slot-ref s 'v)))
-    (if (< i (lokke-vector-length v))
-        s
-        #nil)))
-
-(define-method (first (x <lokke-vector-seq>))
-  (let* ((i (slot-ref x 'i))
-         (v (slot-ref x 'v)))
-    (if (< i (lokke-vector-length v))
-        (lokke-vector-ref v i)
-        #nil)))
-
-(define-method (rest (x <lokke-vector-seq>))
-  (let ((v (slot-ref x 'v))
-        (i (slot-ref x 'i)))
-    (make <lokke-vector-seq> #:v v #:i (1+ i))))
-
-(define-method (counted? (vs <lokke-vector-seq>)) #t)
-
-(define-method (count (x <lokke-vector-seq>))
-  (let ((v (slot-ref x 'v))
-        (i (slot-ref x 'i)))
-    (- (lokke-vector-length v) i)))
+      (make <lokke-vector-seq> #:items v)))
