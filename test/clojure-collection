@@ -136,6 +136,13 @@
   (is (= {:x {:y 1}} (assoc-in {} [:x :y] 1)))
   (is (= {:w {:x :z}} (assoc-in {:w {:x {:y {:z 1}}}} [:w :x] :z))))
 
+(testing "replace"
+  (is (= nil (replace nil nil)))        ; jvmdiff: clojure/jvm returns ()
+  (is (= nil (replace {} nil)))         ; jvmdiff: clojure/jvm returns ()
+  (is (= [] (replace {} [])))
+  (is (= true (vector? (replace {} [])))))
+
+
 (testing "doseq"
   (is (= nil (doseq [x []])))
 

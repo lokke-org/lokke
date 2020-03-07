@@ -21,3 +21,7 @@
 
 (guile.lokke.ns/re-export-all! '(lokke core))
 (guile.lokke.ns/re-export-all! '(lokke ns clojure core epl))
+
+(defn replace [smap coll]
+  (into (empty coll)
+        (map #(get smap % %) coll)))
