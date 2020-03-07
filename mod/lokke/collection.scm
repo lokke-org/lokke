@@ -78,7 +78,7 @@
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke hash-map) #:select (hash-map))
-  #:use-module ((lokke scm vector) #:select (<lokke-vector>))
+  #:use-module ((lokke scm vector) #:select (<lokke-vector> lokke-vector))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
@@ -352,7 +352,7 @@
     (scm-error 'wrong-number-of-args
                "mapv"
                "Wrong number of arguments" '() #f))
-  (let loop ((result (vector))
+  (let loop ((result (lokke-vector))
              (nexts colls))
     (if (some nil? nexts)
         result
@@ -360,7 +360,7 @@
               (map next nexts)))))
 
 (define (filterv pred coll)
-  (let loop ((result (vector))
+  (let loop ((result (lokke-vector))
              (rst coll))
     (if-let (s (seq rst))
             (let ((x (first s)))
