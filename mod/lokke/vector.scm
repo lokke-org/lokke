@@ -56,6 +56,7 @@
                           lokke-vector-with-meta
                           lokke-vector?
                           vector->lokke-vector))
+  #:use-module ((srfi srfi-1) #:select (fold))
   #:use-module ((srfi srfi-67) #:select (vector-compare))
   #:replace (vector vector?)
   #:export (vec)
@@ -107,10 +108,9 @@
   (vector-compare compare v1 v2 lokke-vector-length lokke-vector-ref))
 
 (define-method (conj (v <lokke-vector>) . xs)
-  (reduce (lambda (result x)
-            (lokke-vector-conj result x))
-          v
-          xs))
+  (fold (lambda (x result) (lokke-vector-conj result x))
+        v
+        xs))
 
 (define empty-vector (@@ (lokke scm vector) lokke-empty-vector))
 
