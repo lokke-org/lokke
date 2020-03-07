@@ -58,6 +58,7 @@
             fnext
             get
             get-in
+            into
             keys
             lazy-seq
             make-pair-seq

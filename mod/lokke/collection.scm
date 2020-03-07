@@ -50,6 +50,7 @@
                           fnext
                           get
                           get-in
+                          into
                           keys
                           lazy-seq
                           list?
@@ -86,7 +87,6 @@
             dorun
             empty?
             filterv
-            into
             iterate
             mapv
             not-any?
@@ -121,6 +121,7 @@
                fnext
                get
                get-in
+               into
                invoke
                key
                keys
