@@ -376,8 +376,6 @@
 
 ;;; <vector>
 
-(define-method (conj (v <vector>) x) (vector-append v (vector x)))
-
 (define-method (contains? (v <vector>) key)
   (and (>= key 0)
        (< key (vector-length v))))
