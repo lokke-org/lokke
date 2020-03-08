@@ -359,6 +359,7 @@
                str
                string?
                subs
+               subvec
                swap!
                symbol
                symbol?
