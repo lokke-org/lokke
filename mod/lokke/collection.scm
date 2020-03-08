@@ -187,27 +187,27 @@
       #f)
     (not (seq s2))))
 
-;; We have to special case anything that's sequable?, but not <sequential>.
+
 ;; FIXME: improper lists, etc.  See DESIGN <pair>s TODO.
+
+;; It looks like on the jvm anything sequential must also be seqable,
+;; and so we stick to sequential here so that scheme vectors won't be
+;; included, matching the jvm for now.
+
 (define-method (clj= (x <pair>) (y <pair>))
   (and (equal? (car x) (car y))
        (clj= (cdr x) (cdr y))))
 
-(define (clj-sequential= x y)
-  (clj= (seq x) (seq y)))
-
 (define-method (clj= (s <pair>) x)
-  (when (sequential? x)
-    (clj-sequential= s x)))
+  (and (sequential? x) (clj= (seq s) (seq x))))
 
 ;; Empty list is <null> in goops
 (define-method (clj= (s <null>) x)
-  (when (sequential? x)
-   (eq? #nil (seq x))))
+  ;; #nil is not sequential? but is seqable?.
+  (and (not (eq? #nil x))
+       (sequential? x)
+       (eq? #nil (seq x))))
 
-(define-method (clj= (s <sequential>) x)
-  (when (sequential? x)
-    (clj-sequential= s x)))
 
 (define (show coll emit port open close)
   (display open port)
