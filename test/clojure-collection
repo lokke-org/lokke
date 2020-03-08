@@ -159,6 +159,22 @@
   (is (= [1] (list* 1 [])))
   (is (= [1 2 3] (take 3 (list* 1 2 (repeat 3))))))
 
+(testing "peek"
+  (is (= nil (peek nil)))
+  (is (= nil (peek ())))
+  (is (= nil (peek [])))
+  (is (= 1 (peek '(1 2))))
+  (is (= 2 (peek [1 2])))
+  (is (= 3 (peek (subvec [1 2 3] 1)))))
+
+(testing "pop"
+  (is (= nil (pop nil)))
+  ;; (pop ())   FIXME: test for exception
+  ;; (is (= nil (pop [])))  FIXME: test for exception
+  (is (= [2] (pop '(1 2))))
+  (is (= [1] (pop [1 2])))
+  (is (= [2] (pop (subvec [1 2 3] 1)))))
+
 (testing "doseq"
   (is (= nil (doseq [x []])))
 

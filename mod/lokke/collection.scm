@@ -14,7 +14,7 @@
 (define-module (lokke collection)
   #:version (0 0 0)
   #:use-module ((ice-9 format) #:select (format))
-  #:use-module ((guile) :select ((cons . %scm-cons)))
+  #:use-module ((guile) #:hide (peek))
   #:use-module (oop goops)
   #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
   #:use-module ((srfi srfi-1) #:select (circular-list? proper-list?))
@@ -92,6 +92,7 @@
             mapv
             not-any?
             not-every?
+            pop
             range
             repeat
             repeatedly
@@ -152,6 +153,7 @@
                update-in
                val
                vals)
+  #:replace (peek)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'apply 'assoc 'list? 'merge)
@@ -393,3 +395,15 @@
           (cons c)
           (cons b)
           (cons a)))))
+
+
+;; The jvm has a persistent stack interface...
+;; FIXME: improper lists, etc.  See DESIGN <pair>s TODO.
+
+(define-method (peek (x <boolean>)) (require-nil 'peek x) #nil)
+(define-method (peek (x <null>)) #nil)
+(define-method (peek (x <pair>)) (car x))
+
+(define-method (pop (x <boolean>)) (require-nil 'pop x) #nil)
+(define-method (pop (x <null>)) (error "cannot pop empty list"))
+(define-method (pop (x <pair>)) (cdr x))

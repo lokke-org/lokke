@@ -12,6 +12,7 @@
 ;;;      option) any later version.
 
 (define-module (lokke vector)
+  #:use-module ((guile) #:hide (peek))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((lokke base collection) #:select (define-nth-seq))
@@ -34,6 +35,8 @@
                           first
                           get
                           nth
+                          peek
+                          pop
                           reduce
                           rest
                           seq
@@ -79,6 +82,8 @@
                get
                meta
                nth
+               peek
+               pop
                pr-on
                print-on
                rest
@@ -412,3 +417,28 @@
   (if (zero? (subvec-length v))
       #nil
       (make <subvec-seq> #:items v)))
+
+
+(define-method (peek (v <lokke-vector>))
+  (let ((len (lokke-vector-length v)))
+    (if (positive? len)
+        (lokke-vector-ref v (1- len))
+        #nil)))
+
+(define-method (pop (v <lokke-vector>))
+  ;; FIXME: add real pop support to lokke-vectors, i.e. shrink tail, etc.
+  (let ((len (lokke-vector-length v)))
+    (when (zero? len)
+      (error "cannot pop empty vector"))
+    (subvec v 0 (1- len))))
+
+
+(define-method (peek (v <subvec>))
+  (subvec-nth v (1- (subvec-length v)) #nil))
+
+(define-method (pop (v <subvec>))
+  ;; FIXME: add real pop support, i.e. shrink tail, etc.
+  (let ((len (subvec-length v)))
+    (when (zero? len)
+      (error "cannot pop empty vector"))
+    (subvec-of (subvec-offset v) (subvec-length v) (subvec-vec v) 0 (1- len))))

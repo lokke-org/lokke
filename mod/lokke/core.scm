@@ -319,6 +319,7 @@
                odd?
                or
                partial
+               pop
                pos?
                pos-int?
                pr
@@ -388,7 +389,7 @@
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'list 'list? 'merge 'read)
+(re-export-and-replace! 'apply 'assoc 'list 'list? 'merge 'peek 'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))
