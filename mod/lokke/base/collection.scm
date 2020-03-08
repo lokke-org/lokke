@@ -333,7 +333,7 @@
 (define-method (rest (b <boolean>)) (require-nil 'rest b) '())
 (define-method (seq (b <boolean>)) (require-nil 'seq b) #nil)
 (define-method (seq? (b <boolean>)) (require-nil 'seq b) #f)
-(define-method (seqable? (b <boolean>)) (require-nil 'seq b) #t)
+(define-method (seqable? (b <boolean>)) (eq? b #nil))
 
 ;; FIXME: replace <null> and <pair> with <list>, particularly when
 ;; they're identical?
@@ -461,6 +461,8 @@
   (if (zero? (vector-length v))
       #nil
       (make <vector-seq> #:items v)))
+
+(define-method (seqable? (x <vector>)) #t)
 
 
 ;;; <vector-rseq>

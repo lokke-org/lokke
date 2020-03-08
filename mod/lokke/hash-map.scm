@@ -39,6 +39,7 @@
                           second
                           select-keys
                           seq
+                          seqable?
                           update
                           vals))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
@@ -78,6 +79,7 @@
                reduce-kv
                select-keys
                seq
+               seqable?
                with-meta
                update
                vals)
@@ -247,6 +249,8 @@
     (if (eq? item not-found)
         #nil
         (lazy-seq (cons item (dissoc m (first item)))))))
+
+(define-method (seqable? (b <hash-map>)) #t)
 
 ;; FIXME: not lazy
 (define-method (keys (m <hash-map>))

@@ -37,6 +37,7 @@
                           reduce
                           rest
                           seq
+                          seqable?
                           update))
   #:use-module ((lokke compare) #:select (clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -82,6 +83,7 @@
                print-on
                rest
                seq
+               seqable?
                with-meta
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -171,6 +173,8 @@
 
 (define-nth-seq <lokke-vector-seq>
   lokke-vector-length lokke-vector-ref)
+
+(define-method (seqable? (x <lokke-vector>)) #t)
 
 (define-method (seq (v <lokke-vector>))
   (if (zero? (lokke-vector-length v))

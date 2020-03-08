@@ -32,7 +32,9 @@
                           into
                           lazy-seq
                           reduce
-                          rest seq))
+                          rest
+                          seq
+                          seqable?))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke set) #:select (<set>))
@@ -54,7 +56,9 @@
                get
                into
                pr-on
-               print-on)
+               print-on
+               seq
+               seqable?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: implement (lokke set) operations, here, or more generically
@@ -189,6 +193,8 @@
     (if (eq? item not-found)
         #nil
         (lazy-seq (cons item (disj s item))))))
+
+(define-method (seqable? (b <hash-set>)) #t)
 
 (define-method (rest (s <hash-set>)) (rest (seq s)))
 

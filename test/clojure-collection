@@ -52,6 +52,16 @@
   (is (not (= [1 2 3] (list 4 5))))
   (is (not (= [1 2 3] '(4 5)))))
 
+(testing "seqable?"
+  (is (= true (seqable? nil)))
+  (is (= true (seqable? ())))
+  (is (= true (seqable? [])))
+  (is (= true (seqable? {})))
+  (is (= true (seqable? #{})))
+  (is (= true (seqable? (guile.guile/vector))))
+  (is (= false (seqable? true)))
+  (is (= false (seqable? false))))
+
 (testing "full sequential equals"
   (is (not (= '(1 2 3) '(4 5 6))))
   (is (not (= (seq [1 2 3]) [4 5 6]))))
