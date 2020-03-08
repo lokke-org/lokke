@@ -205,6 +205,15 @@ TODO
 - Continue adding metadata support as-needed.  e.g. consider adding it
   to vector, hash-map, hash-set, etc.
 
+- Review handling of cons pairs.  Right now we use/allow them in
+  various places, but for example, doing so doesn't support metadata,
+  or hashing (if we need that), and printing cons pairs as clj
+  seqs/lists will break for improper lists.  One option might be to
+  just shift everything to <pair-seq> or something similar,
+  particularly if that won't overly complicate compilation and/or
+  macroexpansion (e.g. do we still need the make-pair-seq eval-when
+  difference?).
+
 - Examine (srfi srfi-45) wrt lazy seqs.
 
 - remove vestigial bits from the reader (syntax, synquote, etc.?)

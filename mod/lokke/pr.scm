@@ -197,27 +197,6 @@
 (define-method (print-on (x <string>) port)
   (display x port) #nil)
 
-
-(define-inlinable (show-pair p emit port)
-  (display "(" port)
-  (let loop ((items p))
-    (when (pair? items)
-      (let ((item (car items))
-            (more (cdr items)))
-        (emit item port)
-        (when (pair? more)
-          (display " " port)
-          (loop more)))))
-  (display ")" port)
-  #nil)
-
-(define-method (pr-on (x <pair>) port)
-  (show-pair x pr-on port))
-
-(define-method (print-on (x <pair>) port)
-  (show-pair x print-on port))
-
-
 (define-method (pr-on (x <module>) port)
   (display (str-somehow x (pr-str (module-name->ns-str (module-name x)))) port)
   #nil)

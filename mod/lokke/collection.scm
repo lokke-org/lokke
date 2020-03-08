@@ -223,6 +223,14 @@
 (define-method (print-on (s <seq>) port)
   (show s print-on port "(" ")"))
 
+;; FIXME: improper lists?
+
+(define-method (pr-on (s <pair>) port)
+  (show s pr-on port "(" ")"))
+
+(define-method (print-on (s <pair>) port)
+  (show s print-on port "(" ")"))
+
 ;; For now, just emulate the same output as Guile, assuming that
 ;; <class> is always correct.
 

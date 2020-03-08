@@ -111,7 +111,7 @@
 (define-generic update)
 (define-generic vals)
 
-;; ;; FIXME: double-check
+;; FIXME: double-check, and re-evaluate cons handling more generally...
 (define-generic cons)
 
 (define-method (conj coll . xs)
