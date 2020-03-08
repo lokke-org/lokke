@@ -188,8 +188,10 @@
     (not (seq s2))))
 
 ;; We have to special case anything that's sequable?, but not <sequential>.
-;; FIXME: improper lists?
-(define-method (clj= (x <pair>) (y <pair>)) (equal? x y))
+;; FIXME: improper lists, etc.  See DESIGN <pair>s TODO.
+(define-method (clj= (x <pair>) (y <pair>))
+  (and (equal? (car x) (car y))
+       (clj= (cdr x) (cdr y))))
 
 (define (clj-sequential= x y)
   (clj= (seq x) (seq y)))
