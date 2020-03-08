@@ -115,6 +115,11 @@
      expr
      (cond
       ((eq? '() expr) '(quote ()))
-      ((list? expr) (if (nil? expr) expr (map convert expr)))
+      ;; FIXME: need syntax-quote recursion?  See DESIGN TODO.
+      ((list? expr)
+       (cond
+        ((nil? expr) expr)
+        ((memq (car expr) '(quote syntax-quote)) expr)
+        (else (map convert expr))))
       (else expr))))
   (convert expr))

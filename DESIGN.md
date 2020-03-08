@@ -218,6 +218,12 @@ TODO
 
 - remove vestigial bits from the reader (syntax, synquote, etc.?)
 
+- Investigate difference in repl wrt \`(foo \`()) (ignore the markdown
+  backslashes).  Along those lines, we may need another syntax-quote
+  recursion there (in `quote-empty-lists`), to move () handling to the
+  tree-il level, or to add a new /lokke/reader-list, which might end
+  up being desirable for other reasons.
+
 - Create clojure.edn, maybe some suitable File and/or
   clojure.java.io, and clojure.java.shell shims, etc.
 
