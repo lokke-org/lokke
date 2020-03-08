@@ -158,9 +158,15 @@
 (define-method (nth (v <lokke-vector>) i not-found)
   (lokke-vector-ref v i not-found))
 
-(define-method (get (v <lokke-vector>) i) (lokke-vector-ref v i #nil))
+(define-method (get (v <lokke-vector>) i)
+  (if (and (integer? i) (> i 0))
+      (lokke-vector-ref v i #nil)
+      #nil))
+
 (define-method (get (v <lokke-vector>) i not-found)
-  (lokke-vector-ref v i not-found))
+  (if (and (integer? i) (> i 0))
+      (lokke-vector-ref v i not-found)
+      #nil))
 
 (define-method (find (v <lokke-vector>) i)
   (if (valid-index? v i)
