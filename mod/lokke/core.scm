@@ -12,7 +12,8 @@
 ;;;      option) any later version.
 
 (define-module (lokke core)
-  #:use-module ((guile) #:select ((begin . %scm-begin) (let . %scm-let)))
+  #:use-module ((guile)
+                #:select ((apply . %scm-apply) (begin . %scm-begin) (let . %scm-let)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
@@ -392,7 +393,7 @@
   (identifier-syntax (or (current-filename) #nil)))
 
 (define = clj=)
-(define (not= . args) (not (apply = args)))
+(define (not= . args) (not (%scm-apply = args)))
 
 (defdyn *command-line-args* (cdr (program-arguments)))
 
