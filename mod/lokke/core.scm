@@ -288,7 +288,6 @@
                let
                letfn
                line-seq
-               list
                load-file
                loop
                macroexpand
@@ -387,7 +386,7 @@
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'list? 'merge 'read)
+(re-export-and-replace! 'apply 'assoc 'list 'list? 'merge 'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))
