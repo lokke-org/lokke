@@ -289,6 +289,7 @@
                let
                letfn
                line-seq
+               list*
                load-file
                loop
                macroexpand

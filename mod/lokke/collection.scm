@@ -19,7 +19,7 @@
   #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
   #:use-module ((srfi srfi-1) #:select (circular-list? proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-unfold))
-  #:use-module ((lokke base syntax) #:select (if-let when when-let when-not))
+  #:use-module ((lokke base syntax) #:select (->> if-let when when-let when-not))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke base collection)
                 #:select (<coll>
@@ -88,6 +88,7 @@
             empty?
             filterv
             iterate
+            list*
             mapv
             not-any?
             not-every?
@@ -373,3 +374,22 @@
               (loop (if (pred x) (conj result x) result)
                     (rest s)))
             result)))
+
+(define list*
+  (case-lambda
+    ((s) (seq s))
+    ((a s) (cons a (list* s)))
+    ((a b s) (cons a (cons b (list* s))))
+    ((a b c s) (cons a (cons b (cons c (list* s)))))
+    ((a b c d s) (cons a (cons b (cons c (cons d (list* s))))))
+    ((a b c d e . more)
+     (->> (let loop ((more more))
+            (cond
+             ((eq? #nil more) #nil)
+             ((eq? #nil (next more)) (seq (next more)))
+             (else (cons (first more) (loop (next more))))))
+          (cons e)
+          (cons d)
+          (cons c)
+          (cons b)
+          (cons a)))))

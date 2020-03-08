@@ -152,6 +152,12 @@
   (is (= [] (replace {} [])))
   (is (= true (vector? (replace {} [])))))
 
+(testing "list*"
+  (is (= nil (list* nil)))
+  (is (= nil (list* [])))
+  (is (= [1] (list* 1 nil)))
+  (is (= [1] (list* 1 [])))
+  (is (= [1 2 3] (take 3 (list* 1 2 (repeat 3))))))
 
 (testing "doseq"
   (is (= nil (doseq [x []])))
