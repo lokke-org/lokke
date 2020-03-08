@@ -60,7 +60,7 @@
 
 (define-method (meta (a <atom>)) (atom-meta a))
 (define-method (alter-meta! (a <atom>) f . args)
-  (apply atom-alter-meta a f args))
+  (apply atom-alter-meta! a f args))
 
 
 ;; Can't just alias guile futures because this doesn't work w/goops:
