@@ -107,7 +107,6 @@
                clj=
                coll?
                conj
-               cons
                const-nth?
                contains?
                count
@@ -156,7 +155,7 @@
   #:replace (peek)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'list? 'merge)
+(re-export-and-replace! 'apply 'assoc 'cons 'list? 'merge)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)

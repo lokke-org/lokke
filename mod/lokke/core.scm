@@ -217,7 +217,6 @@
                compare
                complement
                conj
-               cons
                constantly
                contains?
                count
@@ -389,7 +388,7 @@
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'list 'list? 'merge 'peek 'read)
+(re-export-and-replace! 'apply 'assoc 'cons 'list 'list? 'merge 'peek 'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))

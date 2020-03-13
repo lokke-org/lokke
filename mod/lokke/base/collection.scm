@@ -29,6 +29,7 @@
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil vec-tag?))
   #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-append))
@@ -83,9 +84,11 @@
             update
             update-in
             vals)
-  #:re-export (clj= cons invoke)
+  #:re-export (clj= invoke)
   #:replace (apply assoc first list? merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'cons)
 
 ;; FIXME: should these implmentations of rest actually be next?
 
