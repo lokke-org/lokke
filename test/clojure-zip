@@ -1,0 +1,46 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-zip
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [clojure.zip :as zip]))
+
+(begin-tests (ns-name *ns*))
+
+(def src [1 2 [3 4]])
+(def zv (zip/vector-zip src))
+
+(is (= src (-> zv zip/root)))
+(is (= [1 [3 4]] (-> zv zip/down zip/right zip/remove zip/root)))
+(is (= [1 3 [3 4]] (-> zv zip/down zip/right (zip/edit inc) zip/root)))
+
+(is (= [1 2 [3 4 5]]
+       (-> zv zip/down zip/right zip/right (zip/append-child 5) zip/root)))
+(is (= [1 2 [5 3 4]]
+       (-> zv zip/down zip/right zip/right (zip/insert-child 5) zip/root)))
+
+(is (= [1 5 2 [3 4]] (-> zv zip/down zip/right (zip/insert-left 5) zip/root)))
+(is (= [1 2 5 [3 4]] (-> zv zip/down zip/right (zip/insert-right 5) zip/root)))
+(is (= [2 [3 4]] (-> zv zip/down zip/right zip/leftmost zip/remove zip/root)))
+
+(is (= [3 4] (-> zv zip/down zip/right zip/right zip/children)))
+
+(is (= false (-> zv zip/next zip/next zip/next zip/next zip/next zip/end?)))
+(is (= true (-> zv zip/next zip/next zip/next zip/next zip/next zip/next zip/end?)))
+
+;; FIXME: test more...
+
+(end-tests (ns-name *ns*) :exit? true)

@@ -29,8 +29,9 @@
   root is the root node."
   {:added "1.0"}
   [branch? children make-node root]
-    ^{:zip/branch? branch? :zip/children children :zip/make-node make-node}
-    [root nil])
+  (with-meta
+    [root nil]
+    {:zip/branch? branch? :zip/children children :zip/make-node make-node}))
 
 (defn seq-zip
   "Returns a zipper for nested sequences, given a root sequence"
@@ -78,7 +79,7 @@
   [loc]
     (if (branch? loc)
       ((:zip/children (meta loc)) (node loc))
-      (throw (Exception. "called children on a leaf node"))))
+      (throw (ex-info "called children on a leaf node" {}))))
 
 (defn make-node
   "Returns a new branch node, given an existing node and new
