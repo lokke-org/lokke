@@ -34,7 +34,8 @@
             lokke-vector-with-meta
             lokke-vector?
             vector->lokke-vector)
-  #:re-export (equal?))
+  #:re-export (display equal? write)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: implement a "cursor" on the C side that can be used for
 ;; traversals, including seq.
@@ -48,6 +49,24 @@
 (load-extension "lokke-vector.so" "init_lokke_vector")
 
 (define (lokke-vector? x) (is-a? x <lokke-vector>))
+
+(define-inlinable (show v port emit)
+  (format port "#<<lokke-vector> ~x [" (object-address v))
+  (let ((len (lokke-vector-length v)))
+    (when (> len 0)
+      (emit (lokke-vector-ref v 0) port))
+    (when (> len 1)
+      (do ((i 1 (1+ i)))
+          ((= i len))
+        (display " " port)
+        (emit (lokke-vector-ref v i) port))))
+  (display "]>" port))
+
+(define-method (write (v <lokke-vector>) port)
+  (show v port write))
+
+(define-method (display (v <lokke-vector>) port)
+  (show v port display))
 
 (define (lokke-vector-with-meta v m)
   (unless (or (hash-map? m) (eq? #nil m))
