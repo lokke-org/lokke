@@ -205,6 +205,8 @@ TODO
 - Continue adding metadata support as-needed.  e.g. consider adding it
   to vector, hash-map, hash-set, etc.
 
+- Add doc and attr args to defmacro.
+
 - Review handling of cons pairs.  Right now we use/allow them in
   various places, but for example, doing so doesn't support metadata,
   or hashing (if we need that), and printing cons pairs as clj
@@ -214,9 +216,13 @@ TODO
   macroexpansion (e.g. do we still need the make-pair-seq eval-when
   difference?).
 
+- Implement defmacro `&form` and `&env`?
+
 - Examine (srfi srfi-45) wrt lazy seqs.
 
-- remove vestigial bits from the reader (syntax, synquote, etc.?)
+- Remove vestigial bits from the reader (syntax, synquote, etc.?)
+
+- Fix '[1] in the repl -- includes reader-vector...
 
 - Investigate difference in repl wrt \`(foo \`()) (ignore the markdown
   backslashes).  Along those lines, we may need another syntax-quote
@@ -286,6 +292,9 @@ TODO
 
 - Finish fixing up the pr-related functions (prn, pr-str, etc.) and
   augment the tests.
+
+- Consider adding pr-str methods if the string port overhead becomes
+  relevant.
 
 - Use SPDX license identifiers?  And can we automate copyright notice
   updates (years) via git?
