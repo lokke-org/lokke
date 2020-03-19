@@ -37,6 +37,7 @@
             fash-set!
             fash-fold
             fash-unfold
+            fash-update
             fash->alist
             alist->fash
             fash
@@ -231,7 +232,7 @@
      (assert-readable! edit)
      (find-value 0 root (hash k) equal))))
 
-(define* (fash-set fash k v)
+(define (fash-update fash k f not-found . args)
   (define (update shift root h equal)
     (let recurse ((shift shift) (root root))
       (match root
@@ -260,11 +261,12 @@
                                    added?)))))
                   ((or (eq? k k*) (equal k k*))
                    ;; Replace value.
-                   (if (eq? v v*)
-                       (values root #f)
-                       (values (update-branch
-                                (clone-and-set array (1+ idx) v))
-                               #f)))
+                   (let ((v (apply f v* args)))
+                     (if (eq? v v*)
+                         (values root #f)
+                         (values (update-branch
+                                  (clone-and-set array (1+ idx) v))
+                                 #f))))
                   (else
                    ;; Replace leaf with subnode.
                    (let* ((h* ((fash-hash fash) k*))
@@ -281,7 +283,7 @@
                      (let ((array* (make-vector (+ old-length 2))))
                        (vector-move-left! array 0 idx array* 0)
                        (vector-set! array* idx k)
-                       (vector-set! array* (1+ idx) v)
+                       (vector-set! array* (1+ idx) (apply f not-found args))
                        (vector-move-left! array idx old-length array* (+ idx 2))
                        (values (sparse-branch (logior bitmap bit) array* #f)
                                #t))
@@ -290,7 +292,8 @@
                            (hash (fash-hash fash))
                            (shift* (+ shift *branch-bits*)))
                        (vector-set! array* (mask h shift)
-                                    (sparse-leaf shift* h k v))
+                                    (sparse-leaf shift* h k
+                                                 (apply f not-found args)))
                        (let lp ((i 0) (idx 0))
                          (when (< i *branch-size*)
                            (if (logbit? i bitmap)
@@ -319,18 +322,22 @@
            (let lp ((i 0))
              (if (< i len)
                  (if (equal (vector-ref array i) k)
-                     (if (eq? (vector-ref array (1+ i)) v)
-                         root
-                         (let ((array* (vector-copy array)))
-                           (vector-set! array* (1+ i) v)
-                           (values (collision-branch array* #f) #f)))
+                     (let* ((v* (vector-ref array (1+ i)))
+                            (v (apply f v* args)))
+                       (if (eq? v* v)
+                           root
+                           (let ((array* (vector-copy array)))
+                             (vector-set! array* (1+ i) v)
+                             (values (collision-branch array* #f) #f))))
                      (lp (+ i 2)))
                  (let ((array* (make-vector (+ len 2) #f)))
                    (vector-move-left! array 0 len array* 0)
                    (vector-set! array* len k)
-                   (vector-set! array* (1+ len) v)
+                   (vector-set! array* (1+ len) (apply f not-found args))
                    (values (collision-branch array* #f) #t))))))
-        (#f (values (sparse-branch (bitpos h shift) (vector k v) #f)
+        (#f (values (sparse-branch (bitpos h shift)
+                                   (vector k (apply f not-found args))
+                                   #f)
                     #t)))))
   (match fash
     (($ <fash> size root hash equal)
@@ -339,7 +346,10 @@
            fash
            (%make-fash (if added? (1+ size) size) root* hash equal))))
     (($ <transient-fash>)
-     (fash-set (persistent-fash fash) k v))))
+     (apply fash-update (persistent-fash fash) k f not-found args))))
+
+(define-inlinable (fash-set fash k v)
+  (fash-update fash k (lambda (_) v) #f))
 
 (define* (fash-set! fash k v)
   (define (update shift root h equal root-edit)
