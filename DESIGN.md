@@ -222,8 +222,6 @@ TODO
 
 - Remove vestigial bits from the reader (syntax, synquote, etc.?)
 
-- Fix '[1] in the repl -- includes reader-vector...
-
 - Investigate difference in repl wrt \`(foo \`()) (ignore the markdown
   backslashes).  Along those lines, we may need another syntax-quote
   recursion there (in `quote-empty-lists`), to move () handling to the

@@ -126,6 +126,13 @@
 (test-equal (lokke-vector 1 2 3) (t/read-string "[1 2 3]"))
 
 
+;;; quoting
+
+(test-equal `(quote ,(lokke-vector)) (t/read-string "'[]"))
+(test-equal `(quote ,(hash-map)) (t/read-string "'{}"))
+(test-equal `(quote ,(hash-set)) (t/read-string "'#{}"))
+
+
 ;;; Anonymous functions: #(foo %1)
 
 (let ((anon (t/read-string "#(inc %)")))

@@ -41,6 +41,7 @@
                           when
                           when-let
                           when-not))
+  #:use-module ((lokke boot) #:select (quote))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -329,7 +330,6 @@
                println
                prn
                quot
-               quote
                rand
                rand-int
                range
@@ -388,7 +388,15 @@
                zero?)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'cons 'list 'list? 'merge 'peek 'read)
+(re-export-and-replace! 'apply
+                        'assoc
+                        'cons
+                        'list
+                        'list?
+                        'merge
+                        'peek
+                        'quote
+                        'read)
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))

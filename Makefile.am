@@ -29,6 +29,7 @@ TESTS = \
   test/equality \
   test/clojure-defmacro \
   test/clojure-dynamic \
+  test/clojure-evaluation \
   test/clojure-exceptions \
   test/clojure-ns \
   test/clojure-string \
