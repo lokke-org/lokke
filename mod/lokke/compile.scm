@@ -115,7 +115,7 @@ Clojure reference like clojure.string/join to the corresponding Guile
              (ns-sym (parsed-sym-ns parsed)))
         (unless ns-sym
           ;; FIXME: appropriate?  They're class references for Clojure/JVM
-          (error "Top-level x.y references are currently not allowed" name))
+          (error "Top-level x.y references are currently not allowed:" name))
         (tree-il/make-module-ref (tree-il/toplevel-ref-src top)
                                  (resolved-ns-sym->mod-name ns-sym ns-aliases)
                                  (parsed-sym-ref parsed)
