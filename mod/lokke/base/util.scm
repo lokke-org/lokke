@@ -23,6 +23,7 @@
             pairify
             require-nil
             string->keyword
+            synquote-resolve-symbol-str
             vec-tag?))
 
 (define (string->keyword x) (symbol->keyword (string->symbol x)))
@@ -38,6 +39,12 @@
 
 (define (module-name->ns-sym m)
   (string->symbol (module-name->ns-str m)))
+
+(define (synquote-resolve-symbol-str s s-mod)
+  (let ((src-module (module-import-interface s-mod (string->symbol s))))
+    (string-append (module-name->ns-str (module-name (or src-module s-mod)))
+                   "/"
+                   s)))
 
 (define (global-identifier? syn)
   (receive (type _)

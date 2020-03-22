@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -18,7 +18,8 @@
                 #:select (keyword->string
                           module-name->ns-str
                           pairify
-                          string->keyword))
+                          string->keyword
+                          synquote-resolve-symbol-str))
   #:use-module ((lokke collection) #:select (empty? merge))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
@@ -69,14 +70,18 @@
                (class-of expr)) expr))))
   (expand expr))
 
-(define (expand-ref sym ns-str aliases)
+(define (expand-ref sym env aliases)
   ;; foo -> some.where/foo
   ;; str/join -> clojure.string/join
   ;; FIXME: too permissive?
   ;; FIXME: efficiency
   (let* ((parsed (parse-symbol sym)))
     (if (not (parsed-sym-ns parsed))
-        (string-append ns-str "/" (symbol->string sym))
+        (let ((resolved (synquote-resolve-symbol-str (symbol->string sym) env)))
+          (if (or (string=? resolved "guile.lokke.boot/unquote")
+                  (string=? resolved "guile.lokke.boot/unquote-splicing"))
+              "unquote-splicing"
+              resolved))
         (let ((mod (and aliases (get aliases (parsed-sym-ns parsed))))
               (ref (symbol->string (parsed-sym-ref parsed))))
           (unless mod
@@ -86,37 +91,36 @@
           ;; needs this function.
           (string-append (module-name->ns-str (module-name mod)) "/" ref)))))
 
-(define (expand-keyword-aliases kw ns-str aliases)
+(define (expand-keyword-aliases kw env aliases)
   ;; Always expand a keyword with a double-colon prefix
   (let* ((s (keyword->string kw)))
     (if (or (< (string-length s) 2)
             (not (char=? #\: (string-ref s 0))))
         kw
         (let* ((name (substring/read-only s 1))
-               (expanded (expand-ref (string->symbol name) ns-str aliases)))
+               (expanded (expand-ref (string->symbol name) env aliases)))
           (string->keyword expanded)))))
 
-(define (expand-sym/key-aliases expr ns-str aliases)
+(define (expand-sym/key-aliases expr env aliases)
   ;; We don't have to handle literal collections here because we
   ;; expand them later.  It appears that on the JVM, keywords always
   ;; expand, and symbols expand inside syntax-quote forms, but not
   ;; inside quote forms, unless the quote form itself is inside
   ;; syntax-quote form.  Once there's an enclosing syntax-quoted
   ;; region, everything expands.
-
   (define (maybe-expand-symbol-aliases sym syntax-quoted?)
     (if syntax-quoted?
         (let ((s (symbol->string sym)))
           (cond
            ((string-prefix? "/lokke/" s) sym)
            ((string-suffix? "#" s) sym)
-           (else (string->symbol (expand-ref sym ns-str aliases)))))
+           (else (string->symbol (expand-ref sym env aliases)))))
         sym))
 
   (define (expand expr syntax-quoted?)
     (cond
      ((symbol? expr) (maybe-expand-symbol-aliases expr syntax-quoted?))
-     ((keyword? expr) (expand-keyword-aliases expr ns-str aliases))
+     ((keyword? expr) (expand-keyword-aliases expr env aliases))
      ((null? expr) expr)
      ((list? expr)
       (case (car expr)
@@ -134,6 +138,7 @@
       (error
        (format #f "Unexpected expression while expanding symbols and keywords ~s:"
                (class-of expr)) expr))))
+
   (expand expr #f))
 
 (define (rewrite-anon-fns expr)
@@ -227,7 +232,8 @@
     (else (error (format #f "Unexpected ~s while rewriting #():" (class-of expr))
                  expr)))))
 
-;;; syntax-quote (i.e. quasiquote)
+
+;;; syntax-quote which Clojure only provides via reader ` (i.e. quasiquote)
 
 (define synquote-gensym?
   ;; FIXME: stricter syntax, or can we assume it's already a valid
@@ -431,7 +437,7 @@
                      (cdr expr))))
            (else (car result)))))))
 
-(define (uninstantiated-read port ns-str aliases)
+(define (uninstantiated-read port env aliases)
   (let loop ((expr (read-conditionally port))
              (pending-meta (hash-map)))
     (cond
@@ -463,12 +469,12 @@
              (result (expand-@-refs expr))
              (_ (when debug-reader?
                   (format (current-error-port) "reader expanding syms/keys: ~s\n" result)))
-             (result (expand-sym/key-aliases result ns-str aliases))
+             (result (expand-sym/key-aliases result env aliases))
              (_ (when debug-reader?
                   (format (current-error-port) "reader rewriting #(): ~s\n" result)))
              (result (rewrite-anon-fns result))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader expanding syntax-quote: ~s\n" result)))
+                  (format (current-error-port) "reader expanding syntax-quote (`): ~s\n" result)))
              (result (expand-synquote-gensyms result))
              (_ (when debug-reader?
                   (format (current-error-port) "reader compiling metadata: ~s\n" result)))
@@ -485,8 +491,7 @@
 (define (read-for-compiler port env)
   ;; Don't use str because it needs binding via print-str, which isn't
   ;; availble during early compilation, which needs this function.
-  (let ((expr (uninstantiated-read port (module-name->ns-str (module-name env))
-                                   (ns-aliases env))))
+  (let ((expr (uninstantiated-read port env (ns-aliases env))))
     (quote-empty-lists expr)))
 
 (define (read-string-for-compiler s env)
@@ -495,9 +500,7 @@
 
 ;; FIXME: read always just grabs current-module?
 (define (read port)
-  (let ((expr (uninstantiated-read port
-                                   (module-name->ns-str
-                                    (module-name (current-module))) #f)))
+  (let ((expr (uninstantiated-read port (current-module) #f)))
     (if (eof-object? expr)
         expr
         (literals->clj-instances expr))))
