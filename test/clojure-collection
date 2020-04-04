@@ -185,6 +185,55 @@
   (let [effects (atom 0)]
     (doseq [x (range 3)]
       (swap! effects inc))
-    (is (= 3 @effects))))
+    (is (= 3 @effects)))
+
+  (let [effects (atom [])]
+    (doseq [x (range 10) :when (odd? x)]
+      (swap! effects conj x))
+    (is (= [1 3 5 7 9] @effects)))
+
+  (let [effects (atom [])]
+    (doseq [x (range 3) :let [y (* 2 x)]]
+      (swap! effects conj [x y]))
+    (is (= [[0 0] [1 2] [2 4]] @effects)))
+
+  (let [effects (atom [])]
+    (doseq [x (range 2)
+            y (range 3)]
+      (swap! effects conj [x y]))
+    (is (= [[0 0] [0 1] [0 2]
+            [1 0] [1 1] [1 2]]
+           @effects)))
+
+  (let [effects (atom [])]
+    (doseq [x (range 10) :while (< x 4)] (swap! effects conj x))
+    (is (= [0 1 2 3] @effects)))
+
+  (let [effects (atom [])]
+    (doseq [x (range 2) y (range 5) :while (< y 3)]
+      (swap! effects conj [x y]))
+    (is (= [[0 0] [0 1] [0 2]
+            [1 0] [1 1] [1 2]]
+           @effects)))
+
+  (let [effects (atom [])]
+    (doseq [x (range 2) y (range 5) :while (< y 3) :when (even? x)]
+      (swap! effects conj [x y]))
+    (is (= [[0 0] [0 1] [0 2]] @effects))))
+
+(testing "for"
+  (is (= () (for [x []] true)))
+  (is (= [0 1 2] (for [x (range 3)] x)))
+  (is (= [1 3 5 7 9] (for [x (range 10) :when (odd? x)] x)))
+  (is (= [[0 0] [1 2] [2 4]] (for [x (range 3) :let [y (* 2 x)]] [x y])))
+  (is (= [[0 0] [0 1] [0 2]
+          [1 0] [1 1] [1 2]]
+         (for [x (range 2) y (range 3)] [x y])))
+  (is (= [0 1 2 3] (for [x (range 10) :while (< x 4)] x)))
+  (is (= [[0 0] [0 1] [0 2]
+          [1 0] [1 1] [1 2]]
+         (for [x (range 2) y (range 5) :while (< y 3)] [x y])))
+  (is (= [[0 0] [0 1] [0 2]]
+         (for [x (range 2) y (range 5) :while (< y 3) :when (even? x)] [x y]))))
 
 (end-tests (ns-name *ns*) :exit? true)

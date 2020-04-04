@@ -37,7 +37,14 @@
                           drop-right
                           last
                           take-right))
-  #:use-module ((lokke base collection) #:select (merge))
+  #:use-module ((lokke base collection)
+                #:select ((cons . clj-cons)
+                          concat
+                          first
+                          lazy-seq
+                          rest
+                          take-while
+                          seq))
   #:use-module ((lokke base destructure) #:select (destructure-binding-syntax))
   #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
@@ -51,7 +58,9 @@
             declare
             def
             defn
+            doseq
             dotimes
+            for
             fn
             if-let
             if-not
@@ -433,3 +442,72 @@
   (letrec ((fn-name (fn fn-name fn-body ...)) ...)
     #nil
     body ...))
+
+(define-syntax %doseq
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag exp ...) body ...)  (vec-tag? #'vec-tag)
+       #'(%doseq (exp ...) body ...))
+      ((_ (#:let bindings exp ...) body ...)
+       #'(let** bindings (%doseq (exp ...) body ...)))
+      ((_ (#:when guard exp ...) body ...)
+       #'(begin
+           (when guard (%doseq (exp ...) body ...))
+           #t))
+      ((_ (#:while guard exp ...) body ...)
+       #'(when guard (%doseq (exp ...) body ...)))
+      ((_ () body ...) #'(begin #nil body ... #t))
+      ((_ (bind init bindings ...) body ...)
+       #'(let loop ((s init))
+           (let ((s (seq s)))
+             (if (not s)
+                 #t
+                 (let** (bind (first s))
+                   (when (%doseq (bindings ...) body ...)
+                     (loop (rest s)))
+                   #t))))))))
+
+(define-syntax doseq
+  (lambda (x)
+    (syntax-case x ()
+      ((_ exp ...)
+       #'(begin
+           (%doseq exp ...)
+           #nil)))))
+
+(define-syntax %for
+  (lambda (x)
+    (syntax-case x ()
+      ((_ terminator inner (vec-tag exp ...) body ...)  (vec-tag? #'vec-tag)
+       #'(%for terminator inner (exp ...) body ...))
+      ((_ terminator inner (#:let bindings exp ...) body ...)
+       #'(let** bindings (%for terminator inner (exp ...) body ...)))
+      ((_ terminator inner (#:when guard exp ...) body ...)
+       #'(if guard
+             (%for terminator inner (exp ...) body ...)
+             (inner)))
+      ((_ terminator inner (#:while guard exp ...) body ...)
+       #'(if guard
+             (%for terminator inner (exp ...) body ...)
+             (clj-cons terminator #nil)))
+      ((_ terminator inner () body ...)
+       #'(clj-cons (begin #nil body ...) (inner)))
+      ((_ terminator inner (bind init bindings ...) body ...)
+       #`(let loop ((s init))
+           (lazy-seq
+            (let ((x (seq s)))
+              (when x
+                (let** (bind (first x))
+                       (let ((new-inner (lambda () (loop (rest s)))))
+                         (take-while (lambda (x) (not (eq? x terminator)))
+                                     (concat
+                                      (%for terminator inner
+                                        (bindings ...) body ...)
+                                      (loop (rest s))))))))))))))
+
+(define-syntax for
+  (lambda (x)
+    (syntax-case x ()
+      ((_ exp ...)
+       #'(let ((terminator (cons #f #f)))
+           (%for terminator (lambda () #nil) exp ...))))))

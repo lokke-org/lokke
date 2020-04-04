@@ -77,55 +77,44 @@
     (is (= [3 4 5] (subvec (subvec [1 2 3 4 5] 1) 1)))))
 
 (testing "metadata"
-  ;; FIXME: replace with doseq once it's sufficient
-  ;; FIXME: use better destructuring once that's fixed
-  (loop [items [["vector" []]
-                ["subvec" (subvec [1 2 3] 1 2)]]]
-    (when (seq items)
-      (let [[kind x] (first items)]
-        (testing (str "for " kind)
-          (is (= nil (meta x)))
-          (is (= nil (meta (with-meta x nil))))
-          (is (= {} (meta (with-meta x {}))))
-          (is (= {:x 1} (meta (with-meta x {:x 1}))))
-          ;;(is (= {:x 1} (meta (assoc (with-meta x {:x 1}) 0 1) )))
-          ))
-      (recur (rest items)))))
+  (doseq [[kind x] [["vector" []]
+                    ["subvec" (subvec [1 2 3] 1 2)]]]
+    (testing (str "for " kind)
+      (is (= nil (meta x)))
+      (is (= nil (meta (with-meta x nil))))
+      (is (= {} (meta (with-meta x {}))))
+      (is (= {:x 1} (meta (with-meta x {:x 1}))))
+      ;;(is (= {:x 1} (meta (assoc (with-meta x {:x 1}) 0 1) )))
+      )))
 
-;; FIXME: replace with doseq once it's sufficient
-;; FIXME: use better destructuring once that's fixed
-(loop [items [["vector" [1 2 3]]
-              ["subvec" (subvec [1 2 3] 0)]
-              ["prefix subvec" (subvec [0 1 2 3] 1)]
-              ["internal subvec" (subvec [0 1 2 3 4] 1 4)]]]
-  (when (seq items)
-    (let [[kind x] (first items)]
-      (testing (str "misc for " kind)
-        (is (vector? x))
-        (is (counted? x))
-        (is (= 3 (count x)))
-        (is (= true (contains? x 0)))
-        (is (= true (contains? x 1)))
-        (is (= true (contains? x 2)))
-        (is (= false (contains? x 3)))
-        (is (= false (contains? x :nope)))
-        (is (= 1 (nth x 0)))
-        (is (= 2 (nth x 1)))
-        (is (= 3 (nth x 2)))
-        (is (= :nope (get x 100 :nope)))
-        (is (= [1 2 3 4] (conj x 4)))
-        (is (= [1 :foo 3] (assoc x 1 :foo)))
-        (is (= [1 2 3 4] (assoc x 3 4)))
-        (is (= [1 2 3 4 5 6 7] (assoc x 3 4 4 5 5 6 6 7)))
-        (is (= [1 2 4] (update x 2 inc)))
-        (is (= [1 2 3 nil] (update x 3 identity)))
-        (is (= [0 1] (find x 0)))
-        (is (= [1 2] (find x 1)))
-        (is (= [2 3] (find x 2)))
-        (is (= nil (find x 3)))
-        (is (= nil (find x :nope)))
-        (is (= x (seq x)))))
-    (recur (rest items))))
-
+(doseq [[kind x] [["vector" [1 2 3]]
+                  ["subvec" (subvec [1 2 3] 0)]
+                  ["prefix subvec" (subvec [0 1 2 3] 1)]
+                  ["internal subvec" (subvec [0 1 2 3 4] 1 4)]]]
+  (testing (str "misc for " kind)
+    (is (vector? x))
+    (is (counted? x))
+    (is (= 3 (count x)))
+    (is (= true (contains? x 0)))
+    (is (= true (contains? x 1)))
+    (is (= true (contains? x 2)))
+    (is (= false (contains? x 3)))
+    (is (= false (contains? x :nope)))
+    (is (= 1 (nth x 0)))
+    (is (= 2 (nth x 1)))
+    (is (= 3 (nth x 2)))
+    (is (= :nope (get x 100 :nope)))
+    (is (= [1 2 3 4] (conj x 4)))
+    (is (= [1 :foo 3] (assoc x 1 :foo)))
+    (is (= [1 2 3 4] (assoc x 3 4)))
+    (is (= [1 2 3 4 5 6 7] (assoc x 3 4 4 5 5 6 6 7)))
+    (is (= [1 2 4] (update x 2 inc)))
+    (is (= [1 2 3 nil] (update x 3 identity)))
+    (is (= [0 1] (find x 0)))
+    (is (= [1 2] (find x 1)))
+    (is (= [2 3] (find x 2)))
+    (is (= nil (find x 3)))
+    (is (= nil (find x :nope)))
+    (is (= x (seq x)))))
 
 (end-tests (ns-name *ns*) :exit? true)

@@ -51,7 +51,6 @@
             counted?
             define-nth-seq
             dissoc
-            doseq
             drop
             empty
             every?
@@ -601,20 +600,6 @@
                   (reduce (lambda (result x) (conj result x))
                           result
                           (car xs)))))))
-
-(define-syntax doseq
-  (lambda (x)
-    (syntax-case x ()
-      ((_ (vec-tag var init) body ...)  (vec-tag? #'vec-tag)
-       #'(doseq (var init) body ...))
-      ((_ (var init) body ...)
-       #'(let loop ((s init))
-           (let ((s (seq s)))
-             (if (not s)
-                 #nil
-                 (let ((var (first s)))
-                   body ...
-                   (loop (rest s))))))))))
 
 (define concat
   (match-lambda*

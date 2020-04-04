@@ -28,8 +28,10 @@
                           defn
                           defdyn
                           defdynloc
+                          doseq
                           dotimes
                           fn
+                          for
                           if
                           if-let
                           if-not
@@ -262,6 +264,7 @@
                flush
                fn
                fnext
+               for
                format
                future
                gensym
