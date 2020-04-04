@@ -276,8 +276,8 @@
       (map-entry k v))))
 
 (define (update m k f . args)
-  (make-map (apply fash-update (%hash-map-fm m) k f #nil args)
-            (%hash-map-meta m)))
+  (make-map (apply fash-update (map-fm m) k f #nil args)
+            (map-meta m)))
 
 (define-method (reduce-kv f init (m <hash-map>))
   (fash-fold (lambda (k v result)
