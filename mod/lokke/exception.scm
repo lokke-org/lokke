@@ -40,7 +40,6 @@
             ex-message
             ex-suppressed
             ex-tag
-            throw
             try
             with-final
             with-open)
