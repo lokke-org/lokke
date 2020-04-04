@@ -68,8 +68,6 @@
     (cond
      ((null? expr) expr)
      ((list? expr)
-      (write (list #:rewriting expr))
-      (newline)
       (case (car expr)
         ((/lokke/reader-hash-map) (cons (%scm-quote hash-map) (map convert (cdr expr))))
         ((/lokke/reader-hash-set) (cons (%scm-quote hash-set) (map convert (cdr expr))))
