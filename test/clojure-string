@@ -116,4 +116,38 @@
   (is (= "\r\nx" (trim-newline "\r\nx\r\n")))
   (is (= " \nx\r " (trim-newline " \nx\r "))))
 
+
+;; FIXME: test utf32 patterns/strings
+
+(testing "re-pattern"
+  (is (= "#\"x\"" (str (re-pattern "x")))))
+
+(testing "re-matcher"
+  (is (re-matcher (re-pattern "x") "x")))
+
+(defn matches [m]
+  (take-while identity
+              (repeatedly #(let [groups (re-find m)]
+                             ;; FIXME: test for re-groups no-match exceptions
+                             (when groups
+                               (is (= groups (re-groups m))))
+                             groups))))
+
+(testing "re-find"
+  (is (not (re-find (re-pattern "x") "y")))
+  (is (= "x" (re-find (re-pattern "x") "x")))
+  (is (= ["x" "x"] (re-find (re-pattern "(x)") "x")))
+  (is (not (re-find (re-pattern "^y") "xy")))
+  (is (= "y" (re-find (re-pattern "y") "xy")))
+
+  (is (= [] (matches (re-matcher (re-pattern "x") "y"))))
+  (is (= ["x"] (matches (re-matcher (re-pattern "x") "x"))))
+  (is (= [["x" "x"]] (matches (re-matcher (re-pattern "(x)") "x"))))
+  (is (= [] (matches (re-matcher (re-pattern "^y") "xy"))))
+  (is (= ["y"] (matches (re-matcher (re-pattern "y") "xy")))))
+
+(testing "re-seq"
+  (is (= ["x" "x" "x"] (re-seq (re-pattern "x") "xxx")))
+  (is (= [["x" "x"] ["x" "x"] ["x" "x"]] (re-seq (re-pattern "(x)") "xxx"))))
+
 (end-tests (ns-name *ns*) :exit? true)

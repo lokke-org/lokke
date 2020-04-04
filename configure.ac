@@ -18,6 +18,8 @@ gl_INIT
 
 # Checks for libraries.
 
+PKG_CHECK_MODULES(PCRE2, [libpcre2-8 libpcre2-32])
+
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_CHECK_HEADERS([string.h unistd.h])

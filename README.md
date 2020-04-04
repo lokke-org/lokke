@@ -61,7 +61,7 @@ Ensure that a version of
 For Debian:
 
     # apt-get install guile-2.2 guile-2.2-dev
-    # apt-get install gnulib libunistring-dev
+    # apt-get install gnulib libunistring-dev libpcre2-dev
 
 Then
 
@@ -147,6 +147,7 @@ Differences from Clojure/JVM (an incomplete list)
   which should also be available via `info guile` if installed.
 * The implementation should be properly tail-recursive.
 * Argument evaluation order is unspecified.
+* Regular expressions by default are PCRE2 regular expressions.
 * Various functions handle Scheme vectors as they would Clojure
   vectors, i.e. many collection and sequence operations, etc.
 * Various functions handle Scheme lists as they would Clojure
@@ -193,8 +194,6 @@ Differences from Clojure/JVM (an incomplete list)
 * Whether or not `bindings` are established in parallel is undefined.
 * `.indexOf` is `index-of`
 * `.lastIndexOf` is `last-index-of`
-* regex support is provided by guile's facilities on the current host
-* regex "Matcher" semantics are not supported yet.
 * Many of the coercions haven't been included: float double
 * Persistent lists are currently not `counted`, so `count` must
   traverse the list.

@@ -105,6 +105,12 @@
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
                 #:select (*print-meta* alter-meta! meta vary-meta with-meta))
+  #:use-module ((lokke regex)
+                #:select (re-find
+                          re-groups
+                          re-matcher
+                          re-pattern
+                          re-seq))
   #:use-module ((lokke scm bit)
                 #:select (bit-and
                           bit-clear
@@ -337,6 +343,11 @@
                rand
                rand-int
                range
+               re-find
+               re-groups
+               re-matcher
+               re-pattern
+               re-seq
                read-line
                read-string
                reduce
