@@ -16,7 +16,7 @@
 
 (define-module (lokke base dynamic)
   #:use-module ((ice-9 match) #:select (match-lambda))
-  #:use-module ((lokke base util) #:select (vec-tag?))
+  #:use-module ((lokke base util) #:select (module-name->ns-str vec-tag?))
   #:export (binding defdyn defdynloc))
 
 
