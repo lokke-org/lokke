@@ -12,6 +12,7 @@
 ;;;      option) any later version.
 
 (define-module (lokke scm vector)
+  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base collection) #:select (<sequential>))
   #:use-module ((lokke hash-map) #:select (hash-map?))
