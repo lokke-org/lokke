@@ -217,6 +217,7 @@
                comp
                compare
                complement
+               concat
                conj
                constantly
                contains?

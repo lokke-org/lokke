@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or modify
 ;;; it under the terms of (at your option) either of the following two
@@ -25,6 +25,7 @@
   #:version (0 0 0)
   #:use-module ((guile)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
+  #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil vec-tag?))
@@ -42,6 +43,7 @@
             assoc-in
             bounded-count
             coll?
+            concat
             conj
             const-nth?
             contains?
@@ -613,3 +615,14 @@
                  (let ((var (first s)))
                    body ...
                    (loop (rest s))))))))))
+
+(define concat
+  (match-lambda*
+   ('() #nil)
+   ((x) (lazy-seq x))
+   ((x y . seqs)
+    (lazy-seq
+     (let ((s (seq x)))
+       (if s
+           (cons (first s) (apply concat (rest s) y seqs))
+           (apply concat y seqs)))))))

@@ -33,6 +33,7 @@
                           assoc-in
                           bounded-count
                           coll?
+                          concat
                           conj
                           cons
                           const-nth?
@@ -106,6 +107,7 @@
                bounded-count
                clj=
                coll?
+               concat
                conj
                const-nth?
                contains?
