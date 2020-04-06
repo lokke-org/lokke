@@ -31,8 +31,7 @@
                           (if . %scm-if)
                           (let . %scm-let)))
   #:use-module ((srfi srfi-1)
-                #:select (append-map
-                          concatenate
+                #:select (append-map!
                           dotted-list?
                           drop-right
                           last
@@ -134,10 +133,10 @@
         (cons #`(#,var #,init)
               (destructure-binding-syntax x binding var))))
     (define (expand bindings body)
-      (let* ((bindings (concatenate
-                        (map (lambda (p)
-                               (apply destructured-bindings (append p (list body))))
-                             (pairify bindings))))
+      (let* ((bindings (append-map!
+                        (lambda (p)
+                          (apply destructured-bindings (append p (list body))))
+                        (pairify bindings)))
              (result #`(let* #,bindings #,@body)))
         (dbglet "expanded let:\n  ~s\n->\n  ~s\n->\n  ~s\n"
                 (syntax->datum `(let ,bindings ,@body))
@@ -221,10 +220,10 @@
                                   (list shim (cadr var-val)))
                                 shim-args
                                 #'((var val) ...)))
-               (let-args (append-map (lambda (shim var-val)
-                                       (list (car var-val) shim))
-                                     shim-args
-                                     #'((var val) ...))))
+               (let-args (append-map! (lambda (shim var-val)
+                                        (list (car var-val) shim))
+                                      shim-args
+                                      #'((var val) ...))))
           #`(%scm-let recur #,recur-args
                       (let** #,let-args
                         #,@body)))))
@@ -290,9 +289,9 @@
       (let* ((dot? (dotted-list? args))
              (proper-args (undotted args))
              (shim-args (generate-temporaries proper-args))
-             (let-args (append-map (lambda (shim orig) (list orig shim))
-                                   shim-args
-                                   proper-args))
+             (let-args (append-map! (lambda (shim orig) (list orig shim))
+                                    shim-args
+                                    proper-args))
              (shim-args (if dot? (dotted shim-args) shim-args)))
         #`(lambda #,shim-args (let** #,let-args #nil #,@body))))
 
@@ -301,9 +300,9 @@
              (proper-args (undotted args))
              (dummy (dbgfn "proper: ~s\n" proper-args))
              (shim-args (generate-temporaries proper-args))
-             (let-args (append-map (lambda (shim orig) (list orig shim))
-                                   shim-args
-                                   proper-args))
+             (let-args (append-map! (lambda (shim orig) (list orig shim))
+                                    shim-args
+                                    proper-args))
              (shim-args (if dot? (dotted shim-args) shim-args)))
         #`(add-method! #,m (method #,shim-args
                              (let** #,let-args #nil #,@body)))))
