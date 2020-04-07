@@ -90,14 +90,16 @@
   (and (>= (length name) 4)
        (equal? '(lokke ns clojure core) (take name 4))))
 
+;; FIXME: is the clj cljc order the one we want?
+
 (define (find-module-src mod-name)
   (dbgwn #:mod-name mod-name)
   (let* ((path-fragment (string-join (map symbol->string mod-name) "/"))
-         (path (search-path %load-path path-fragment '(".clj" ".scm"))))
+         (path (search-path %load-path path-fragment '(".cljc" ".clj" ".scm"))))
     (and path
          (let ((ext (substring/read-only path (- (string-length path) 4))))
            (cond
-            ((string=? ".clj" ext) path)
+            ((member ext '(".clj" ".cljc")) path)
             ((string=? ".scm" ext) path)
             (else #f))))))
 
@@ -136,6 +138,7 @@
           (error "Unable to define lokke language via (language lokke spec)"))
         (set! bootstrapped-compiler? #t)))
     (dbgf "lokke compiling as ~s ~s\n" lang path)
+    ;; FIXME: should clj files disallow reader conditionals (unlike cljc)?
     (let ((result (if env
                       (compile-file path #:from lang #:env env)
                       (compile-file path #:from lang))))
@@ -182,7 +185,7 @@
                     (dbgf "compiling in ~s: ~s\n" env path)
                     (let* ((ext (substring/read-only path (- (string-length path) 4)))
                            (lang (cond
-                                  ((string=? ".clj" ext) 'lokke)
+                                  ((member ext '(".clj" ".cljc")) 'lokke)
                                   ((string=? ".scm" ext) 'scheme)
                                   (else
                                    (error "Unexpected namespace source file extension:" path)))))
