@@ -23,18 +23,17 @@
   #:pure
   #:use-module ((guile)
                 #:select ((quote . %scm-quote)
-                          ...
                           @
                           car
                           case
                           cddr
                           cdr
                           cond
+                          cond-expand
                           cons
                           datum->syntax
                           define
                           define-syntax
-                          else
                           error
                           format
                           lambda
@@ -51,7 +50,8 @@
                           syntax-error
                           syntax-rules
                           unsyntax
-                          unsyntax-splicing))
+                          unsyntax-splicing
+                          use-modules))
   #:use-module ((lokke ns) #:select (ns))
   #:use-module ((srfi srfi-1) #:select (append-map take))
   #:export (/lokke/reader-hash-map
@@ -61,6 +61,14 @@
   #:re-export (ns)
   #:replace (quote unquote unquote-splicing)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+;; 3.0 requires this, but it can't go in the (guile) #:select above
+;; because *that* crashes 2.2
+(cond-expand
+  ;; note "guile-3" means >= 3
+  (guile-3
+   (use-modules ((guile) #:select (... else))))
+  (else))
 
 
 (define (convert-for-public-message expr)
