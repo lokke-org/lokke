@@ -49,8 +49,8 @@ is intended to provide a C backed implementation of Clojure's
 Getting started
 ---------------
 
-Ensure that a version of
-[Guile](https://www.gnu.org/software/guile/) 2.2 is available:
+Ensure that a version of [Guile](https://www.gnu.org/software/guile/)
+2.2 or 3.0 is available:
 
     $ guile --version
     guile (GNU Guile) 2.2.4
@@ -61,6 +61,11 @@ Ensure that a version of
 For Debian:
 
     # apt-get install guile-2.2 guile-2.2-dev
+    # apt-get install gnulib libunistring-dev libpcre2-dev
+
+or
+
+    # apt-get install guile-3.0 guile-3.0-dev
     # apt-get install gnulib libunistring-dev libpcre2-dev
 
 Then
