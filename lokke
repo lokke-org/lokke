@@ -55,8 +55,12 @@ exec ./guile -s "$0" "$@"
   (display msg (err))
   (exit status))
 
+(define (quit-early msg . args)
+  (apply format (err) msg args)
+  (exit not-even-started))
+
 (define (misuse)
-  (quit usage not-even-started))
+  (quit-early usage))
 
 (define (make-options-hash)
   (let ((result (make-hash-table)))
@@ -87,12 +91,12 @@ exec ./guile -s "$0" "$@"
            ((equal? "--help" arg) (quit usage 0))
            ((member arg '("-i" "--init"))
             (when (null? (cdr args))
-              (quit (format #f "No argument for ~a\n" arg) not-even-started))
+              (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-loader (cadr args)))
             (loop (cddr args) result))
            ((member arg '("-e" "--eval"))
             (when (null? (cdr args))
-              (quit (format #f "No argument for ~a\n" arg) not-even-started))
+              (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-evaluator (cadr args)))
             (loop (cddr args) result))
            ((member arg '("-?" "-h" "--help")) (quit usage 0))
@@ -101,7 +105,7 @@ exec ./guile -s "$0" "$@"
             result)
            (else
             (format (err) "Unrecognized argument: ~s\n" arg)
-            (quit usage not-even-started)))))))
+            (quit-early usage)))))))
 
 ;; load-user-init adapted from the version in Guile 2.2.6 (LGPL 3)
 ;; FIXME: propose accommodations upstream
