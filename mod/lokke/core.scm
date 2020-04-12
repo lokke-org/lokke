@@ -271,7 +271,6 @@
                fn
                fnext
                for
-               format
                future
                gensym
                get
@@ -406,6 +405,7 @@
 (re-export-and-replace! 'apply
                         'assoc
                         'cons
+                        'format
                         'list
                         'list?
                         'merge
