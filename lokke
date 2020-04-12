@@ -42,7 +42,8 @@ exec ./guile -s "$0" "$@"
 (define usage
   (string-append
    "Usage:\n"
-   "  lokke (--help | -h | -?)\n"
+   "  lokke\n"
+   "  lokke {--help | -h | -?}\n"
    "  lokke OPTS\n"
    "  lokke OPTS -- CLOJURE_PROGRAM_ARG...\n"
    "OPTS:\n"
