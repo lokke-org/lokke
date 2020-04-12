@@ -164,7 +164,7 @@
     (cond
      ((counted? remaining) (+ sum (count remaining)))
      ((not (seq remaining)) sum)
-     (else (loop (next remaining) (1+ sum))))))
+     (else (loop (rest remaining) (1+ sum))))))
 
 (define-method (bounded-count n coll)
   (if (counted? coll)
@@ -175,13 +175,13 @@
          ((= sum n) n)
          ((counted? remaining) (min n (+ sum (count remaining))))
          ((not (seq remaining)) sum)
-         (else (loop (next remaining) (1+ sum)))))))
+         (else (loop (rest remaining) (1+ sum)))))))
 
 (define (every? pred coll)
   (let ((s (seq coll)))
     (if s
         (and (pred (first s))
-             (every? pred (next coll)))
+             (every? pred (rest coll)))
         #t)))
 
 ;; Default behaviors
