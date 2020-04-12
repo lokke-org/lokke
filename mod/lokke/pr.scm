@@ -184,7 +184,7 @@
     ((#\backspace) (display "\\backspace" port))
     ((#\return) (display "\\return" port))
     ;; FIXME: adjust to match the jvm (or edn) more precisely
-    (else (display (display (string #\\ c) port)))))
+    (else (display (string #\\ c) port))))
 
 (define-method (print-on (x <char>) port)
   (display x port) #nil)

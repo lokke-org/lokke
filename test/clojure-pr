@@ -19,11 +19,23 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "pr-str"
+  (is (= "" (pr-str)))
+  (is (= "nil" (pr-str nil)))
+  (is (= "1" (pr-str 1)))
+  (is (= "1 nil" (pr-str 1 nil)))
+  (is (= "\\x" (pr-str \x)))
+  (is (= "\\newline" (pr-str \newline)))
+  (is (= "\"foo\"" (pr-str "foo")))
+  (is (= "[1 2 3]" (pr-str [1 2 3]))))
+
 (testing "print-str"
   (is (= "" (print-str)))
   (is (= "nil" (print-str nil)))
   (is (= "1" (print-str 1)))
   (is (= "1 nil" (print-str 1 nil)))
+  (is (= "x" (print-str \x)))
+  (is (= "\n" (print-str \newline)))
   (is (= "foo" (print-str "foo")))
   (is (= "foo" (with-out-str (print "foo"))))
   (is (= "[1 2 3]" (print-str [1 2 3]))))
