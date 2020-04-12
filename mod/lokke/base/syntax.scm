@@ -180,9 +180,9 @@
   (syntax-rules ()
     ((_ guard body ...) (if-not guard (begin #nil body ...)))))
 
-(warn "audit all the if-let-ish expansions for shadowing in else or how about some tests, hmmmmm?")
+;; FIXME: audit all the if-let-ish expansions for shadowing in else
+;; FIXME: more tests
 
-;; FIXME: tests
 ;; FIXME: vector vs list? (see DESIGN)
 (define-syntax if-let
   (lambda (x)
