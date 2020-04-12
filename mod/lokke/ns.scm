@@ -541,7 +541,5 @@
              (require 'guile.language.lokke.spec)  ;; FIXME: may not be needed
              (use 'guile.lokke.boot)
              (require '(guile.lokke.ns #:refer (refer refer-clojure require use)))
-             ;; FIXME: drop after debugging...
-             (require '(guile.guile #:refer (format current-error-port)))
              #,@ref-cmds
              #nil))))))
