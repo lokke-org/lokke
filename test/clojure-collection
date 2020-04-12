@@ -111,6 +111,11 @@
   (is (= [2 3] (mapv inc '(1 2))))
   (is (= [4 6] (mapv + '(1 2) '(3 4)))))
 
+(testing "map-indexed"
+  (is (= [] (map-indexed #(do %&) ())))
+  (is (= [[0 1]] (map-indexed #(do %&) '(1))))
+  (is (= [[0 1] [1 2]] (map-indexed #(do %&) '(1 2)))))
+
 (testing "get"
   (is (= nil (get {} 1)))
   (is (= :something (get {} 1 :something)))

@@ -25,3 +25,6 @@
 (defn replace [smap coll]
   (into (empty coll)
         (map #(get smap % %) coll)))
+
+(defn map-indexed [f coll]
+  (map f (range) coll))
