@@ -80,6 +80,11 @@ Then
 Hopefully the tests will pass.  If not, please report them to
 ... (FIXME: list address).
 
+If you have more than one version of Guile installed, you may be able
+to select a particular version at configuration time like this:
+
+    $ ./configure GUILE_EFFECTIVE_VERSION=2.2
+
 Now you should be able to run a Clojure program via the convenience
 wrapper:
 
