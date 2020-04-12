@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 export GUILE_HISTORY="${LOKKE_HISTORY:-$HOME/.lokke_history}"
-exec ./guile "$0" "$@"
+exec ./guile -s "$0" "$@"
 !#
 
 ;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
