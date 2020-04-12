@@ -33,6 +33,14 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "count"
+  (is (= 0 (count "")))
+  (is (= 1 (count "x"))))
+
+(testing "seq"
+  (is (= [] (seq "")))
+  (is (= [\x] (seq "x"))))
+
 (testing "blank?"
   (is (blank? ""))
   (is (blank? " "))

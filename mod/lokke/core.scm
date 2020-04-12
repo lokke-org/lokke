@@ -44,6 +44,7 @@
                           when-let
                           when-not))
   #:use-module ((lokke boot) #:select (quote))
+  #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -485,3 +486,13 @@
              (if (contains? seen item)
                  #f
                  (recur (cdr rst) (conj seen item)))))))))
+
+(define-method (count (s <string>))
+  (string-length s))
+
+(define-nth-seq <string-seq> string-length string-ref)
+
+(define-method (seq (s <string>))
+  (if (zero? (string-length s))
+      #nil
+      (make <string-seq> #:items s)))
