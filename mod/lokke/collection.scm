@@ -197,7 +197,7 @@
 ;; included, matching the jvm for now.
 
 (define-method (clj= (x <pair>) (y <pair>))
-  (and (equal? (car x) (car y))
+  (and (clj= (car x) (car y))
        (clj= (cdr x) (cdr y))))
 
 (define-method (clj= (s <pair>) x)

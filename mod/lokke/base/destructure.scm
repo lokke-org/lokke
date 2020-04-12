@@ -159,7 +159,7 @@
                           (cdr rest)
                           (cons (list item #`(nth #,enclosing-binding #,i #nil))
                                 result)))
-           ((equal? #:as (syn-keyword item))
+           ((eq? #:as (syn-keyword item))
             (if (null? (cdr rest))
                 (error "No value for :as" rest)
                 (destruct-vec enclosing-binding

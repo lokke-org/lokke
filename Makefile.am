@@ -32,6 +32,7 @@ export LOKKE_TEST_PROTOCOL = tap
 
 TESTS = \
   test/equality \
+  test/clojure-comparisons \
   test/clojure-defmacro \
   test/clojure-dynamic \
   test/clojure-evaluation \

@@ -27,9 +27,10 @@
                           rest
                           second
                           seq))
+  #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:export (<map-entry> key map-entry map-entry? val)
-  #:re-export (assoc first get nth pr-on print-on rest second seq)
+  #:re-export (assoc clj= first get nth pr-on print-on rest second seq)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <map-entry> (<sequential>)
@@ -86,9 +87,9 @@
 
 (define nth get)  ;; efficient, but has the wrong name when printed?
 
-(define-method (equal? (e1 <map-entry>) (e2 <map-entry>))
-  (and (equal? (slot-ref e1 'k) (slot-ref e2 'k))
-       (equal? (slot-ref e1 'v) (slot-ref e2 'v))))
+(define-method (clj= (e1 <map-entry>) (e2 <map-entry>))
+  (and (clj= (slot-ref e1 'k) (slot-ref e2 'k))
+       (clj= (slot-ref e1 'v) (slot-ref e2 'v))))
 
 ;; FIXME?
 (define-method (seq (entry <map-entry>))

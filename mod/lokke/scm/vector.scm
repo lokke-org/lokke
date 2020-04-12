@@ -77,6 +77,7 @@
   (%lokke-vector-with-meta v m))
 
 (define (lokke-vector-equal? v1 v2)
+  ;; Note: this really is equal?, not clojure =
   (let ((n1 (lokke-vector-length v1))
         (n2 (lokke-vector-length v2)))
     (and (= n1 n2)

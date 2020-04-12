@@ -1,0 +1,43 @@
+":"; exec ./lokke -i "$0"  # -*-clojure-*-
+
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-comparisons
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "="
+ (is (= 1 1))
+ (is (not (= 1 2)))
+ (is (not (= 1 "x")))
+ (is (= "x" "x"))
+ (is (not (= "x" "y")))
+
+ (is (not (= nil false)))
+ (is (not (= nil ())))
+ (is (not (= nil [])))
+
+ (is (= [1 2 3] [1 2 3]))
+ (is (not (= [1 2] [1 2 3])))
+
+ (is (not (= () nil)))
+
+ (is (= '([1]) '((1))))
+ (is (= [[1]] ['(1)]))
+ (is (= [1 [2 3 '(4 5 6)]]
+        '(1 [2 3 [4 5 6]]))))
+
+(end-tests (ns-name *ns*) :exit? true)

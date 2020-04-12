@@ -15,9 +15,10 @@
   #:use-module ((lokke base collection) #:select (<coll> count every? get seq))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map-entry) #:select (key val))
+  #:use-module ((lokke compare) #:select (clj=))
   #:use-module (oop goops)
   #:export (<map> map?)
-  #:re-export (get invoke)
+  #:re-export (clj= get invoke)
   #:replace (assoc)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -31,12 +32,12 @@
 (define-class <map> (<coll>))
 (define (map? x) (is-a? x <map>))
 
-(define-method (equal? (x <map>) (y <map>))
+(define-method (clj= (x <map>) (y <map>))
   ;; Fallback for heterogeneous comparisons.  Assume for now they're
   ;; both counted so this will be fast.
   (and (= (count x) (count y))
        (every? (lambda (entry)
-                 (equal? (get y (key entry) sentinel)
+                 (clj= (get y (key entry) sentinel)
                          (val entry)))
                (seq x))))
 

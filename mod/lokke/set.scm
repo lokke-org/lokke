@@ -16,6 +16,7 @@
   #:use-module ((lokke base collection) #:select (<coll> get))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke collection) #:select (contains? count every? seq))
+  #:use-module ((lokke compare) #:select (clj=))
   #:use-module (oop goops)
   #:export (<set>
             difference
@@ -31,7 +32,7 @@
             subset?
             superset?
             union)
-  #:re-export (invoke)
+  #:re-export (clj= invoke)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <set> (<coll>))
@@ -50,7 +51,7 @@
 (define-generic superset?)
 (define-generic union)
 
-(define-method (equal? (x <set>) (y <set>))
+(define-method (clj= (x <set>) (y <set>))
   ;; Fallback for heterogeneous comparisons.  Assume for now they're
   ;; both counted so this will be fast.
   (and (= (count x) (count y))

@@ -17,7 +17,7 @@
 (use-modules
  ((lokke scm test-anything)
   #:select (tap-test-runner))
- ((lokke collection) #:select (counted? reduce seq))
+ ((lokke collection) #:select (clj= counted? reduce seq))
  ((lokke hash-set) #:prefix t/)
  ((srfi srfi-1)
   #:select (iota))
@@ -42,26 +42,26 @@
 
 (test-assert (counted? (t/hash-set)))
 
-(test-equal (t/hash-set) (t/hash-set))
-(test-equal (t/hash-set 1) (t/hash-set 1))
-(test-equal (t/hash-set 1 2) (t/hash-set 1 2))
-(test-assert (not (equal? (t/hash-set) (t/hash-set 1))))
+(test-assert (clj= (t/hash-set) (t/hash-set)))
+(test-assert (clj= (t/hash-set 1) (t/hash-set 1)))
+(test-assert (clj= (t/hash-set 1 2) (t/hash-set 1 2)))
+(test-assert (not (clj= (t/hash-set) (t/hash-set 1))))
 
-(test-equal (t/hash-set 1) (t/set '(1)))
+(test-assert (clj= (t/hash-set 1) (t/set '(1))))
 
-(test-equal (t/hash-set 1) (t/conj (t/hash-set) 1))
-(test-equal (t/hash-set 1 2) (t/conj (t/hash-set) 1 2))
-(test-assert (not (equal? (t/hash-set) (t/conj (t/hash-set) 1))))
+(test-assert (clj= (t/hash-set 1) (t/conj (t/hash-set) 1)))
+(test-assert (clj= (t/hash-set 1 2) (t/conj (t/hash-set) 1 2)))
+(test-assert (not (clj= (t/hash-set) (t/conj (t/hash-set) 1))))
 
-(test-equal (t/hash-set 2) (t/disj (t/hash-set 1 2) 1))
-(test-equal (t/hash-set) (t/disj (t/hash-set 1 2) 1 2))
-(test-equal (t/hash-set) (t/disj (t/hash-set 1 2) 1 2 3))
+(test-assert (clj= (t/hash-set 2) (t/disj (t/hash-set 1 2) 1)))
+(test-assert (clj= (t/hash-set) (t/disj (t/hash-set 1 2) 1 2)))
+(test-assert (clj= (t/hash-set) (t/disj (t/hash-set 1 2) 1 2 3)))
 
 (test-eqv 0 (t/count (t/hash-set)))
 (test-eqv 1 (t/count (t/hash-set 1)))
 (test-eqv 2 (t/count (t/hash-set 1 2)))
 
-(test-equal (t/hash-set) (t/empty (t/hash-set 1 2 3)))
+(test-assert (clj= (t/hash-set) (t/empty (t/hash-set 1 2 3))))
 
 (test-assert (not (t/contains? (t/hash-set) 1)))
 (test-assert (t/contains? (t/hash-set 1) 1))

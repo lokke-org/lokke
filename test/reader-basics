@@ -16,7 +16,7 @@
 
 (use-modules
  ((lokke reader) #:prefix t/)
- ((lokke hash-map) #:select (hash-map))
+ ((lokke hash-map) #:select (clj= hash-map))
  ((lokke hash-set) #:select (hash-set))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke scm vector)
@@ -116,11 +116,11 @@
 
 (test-equal '() (t/read-string "()"))
 
-(test-equal (hash-map) (t/read-string "{}"))
-(test-equal (hash-map 1 2) (t/read-string "{1 2}"))
+(test-assert (clj= (hash-map) (t/read-string "{}")))
+(test-assert (clj= (hash-map 1 2) (t/read-string "{1 2}")))
 
-(test-equal (hash-set) (t/read-string "#{}"))
-(test-equal (hash-set 1) (t/read-string "#{1}"))
+(test-assert (clj= (hash-set) (t/read-string "#{}")))
+(test-assert (clj= (hash-set 1) (t/read-string "#{1}")))
 
 (test-equal (lokke-vector) (t/read-string "[]"))
 (test-equal (lokke-vector 1 2 3) (t/read-string "[1 2 3]"))
@@ -130,7 +130,7 @@
 
 (test-equal `(quote ,(lokke-vector)) (t/read-string "'[]"))
 (test-equal `(quote ,(hash-map)) (t/read-string "'{}"))
-(test-equal `(quote ,(hash-set)) (t/read-string "'#{}"))
+(test-assert (clj= `(quote ,(hash-set)) (t/read-string "'#{}")))
 
 
 ;;; Anonymous functions: #(foo %1)

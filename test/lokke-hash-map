@@ -16,7 +16,8 @@
 
 (use-modules
  ((lokke scm test-anything) #:select (tap-test-runner))
- ((lokke collection) #:select (count counted? first merge reduce second seq))
+ ((lokke collection)
+  #:select (clj= count counted? first merge reduce second seq))
  ((lokke hash-map) #:prefix t/)
  ((lokke base map-entry) #:select (key map-entry? val))
  ((srfi srfi-1) #:select (iota))
@@ -41,26 +42,26 @@
 
 (test-assert (counted? (t/hash-map)))
 
-(test-equal (t/hash-map) (t/hash-map))
-(test-equal (t/hash-map 1 2) (t/hash-map 1 2))
-(test-equal (t/hash-map 1 2 3 4) (t/hash-map 1 2 3 4))
-(test-assert (not (equal? (t/hash-map) (t/hash-map 1 2))))
+(test-assert (clj= (t/hash-map) (t/hash-map)))
+(test-assert (clj= (t/hash-map 1 2) (t/hash-map 1 2)))
+(test-assert (clj= (t/hash-map 1 2 3 4) (t/hash-map 1 2 3 4)))
+(test-assert (not (clj= (t/hash-map) (t/hash-map 1 2))))
 
-(test-equal (t/hash-map 1 2) (t/conj (t/hash-map) #(1 2)))
-(test-equal (t/hash-map 1 2 3 4) (t/conj (t/hash-map) #(1 2) #(3 4)))
+(test-assert (clj= (t/hash-map 1 2) (t/conj (t/hash-map) #(1 2))))
+(test-assert (clj= (t/hash-map 1 2 3 4) (t/conj (t/hash-map) #(1 2) #(3 4))))
 
-(test-assert (not (equal? (t/hash-map) (t/conj (t/hash-map) #(1 2)))))
+(test-assert (not (clj= (t/hash-map) (t/conj (t/hash-map) #(1 2)))))
 
-(test-equal (t/hash-map 3 4) (t/dissoc (t/hash-map 1 2 3 4) 1))
-(test-equal (t/hash-map) (t/dissoc (t/hash-map 1 2 3 4) 1 3))
-(test-equal (t/hash-map 3 4) (t/dissoc (t/hash-map 1 2 3 4) 1 9))
-(test-equal (t/hash-map) (t/dissoc (t/hash-map 1 2 3 4) 1 3 9))
+(test-assert (clj= (t/hash-map 3 4) (t/dissoc (t/hash-map 1 2 3 4) 1)))
+(test-assert (clj= (t/hash-map) (t/dissoc (t/hash-map 1 2 3 4) 1 3)))
+(test-assert (clj= (t/hash-map 3 4) (t/dissoc (t/hash-map 1 2 3 4) 1 9)))
+(test-assert (clj= (t/hash-map) (t/dissoc (t/hash-map 1 2 3 4) 1 3 9)))
 
 (test-eqv 0 (t/count (t/hash-map)))
 (test-eqv 1 (t/count (t/hash-map 1 2)))
 (test-eqv 2 (t/count (t/hash-map 1 2 3 4)))
 
-(test-equal (t/hash-map) (t/empty (t/hash-map 1 2)))
+(test-assert (clj= (t/hash-map) (t/empty (t/hash-map 1 2))))
 
 (test-assert (not (t/contains? (t/hash-map) 1)))
 (test-assert (t/contains? (t/hash-map 1 2) 1))
@@ -85,11 +86,11 @@
   (test-equal 3 (key (second s)))
   (test-equal 4 (val (second s))))
 
-(test-equal (t/hash-map 1 2 3 4)
-  (merge (t/hash-map 1 2) (t/hash-map 3 4)))
+(test-assert (clj= (t/hash-map 1 2 3 4)
+                   (merge (t/hash-map 1 2) (t/hash-map 3 4))))
 
-(test-equal (t/hash-map 1 2 3 4)
-  (merge (t/hash-map 1 9) (t/hash-map 1 2 3 4)))
+(test-assert (clj= (t/hash-map 1 2 3 4)
+                   (merge (t/hash-map 1 9) (t/hash-map 1 2 3 4))))
 
 (test-end)
 

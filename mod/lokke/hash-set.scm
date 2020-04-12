@@ -153,7 +153,7 @@
 (define-method (get (s <hash-set>) x not-found)
   (ref (set-fm s) x not-found))
 
-(define (hash-set-equal? s1 s2)
+(define (hash-set-= s1 s2)
   (let* ((h1 (set-fm s1))
          (h2 (set-fm s2))
          (exit (make-symbol "exit"))
@@ -172,10 +172,8 @@
       (lambda () (and (subset? h1 h2) (subset? h2 h1)))
       (lambda args #f))))
 
-(define-method (equal? (s1 <hash-set>) (s2 <hash-set>)) (hash-set-equal? s1 s2))
-
 ;; specialize this so that we'll bypass the generic <sequential> flavor
-(define-method (clj= (s1 <hash-set>) (s2 <hash-set>)) (hash-set-equal? s1 s2))
+(define-method (clj= (s1 <hash-set>) (s2 <hash-set>)) (hash-set-= s1 s2))
 
 ;; FIXME: add iterator to map?
 

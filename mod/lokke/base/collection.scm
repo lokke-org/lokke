@@ -253,7 +253,7 @@
            (if (eq? x sentinel)
                (eq? y sentinel)
                (and (not (eq? y sentinel))
-                    (equal? x y)
+                    (clj= x y)
                     (loop (next-x) (next-y))))))))
 
 (define-method (clj= (s <sequential>) (b <boolean>))
@@ -269,6 +269,8 @@
 (define-method (clj= (x <sequential>) (y <sequential>))
   (sequential= x y))
 
+;; FIXME: do any/all of our equal? specializations avoid changing the
+;; behavior for existing scheme types?
 (define-method (equal? (x <sequential>) (y <sequential>))
   (sequential= x y))
 

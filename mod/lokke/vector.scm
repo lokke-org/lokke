@@ -55,7 +55,6 @@
                           lokke-vector->list
                           lokke-vector-assoc
                           lokke-vector-conj
-                          lokke-vector-equal?
                           lokke-vector-length
                           lokke-vector-meta
                           lokke-vector-ref
@@ -76,7 +75,6 @@
                counted?
                empty
                empty?
-               equal?
                find
                first
                get
@@ -109,9 +107,17 @@
 (define-method (with-meta (m <lokke-vector>) (mdata <hash-map>))
   (lokke-vector-with-meta m mdata))
 
-;; specialize this so that we'll bypass the generic <sequential> flavor
+;; Specialize this to bypass the generic <sequential> flavor
 (define-method (clj= (v1 <lokke-vector>) (v2 <lokke-vector>))
-  (lokke-vector-equal? v1 v2))
+  (let ((n1 (lokke-vector-length v1))
+        (n2 (lokke-vector-length v2)))
+    (and (= n1 n2)
+         (let loop ((i 0))
+           (cond
+            ((= i n1) #t)
+            ((clj= (lokke-vector-ref v1 i) (lokke-vector-ref v2 i))
+             (loop (1+ i)))
+            (else #f))))))
 
 (define-method (compare (v1 <lokke-vector>) (v2 <lokke-vector>))
   (vector-compare compare v1 v2 lokke-vector-length lokke-vector-ref))
@@ -275,7 +281,6 @@
             (else #f))))))
 
 (define-method (clj= (v1 <subvec>) (v2 <subvec>)) (subvec-same? v2 v1 clj=))
-(define-method (equal? (v1 <subvec>) (v2 <subvec>)) (subvec-same? v2 v1 equal?))
 
 (define (subvec-vec-same? v1 v2 same?)
   (and (= (subvec-length v1)
@@ -294,8 +299,6 @@
 ;; Avoid the per-item generic overhead for these
 (define-method (clj= (v1 <subvec>) (v2 <lokke-vector>)) (subvec-vec-same? v1 v2 clj=))
 (define-method (clj= (v1 <lokke-vector>) (v2 <subvec>)) (subvec-vec-same? v2 v1 clj=))
-(define-method (equal? (v1 <subvec>) (v2 <lokke-vector>)) (subvec-vec-same? v1 v2 equal?))
-(define-method (equal? (v1 <lokke-vector>) (v2 <subvec>)) (subvec-vec-same? v2 v1 equal?))
 
 (define subvec-nth
   (match-lambda*

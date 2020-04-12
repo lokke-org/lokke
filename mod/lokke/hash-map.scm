@@ -71,7 +71,6 @@
                counted?
                dissoc
                empty
-               equal?
                get
                keys
                meta
@@ -207,7 +206,7 @@
 (define-method (get (m <hash-map>) x not-found)
   (ref (map-fm m) x not-found))
 
-(define (hash-map-equal? m1 m2)
+(define (hash-map-= m1 m2)
   (let* ((h1 (map-fm m1))
          (h2 (map-fm m2))
          (exit (make-symbol "exit"))
@@ -226,10 +225,8 @@
       (lambda () (and (subset? h1 h2) (subset? h2 h1)))
       (lambda args #f))))
 
-(define-method (equal? (m1 <hash-map>) (m2 <hash-map>)) (hash-map-equal? m1 m2))
-
 ;; specialize this so that we'll bypass the generic <sequential> flavor
-(define-method (clj= (m1 <hash-map>) (m2 <hash-map>)) (hash-map-equal? m1 m2))
+(define-method (clj= (m1 <hash-map>) (m2 <hash-map>)) (hash-map-= m1 m2))
 
 ;; FIXME: we might need to augment the data structure, but we should
 ;; be able to do better with respect to seq traversal.  Need similar

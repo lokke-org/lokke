@@ -16,6 +16,7 @@
 
 (use-modules
  ((lokke scm test-anything) #:select (tap-test-runner))
+ ((lokke collection) #:select (clj=))
  ((lokke hash-map) #:select (assoc hash-map))
  ((lokke scm atom) #:prefix t/)
  ((srfi srfi-64)
@@ -56,14 +57,15 @@
 (test-equal 2 (t/atom-swap! (t/atom 1) (lambda (v) (1+ v))))
 
 (test-equal #nil (t/atom-meta (t/atom 1)))
-(test-equal (hash-map) (t/atom-meta (t/atom 1 #:meta (hash-map))))
-(test-equal (hash-map 1 2) (t/atom-meta (t/atom 1 #:meta (hash-map 1 2))))
+(test-assert (clj= (hash-map) (t/atom-meta (t/atom 1 #:meta (hash-map)))))
+(test-assert (clj= (hash-map 1 2)
+                   (t/atom-meta (t/atom 1 #:meta (hash-map 1 2)))))
 
 (let ((a (t/atom 1 #:meta (hash-map 1 2))))
-  (test-equal (hash-map 1 2 3 4)
-    (t/atom-alter-meta! a assoc 3 4))
-  (test-equal (hash-map 1 2 3 4)
-    (t/atom-meta a)))
+  (test-assert (clj= (hash-map 1 2 3 4)
+                     (t/atom-alter-meta! a assoc 3 4)))
+  (test-assert (clj= (hash-map 1 2 3 4)
+                     (t/atom-meta a))))
 
 (test-end)
 

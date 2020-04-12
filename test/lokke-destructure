@@ -16,7 +16,7 @@
 
 (use-modules
  ((lokke scm test-anything) #:select (tap-test-runner))
- ((lokke collection) #:select (seq->scm-list))
+ ((lokke collection) #:select (clj= seq->scm-list))
  ((lokke base syntax) #:select ((let . let**)))
  ((lokke hash-map) #:select (hash-map))
  ((srfi srfi-1) #:select (iota))
@@ -113,10 +113,14 @@
           x))
 
  ;; :as
- (test-equal (hash-map #:x 1 #:y 2)
-   (let** ((/lokke/reader-hash-map x #:y #:as all) (hash-map #:x 1 #:y 2)) all))
- (test-equal (hash-map #:x 1 #:y 2)
-   (let** ((/lokke/reader-hash-map #:keys #(x) #:as all) (hash-map #:x 1 #:y 2)) all)))
+ (test-assert
+     (clj= (hash-map #:x 1 #:y 2)
+           (let** ((/lokke/reader-hash-map x #:y #:as all)
+                   (hash-map #:x 1 #:y 2)) all)))
+ (test-assert
+     (clj= (hash-map #:x 1 #:y 2)
+           (let** ((/lokke/reader-hash-map #:keys #(x) #:as all)
+                   (hash-map #:x 1 #:y 2)) all))))
 
 (test-end)
 
