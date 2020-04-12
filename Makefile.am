@@ -7,6 +7,8 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver
 
 EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
 
+man1_MANS = lokke.1
+
 AM_CFLAGS = \
   -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
   -fno-strict-aliasing

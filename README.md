@@ -14,8 +14,8 @@ For Clojure itself
 ------------------
 
 The Clojure dialect is currently available via `./lokke` which can run
-code or provide a REPL.  See [below](#getting-started) for further
-information.
+code, serve as a !# interpreter, or provide a REPL.  See
+[below](#getting-started) for further information.
 
 For a more Clojure oriented experience in Scheme
 ------------------------------------------------
@@ -102,6 +102,10 @@ Currently the Lokke repl *is* the Guile repl, with the initial
 language and environment set for Lokke, and so all of the Guile
 features should be available.  Though for now, `lokke` loads
 `~/.lokke_guile` (which must be Scheme code) rather than `~/.guile`.
+
+See `./lokke --help` or `man -l ./lokke.1` for additional information,
+or if `man -l` isn't available, perhaps something like `nroff -man
+lokke.1 | less`.
 
 Lokke expects all Clojure namespaces to be located in a lokke/ns/
 subdirectory of one of the directories specified by the Guile load

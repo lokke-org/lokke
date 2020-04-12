@@ -191,6 +191,8 @@ Currently Lokke handles equality by:
 TODO
 ----
 
+- Automatically update the version (and maybe date) in lokke.1.
+
 - Add `sorted-set-by` and `sorted-map-by` (and then update
   test/clojure-walk)..
 

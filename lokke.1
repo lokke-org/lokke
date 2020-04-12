@@ -1,0 +1,132 @@
+.\" The macros used below are those described in groff_man(7)
+.
+.TH lokke 1 2020-04-11 "0.0.1"
+.
+.SH NAME
+lokke \- a Clojure dialect for Guile
+.
+.SH SYNOPSIS
+.SY lokke
+.YS
+.SY lokke
+.RB { \-\-help | \-h | \-? }
+.YS
+.SY lokke
+.OP \-i file
+.OP \-e code
+.RB [ OPTION
+\&.\|.\|.\&]
+.YS
+.SY lokke
+.OP \-i file
+.OP \-e code
+.RB [ OPTION
+\&.\|.\|.\&]
+.B \-\-
+.RI [ arg
+\&.\|.\|.\&]
+.YS
+.SY lokke
+.B \-\-!#
+.YS
+.
+.SH DESCRIPTION
+Lokke is a Clojure dialect for Guile, and the primary lokke command
+may be run in a number of distinct modes.
+.P
+When no arguments are provided it presents a Read-Eval-Print-Loop
+(REPL) on the terminal for interactive use.
+.P
+Arguments after
+.B \-\-
+will not be examined and will be available via
+.B *command-line-args*
+in Clojure.
+.P
+The
+.B \-!#
+option allows lokke to act as a script interpreter.  See
+.B SCRIPT EVALUATION
+below for additional information.
+.
+.SH HELP
+.TP
+.BI \-\-help\fR,\ \fB\-h\fR,\ \fB\-?
+Show help and exit.
+.
+.SH OPTION
+.TP
+.BI \-i " file" \fR,\ \fB\-\-init " file"
+Execute code in file.
+.TP
+.BI \-e " code" \fR,\ \fB\-\-eval " code"
+Evaluate code, printing any values that are not nil or unspecified.
+.
+.SH SCRIPT EVALUATION
+In most cases, lokke scripts should begin like this:
+.P
+.RS
+.EX
+#!/path/to/lokke-0.0 --!#
+;; Place any additional lokke arguments as (roughly) EDN here.
+;; For the typical case:
+-i :this -- :args
+!#
+;; Place your Clojure code here, after the !#
+(prn :hello-world)
+\&.\|.\|.\&
+.EE
+.RE
+.P
+The
+.B \-\-!#
+argument will be replaced by the arguments in the "EDN" section, each
+of which must be a string, symbol, number, boolean, or nil, or one of
+the keywords
+.B :this
+or
+.B :args.
+.P
+Symbol, number, boolean, or nil arguments will be converted to
+strings,
+.B :this
+will be replaced with the path to the script itself (i.e. $0 in sh),
+and
+.B :args
+will be replaced with all of the arguments provided to the invocation
+of the script, (i.e. $@ in sh).  Without any EDN arguments, lokke will
+present a REPL.  That is, lokke will not actually run the script if
+not requested by
+.B -i :this
+or the equivalent.
+.P
+Note that the EDN argument text will begin with the character
+immediately after the exclamation point in
+.B \-\-#!
+no matter what it is (i.e. even if it is not whitespace).
+.P
+Among other reasons, this approach has been chosen for portability
+since the semantics and flexibility of #! directives varies across
+platforms.
+.P
+At the moment lokke is not a binary executable.  If the system
+requires #! interpreters to be binary executables, or if you'd like to
+locate lokke via the current PATH, you may be able to rely on env like
+this:
+.P
+.RS
+.EX
+#!/usr/bin/env lokke-0.0 --!#
+\&.\|.\|.\&
+.EE
+.RE
+.SH SEE ALSO
+.
+.IR guile (1),
+and for much more detail, the guile info pages (perhaps via M-x info
+in emacs, or "info guile")
+.P
+.UR https://github.com/edn-format/edn
+Extensible Data Notataion (EDN)
+.UE
+.AUTHORS
