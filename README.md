@@ -128,7 +128,7 @@ environment variable `LOKKE_HISTORY` if set, otherwise
 
 There is also a `./guile` wrapper which just runs Guile with the
 correct environment for Lokke (and which `./lokke` relies on).  It can
-be useful during developement, or if you would like to try out the
+be useful during development, or if you would like to try out the
 Scheme specific facilities:
 
     $ ./guile
@@ -167,9 +167,9 @@ Differences from Clojure/JVM (an incomplete list)
 * Various functions handle Scheme lists as they would Clojure
   lists, i.e. many collection and sequence operations, etc.
 * Multiple `:as` aliases are allowed in destructuring forms.
-* The numeric tower is Guile's (fairly sophisticated) numeric tower,
-  backed by GMP, and there is currently no distinction between
-  functions like `+'` and `+`, or `*'` and `*`, etc.
+* The numeric tower is Guile's numeric tower, backed by GMP, and there
+  is currently no distinction between functions like `+'` and `+`, or
+  `*'` and `*`, etc.
 * At the moment, `format` strings are Guile format strings, but we may
   want to alter or agument that, i.e. perhaps we'll want a formatter
   specifying print or pr format output, though for now pr(int)-str works
@@ -225,6 +225,7 @@ Differences from Clojure/JVM (an incomplete list)
 * In addition to nil, the `lokke` command's `-e` option doesn't print
   unspecified values (Guile's `*unspecified*`).
 * `lokke.io` is the parallel of `clojure.java.io`.
+* `lokke.shell` is the parallel of `clojure.java.shell`.
 * There is experimental support for `try/catch/finally` which maps
   very closely to Guile's underlying `catch/throw`, meaning that in
   addition to catching an `ex-info` exception via `(catch
@@ -333,8 +334,6 @@ Known Issues
 
 - *Many* things are still broken or incomplete.
 
-- No `rseq` yet.
-
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
 
@@ -343,7 +342,15 @@ Known Issues
 
 - atom semantics may not be completely right yet (see code).
 
-- quote is quoting /lokke/reader-vector too, e.g. (prn '[42])
+- Hashes have not been considered with any consistency yet, i.e. for
+  equality comparisons, etc., and should not be relied on.
+
+- To the extent that pairs are used right now (and they're currently
+  used for lists like `'(1 2 3)`), they don't support hashes or
+  metadata, and are not `counted?`.
+
+- Lazy sequences (i.e. via `<pair-seq>`) don't currently support
+  hashes and are not counted?.
 
 - The `foo.bar/baz` syntactic sugar doesn't work for Scheme modules
   from the ./lokke REPL.  I suspect it's using the Lokke reader to

@@ -249,6 +249,8 @@ TODO
 
 - Examine (srfi srfi-45) wrt lazy seqs.
 
+- Examine (srfi srfi-171) wrt transducers.
+
 - Remove vestigial bits from the reader (syntax, synquote, etc.?)
 
 - Investigate difference in repl wrt \`(foo \`()) (ignore the markdown
@@ -257,8 +259,7 @@ TODO
   tree-il level, or to add a new /lokke/reader-list, which might end
   up being desirable for other reasons.
 
-- Create clojure.edn, maybe some suitable File and/or
-  clojure.java.io, and clojure.java.shell shims, etc.
+- Create clojure.edn, maybe some suitable File shims, etc.
 
 - Contemplate eval-when -- do we have it where we need it, does it,
   and/or can it work reasonably from the Clojure side?
@@ -319,6 +320,10 @@ TODO
 
 - Finish fixing up the pr-related functions (prn, pr-str, etc.) and
   augment the tests.
+
+- What about pr vs print vs str?  On the JVM for example, prn falls
+  back to printing the class name pointer and str (.toString), but our
+  str is defined in terms of print...
 
 - Consider adding pr-str methods if the string port overhead becomes
   relevant.
