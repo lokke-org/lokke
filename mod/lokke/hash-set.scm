@@ -21,7 +21,9 @@
   #:use-module ((ice-9 control) #:select (call/ec))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base invoke) #:select (invoke))
-  #:use-module ((lokke collection)
+  #:use-module ((lokke base metadata) #:select (meta with-meta))
+  #:use-module ((lokke base util) #:select (require-nil))
+  #:use-module ((lokke base collection)
                 #:select (conj
                           cons
                           contains?
@@ -36,6 +38,7 @@
                           seq
                           seqable?))
   #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke hash-map) #:select (<hash-map>))
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (oop goops)
@@ -55,10 +58,12 @@
                empty
                get
                into
+               meta
                pr-on
                print-on
                seq
-               seqable?)
+               seqable?
+               with-meta)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: implement (lokke set) operations, here, or more generically
@@ -74,10 +79,23 @@
         result)))
 
 (define-class <hash-set> (<set>)
-  (internals #:init-keyword #:internals))
+  (internals #:init-keyword #:internals)
+  (meta #:init-keyword #:meta))
 
-(define-syntax-rule (make-set fm) (make <hash-set> #:internals fm))
-(define-syntax-rule (set-fm s) (slot-ref s 'internals))
+(define-inlinable (make-set fm meta)
+  (make <hash-set> #:internals fm #:meta meta))
+
+(define-inlinable (set-fm s) (slot-ref s 'internals))
+(define-inlinable (set-meta s) (slot-ref s 'meta))
+
+(define-method (meta (s <hash-set>)) (set-meta s))
+
+(define-method (with-meta (s <hash-set>) (mdata <boolean>))
+  (require-nil 'with-meta 2 mdata)
+  (make-set (set-fm s) mdata))
+
+(define-method (with-meta (s <hash-set>) (mdata <hash-map>))
+  (make-set (set-fm s) mdata))
 
 (define-method (get (s <hash-set>) x)
   (ref (set-fm s) x))
@@ -111,25 +129,32 @@
 
 (define (hash-set? x) (is-a? x <hash-set>))
 
-(define empty-hash-set
-  (make-set (make-fash #:hash hash/hash #:equal clj=)))
+(define empty-fash (make-fash #:hash hash/hash #:equal clj=))
+(define empty-hash-set (make-set empty-fash #nil))
+(define (empty-hash-set-w-meta data)
+  (if (eq? #nil data)
+      empty-hash-set
+      (make-set empty-fash data)))
 
 (define (set coll)
   (make-set (reduce (lambda (result x) (fash-set result x x))
                     (set-fm empty-hash-set)
-                    coll)))
+                    coll)
+            #nil))
 
 (define (hash-set . xs) (set xs))
 
 (define-method (conj (s <hash-set>) . xs)
   (make-set (reduce (lambda (result x) (fash-set result x x))
                     (set-fm s)
-                    xs)))
+                    xs)
+            (set-meta s)))
 
 (define-method (disj (s <hash-set>) . xs)
   (make-set (reduce (lambda (result x) (fash-set result x not-found))
                     (set-fm s)
-                    xs)))
+                    xs)
+            (set-meta s)))
 
 (define-method (count (x <hash-set>))
   (fash-fold (lambda (k v size) (if (eq? v not-found) size (1+ size)))
@@ -140,7 +165,7 @@
   #t)
 
 (define-method (empty (x <hash-set>))
-  empty-hash-set)
+  (empty-hash-set-w-meta (set-meta x)))
 
 ;; not-empty - generic default is correct
 

@@ -13,12 +13,23 @@
 
 (define-module (lokke transmogrify)
   #:use-module ((ice-9 pretty-print) #:select (pretty-print))
-  #:use-module ((lokke collection) #:select (seq? seq->scm-list))
+  #:use-module ((lokke reader literal)
+                #:select (reader-hash-map
+                          reader-hash-map-elts
+                          reader-hash-map-meta
+                          reader-hash-set
+                          reader-hash-set-elts
+                          reader-hash-set-meta
+                          reader-vector
+                          reader-vector-elts
+                          reader-vector-meta))
+  #:use-module ((lokke base collection) #:select (seq? seq->scm-list))
   #:use-module ((lokke hash-map) #:select (hash-map hash-map? kv-list))
   #:use-module ((lokke hash-set) #:select (hash-set? into set))
-  #:use-module ((lokke metadata) #:select (meta))
+  #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke scm vector)
                 #:select (lokke-vec lokke-vector? lokke-vector->list))
+  #:use-module ((lokke vector) #:select (meta with-meta))
   #:use-module (oop goops)
   #:export (clj-instances->literals
             literals->clj-instances
@@ -26,6 +37,9 @@
             preserve-meta-if-new!
             quote-empty-lists)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+;; Note that some of the null? checks here are doing dual duty for
+;; both nil and ().
 
 (define debug-transmogrify? #f)
 
@@ -41,7 +55,7 @@
 (define (preserve-meta-if-new! orig maybe-new)
   (cond
    ((eq? orig maybe-new) orig)
-   ((nil? (meta orig)) maybe-new)
+   ((nil? (meta orig)) maybe-new)  ;; FIXME: do we want to include '()?
    (else ((@@ (lokke metadata) with-meta) maybe-new (meta orig)))))
 
 (define (literals->clj-instances expr)
@@ -52,11 +66,16 @@
       ((null? expr) expr)
       ((list? expr)
        (case (car expr)
-         ((/lokke/reader-hash-set) (set (map convert (cdr expr))))
-         ((/lokke/reader-vector) (lokke-vec (map convert (cdr expr))))
+         ((/lokke/reader-vector)
+          (with-meta (lokke-vec (map convert (reader-vector-elts expr)))
+                     (convert (reader-vector-meta expr))))
          ((/lokke/reader-hash-map)
-          (apply hash-map (map convert (cdr expr))))
-         (else (map literals->clj-instances expr))))
+          (with-meta (apply hash-map (map convert (reader-hash-map-elts expr)))
+                     (convert (reader-hash-map-meta expr))))
+         ((/lokke/reader-hash-set)
+          (with-meta (set (map convert (reader-hash-set-elts expr)))
+                     (convert (reader-hash-set-meta expr))))
+         (else (map convert expr))))
       (else expr))))
   (convert expr))
 
@@ -68,10 +87,13 @@
       ((null? expr) expr)
       ((list? expr)
        (case (car expr)
-         ((/lokke/reader-hash-set) (list (map convert (cdr expr))))  ;; for srfi-1
-         ((/lokke/reader-vector) (apply vector (map convert (cdr expr))))
-         ((/lokke/reader-hash-map) (items->alist (map convert (cdr expr))))
-         (else (map literals->scm-instances expr))))
+         ((/lokke/reader-vector)
+          (apply vector (map convert (reader-vector-elts expr))))
+         ((/lokke/reader-hash-map)
+          (items->alist (map convert (reader-hash-map-elts expr))))
+         ((/lokke/reader-hash-set)  ;; list for srfi-1
+          (list (map convert (reader-hash-set-elts expr))))
+         (else (map convert expr))))
       (else expr))))
   (convert expr))
 
@@ -89,9 +111,15 @@
       ((boolean? expr) expr)
       ((pair? expr) (cons (convert (car expr)) (convert (cdr expr))))
       ;;((list? expr) (map convert expr))
-      ((lokke-vector? expr) `(/lokke/reader-vector ,@(map convert (lokke-vector->list expr))))
-      ((hash-map? expr) `(/lokke/reader-hash-map ,@(map convert (kv-list expr))))
-      ((hash-set? expr) `(/lokke/reader-hash-set ,@(into '() (map convert expr))))
+      ((lokke-vector? expr)
+       (apply reader-vector (convert (meta expr))
+              (map convert (lokke-vector->list expr))))
+      ((hash-map? expr)
+       (apply reader-hash-map (convert (meta expr))
+              (map convert (kv-list expr))))
+      ((hash-set? expr)
+       (apply reader-hash-set (convert (meta expr))
+              (into '() (map convert expr))))
       ((seq? expr)
        (map convert (seq->scm-list expr)))
       (else (error "Unexpected expression while uninstantiating literals:"

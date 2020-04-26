@@ -24,6 +24,7 @@
 (define-module (lokke base collection)
   #:version (0 0 0)
   #:use-module ((guile)
+                #:hide (peek)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base invoke) #:select (invoke))
@@ -53,6 +54,7 @@
             dissoc
             drop
             empty
+            empty?
             every?
             ffirst
             find
@@ -69,6 +71,7 @@
             nnext
             not-empty
             nth
+            pop
             reduce
             reduce-kv
             rest
@@ -86,7 +89,7 @@
             update-in
             vals)
   #:re-export (clj= invoke)
-  #:replace (apply assoc first list? merge)
+  #:replace (apply assoc first list? merge peek)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'cons)
@@ -613,3 +616,39 @@
        (if s
            (cons (first s) (apply concat (rest s) y seqs))
            (apply concat y seqs)))))))
+
+
+(define-method (empty? (coll <coll>))
+  (if (counted? coll)
+      (zero? (count coll))
+      (not (seq coll))))
+
+(define-method (empty? (v <vector>))
+  (zero? (vector-length v)))
+
+(define-method (empty? (v <list>))
+  (null? v))
+
+(define-method (empty? (v <sequential>))
+  (eq? #nil (seq v)))
+
+(define-method (empty? (v <null>))
+  #t)
+
+(define-method (empty? (v <pair>))
+  #f)
+
+(define-method (empty? (b <boolean>))
+  (require-nil 'empty? b)
+  #t)
+
+;; The jvm has a persistent stack interface...
+;; FIXME: improper lists, etc.  See DESIGN <pair>s TODO.
+
+(define-method (peek (x <boolean>)) (require-nil 'peek x) #nil)
+(define-method (peek (x <null>)) #nil)
+(define-method (peek (x <pair>)) (car x))
+
+(define-method (pop (x <boolean>)) (require-nil 'pop x) #nil)
+(define-method (pop (x <null>)) (error "cannot pop empty list"))
+(define-method (pop (x <pair>)) (cdr x))

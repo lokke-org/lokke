@@ -129,7 +129,7 @@
 ;;; quoting
 
 (test-equal `(quote ,(lokke-vector)) (t/read-string "'[]"))
-(test-equal `(quote ,(hash-map)) (t/read-string "'{}"))
+(test-assert (clj= `(quote ,(hash-map)) (t/read-string "'{}")))
 (test-assert (clj= `(quote ,(hash-set)) (t/read-string "'#{}")))
 
 

@@ -18,7 +18,7 @@
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
-  #:use-module ((lokke collection)
+  #:use-module ((lokke base collection)
                 #:select (<coll>
                           <seq>
                           <sequential>

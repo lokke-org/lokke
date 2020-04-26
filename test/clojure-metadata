@@ -1,6 +1,6 @@
 ":"; exec ./lokke -i "$0"  # -*-clojure-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -19,12 +19,47 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "vector"
+  (is (= nil (meta [])))
+  (is (= nil (meta (with-meta [] nil))))
+  (is (= {} (meta (with-meta [] {}))))
+  (is (= {:x 1} (meta (with-meta [] {:x 1}))))
+  (is (= {:x 1} (meta (conj (with-meta [] {:x 1}) 0 1))))
+
+  (is (= {:tag 'x} (meta ^x [])))
+  (is (= {:tag "x"} (meta ^"x" [])))
+  (is (= {:x true} (meta ^:x [])))
+  (is (= {:x :y} (meta ^{:x :y} [])))
+  (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} [])))
+  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} []))))
+
 (testing "hash-map"
   (is (= nil (meta {})))
   (is (= nil (meta (with-meta {} nil))))
   (is (= {} (meta (with-meta {} {}))))
   (is (= {:x 1} (meta (with-meta {} {:x 1}))))
-  (is (= {:x 1} (meta (assoc (with-meta {} {:x 1}) 0 1) ))))
+  (is (= {:x 1} (meta (assoc (with-meta {} {:x 1}) 0 1))))
+
+  (is (= {:tag 'x} (meta ^x {})))
+  (is (= {:tag "x"} (meta ^"x" {})))
+  (is (= {:x true} (meta ^:x {})))
+  (is (= {:x :y} (meta ^{:x :y} {})))
+  (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} {})))
+  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} {}))))
+
+(testing "hash-set"
+  (is (= nil (meta #{})))
+  (is (= nil (meta (with-meta #{} nil))))
+  (is (= {} (meta (with-meta #{} {}))))
+  (is (= {:x 1} (meta (with-meta #{} {:x 1}))))
+  (is (= {:x 1} (meta (conj (with-meta #{} {:x 1}) 0 1))))
+
+  (is (= {:tag 'x} (meta ^x #{})))
+  (is (= {:tag "x"} (meta ^"x" #{})))
+  (is (= {:x true} (meta ^:x #{})))
+  (is (= {:x :y} (meta ^{:x :y} #{})))
+  (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} #{})))
+  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} #{}))))
 
 (testing "variables"
   (def meta-test-var nil)

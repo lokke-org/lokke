@@ -23,9 +23,12 @@
   #:use-module ((lokke collection) #:select (empty? merge))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
-  #:use-module ((lokke hash-set) #:select (hash-set))
-  #:use-module ((lokke metadata) #:select (with-meta))
   #:use-module ((lokke ns) #:select (ns-aliases))
+  #:use-module ((lokke reader literal)
+                #:select (reader-hash-map?
+                          reader-vector
+                          reader-vector-elts
+                          with-reader-meta))
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
   #:use-module ((lokke transmogrify)
@@ -210,7 +213,7 @@
                         (if rst
                             (append arglist (list '& rst))
                             arglist))))
-        `(fn (/lokke/reader-vector ,@arglist) ,expanded))))
+        `(fn ,(apply reader-vector #nil arglist) ,expanded))))
 
   (preserve-meta-if-new!  ;; currently unnecessary
    expr
@@ -319,19 +322,24 @@
       (let ((expr (car lst)))
         (if (and (pair? expr) (eq? '/lokke/reader-meta (car expr)))
             ;; For now, assume the meta expr is valid
-            (let ((m (cdr expr)))
+            (let ((m (cadr expr)))
               (cond
                ((keyword? m)
-                (loop (cdr lst) (merge (hash-map m #t) pending-meta) result))
-               ((or (symbol? m) (string? m))
-                ;; FIXME: why does tag: here and further below cause this:
-                ;;   In procedure module-lookup: Unbound variable: #{tag:}#
-                ;; wonder if lokke-reader.c has some remaining
-                ;; overlapping state with guile's reader...  (Still a
-                ;; problem?)
-                (loop (cdr lst) (merge (hash-map #:tag m) pending-meta) result))
-               ((and (pair? m) (eq? '/lokke/reader-hash-map (car m)))
-                (loop (cdr lst) (merge m pending-meta) result))
+                (loop (cdr lst)
+                      (merge (hash-map m #t) pending-meta)
+                      result))
+               ((string? m)
+                (loop (cdr lst)
+                      (merge (hash-map #:tag m) pending-meta)
+                      result))
+               ((symbol? m)
+                (loop (cdr lst)
+                      (merge (hash-map #:tag `(quote ,m)) pending-meta)
+                      result))
+               ((reader-hash-map? m)
+                (loop (cdr lst)
+                      (merge (literals->clj-instances m) pending-meta)
+                      result))
                (else
                 (error (format #f "Unexpected metadata type ~s for:"
                                (class-of m))
@@ -342,7 +350,7 @@
                     (hash-map)
                     (cons (if (empty? pending-meta)
                               x
-                              (with-meta pending-meta x))
+                              (with-reader-meta x pending-meta))
                           result))))))
      (else
       (error "Argument must be a list:" lst)))))
@@ -370,7 +378,7 @@
      ((list? selected)
       (case (car selected)
         ;; Clojure/JVM only allows implementers of List interface
-        ((/lokke/reader-vector) (cdr selected))
+        ((/lokke/reader-vector) (reader-vector-elts selected))
         (else selected)))
      (else
       (error (format #f "Improper splice in #?@~s" reader-cond)))))
@@ -457,9 +465,10 @@
          ((or (symbol? m) (string? m))
           (loop (read-conditionally port)
                 (merge (hash-map #:tag m) pending-meta)))
-         ((and (pair? m) (eq? '/lokke/reader-hash-map (car m)))
+         ((reader-hash-map? m)
           (loop (read-conditionally port)
-                (merge (apply hash-map (cdr m)) pending-meta)))
+                (merge (literals->clj-instances m)
+                       pending-meta)))
          (else
           (error (format #f "Unexpected metadata type ~s for:" (class-of m))
                  m)))))
@@ -483,7 +492,7 @@
                   (format (current-error-port) "reader finishing up: ~s\n" result)))
              (result (if (empty? pending-meta)
                          result
-                         (with-meta result pending-meta))))
+                         (with-reader-meta result pending-meta))))
         (when debug-reader?
           (format (current-error-port) "reader returning: ~s\n" result))
         result)))))

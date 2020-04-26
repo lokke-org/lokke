@@ -197,9 +197,8 @@ Differences from Clojure/JVM (an incomplete list)
 * `(alias ...)` calls only take full effect at the end of the
   enclosing top level form (because at the moment, the compiler works
   from a snapshot of the alias map, cf. `rewrite-il-calls`).
-* Metadata support is very limited.  It currently only works for vars,
-  namespaces, and atoms.
-* Reader metadata support is evem more limited.
+* Metadata support is limited: vectors, hash-sets, and hash-maps, vars,
+  namespaces, and atoms are supported, lists and symbols are not.
 * Dynamic variables must be declared via `(defdyn name init-expr)`
   rather than via metadata, and they are always inherited by
   sub-threads, unlike on the JVM, where only some forms provide

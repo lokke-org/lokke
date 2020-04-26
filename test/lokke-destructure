@@ -59,16 +59,16 @@
 
 (test-group
  "reader vectors"
- (test-equal #nil (let** ((/lokke/reader-vector x) #()) x))
- (test-equal '(#nil #nil) (let** ((/lokke/reader-vector x y) #()) (list x y)))
- (test-equal 1 (let** ((/lokke/reader-vector x) #(1 2)) x))
- (test-equal '(1 2) (let** ((/lokke/reader-vector x y) #(1 2)) (list x y)))
- (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector & more) #(1 2)) more)))
- (test-equal 1 (let** ((/lokke/reader-vector x & more) #(1 2)) x))
- (test-equal '(2) (seq->scm-list (let** ((/lokke/reader-vector x & more) #(1 2)) more)))
+ (test-equal #nil (let** ((/lokke/reader-vector #nil x) #()) x))
+ (test-equal '(#nil #nil) (let** ((/lokke/reader-vector #nil x y) #()) (list x y)))
+ (test-equal 1 (let** ((/lokke/reader-vector #nil x) #(1 2)) x))
+ (test-equal '(1 2) (let** ((/lokke/reader-vector #nil x y) #(1 2)) (list x y)))
+ (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector #nil & more) #(1 2)) more)))
+ (test-equal 1 (let** ((/lokke/reader-vector #nil x & more) #(1 2)) x))
+ (test-equal '(2) (seq->scm-list (let** ((/lokke/reader-vector #nil x & more) #(1 2)) more)))
  ;; :as
- (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector x #:as all) #(1 2)) all)))
- (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector x & more #:as all) #(1 2)) all))))
+ (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector #nil x #:as all) #(1 2)) all)))
+ (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector #nil x & more #:as all) #(1 2)) all))))
 
 (test-group
  "destructuring seq values"
@@ -77,49 +77,49 @@
  (test-equal 1 (let** (#(x) '(1 2)) x))
  (test-equal '(2) (seq->scm-list (let** (#(x & more) #(1 2)) more)))
  ;; via map destructuring
- (test-equal #nil (let** ((/lokke/reader-hash-map #:keys #(x)) #nil) x))
- (test-equal #nil (let** ((/lokke/reader-hash-map #:keys #(x)) '()) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map #:keys #(x)) '(#:x 1)) x)))
+ (test-equal #nil (let** ((/lokke/reader-hash-map #nil #:keys #(x)) #nil) x))
+ (test-equal #nil (let** ((/lokke/reader-hash-map #nil #:keys #(x)) '()) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil #:keys #(x)) '(#:x 1)) x)))
 
 (test-group
  "reader maps"
 
  ;; {#:x y}
- (test-equal #nil (let** ((/lokke/reader-hash-map x :y) (hash-map)) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map x y) (hash-map 'y 1)) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map x #:y) (hash-map #:y 1)) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map x "y") (hash-map "y" 1)) x))
+ (test-equal #nil (let** ((/lokke/reader-hash-map #nil x :y) (hash-map)) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil x y) (hash-map 'y 1)) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil x #:y) (hash-map #:y 1)) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil x "y") (hash-map "y" 1)) x))
 
  ;; {#:keys [...] #:syms [...] #:strs [...]}
- (test-equal #nil (let** ((/lokke/reader-hash-map #:keys #(x)) (hash-map)) x))
- (test-equal #nil (let** ((/lokke/reader-hash-map #:syms #(x)) (hash-map)) x))
- (test-equal #nil (let** ((/lokke/reader-hash-map #:strs #(x)) (hash-map)) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map #:keys #(x)) (hash-map #:x 1)) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map #:syms #(x)) (hash-map 'x 1)) x))
- (test-equal 1 (let** ((/lokke/reader-hash-map #:strs #(x)) (hash-map "x" 1)) x))
+ (test-equal #nil (let** ((/lokke/reader-hash-map #nil #:keys #(x)) (hash-map)) x))
+ (test-equal #nil (let** ((/lokke/reader-hash-map #nil #:syms #(x)) (hash-map)) x))
+ (test-equal #nil (let** ((/lokke/reader-hash-map #nil #:strs #(x)) (hash-map)) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil #:keys #(x)) (hash-map #:x 1)) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil #:syms #(x)) (hash-map 'x 1)) x))
+ (test-equal 1 (let** ((/lokke/reader-hash-map #nil #:strs #(x)) (hash-map "x" 1)) x))
 
  ;; :or
  (test-equal #nil
-   (let** ((/lokke/reader-hash-map #:keys #(x) #:or (/lokke/reader-hash-map))
+   (let** ((/lokke/reader-hash-map #nil #:keys #(x) #:or (/lokke/reader-hash-map #nil))
            (hash-map))
           x))
  (test-equal 1
-   (let** ((/lokke/reader-hash-map #:keys #(x) #:or (/lokke/reader-hash-map x 1))
+   (let** ((/lokke/reader-hash-map #nil #:keys #(x) #:or (/lokke/reader-hash-map #nil x 1))
            (hash-map))
           x))
  (test-equal '(0)
-   (let** ((/lokke/reader-hash-map #:keys #(x) #:or (/lokke/reader-hash-map x (iota 1)))
+   (let** ((/lokke/reader-hash-map #nil #:keys #(x) #:or (/lokke/reader-hash-map #nil x (iota 1)))
            (hash-map))
           x))
 
  ;; :as
  (test-assert
      (clj= (hash-map #:x 1 #:y 2)
-           (let** ((/lokke/reader-hash-map x #:y #:as all)
+           (let** ((/lokke/reader-hash-map #nil x #:y #:as all)
                    (hash-map #:x 1 #:y 2)) all)))
  (test-assert
      (clj= (hash-map #:x 1 #:y 2)
-           (let** ((/lokke/reader-hash-map #:keys #(x) #:as all)
+           (let** ((/lokke/reader-hash-map #nil #:keys #(x) #:as all)
                    (hash-map #:x 1 #:y 2)) all))))
 
 (test-end)

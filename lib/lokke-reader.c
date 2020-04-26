@@ -406,11 +406,13 @@ scm_read_sexp (scm_t_wchar chr, int list_for_curly, SCM port, scm_t_read_opts *o
     switch (c)
       {
       case ')': return SCM_EOL; break;
-      case ']': return scm_list_1 (lokke_sym_reader_vector);; break;
+      case ']':
+        return scm_list_2 (lokke_sym_reader_vector, SCM_ELISP_NIL);
+        break;
       case '}':
         if (list_for_curly)
           return SCM_EOL;
-        return scm_cons(lokke_sym_reader_hash_map, SCM_EOL);
+        return scm_cons2(lokke_sym_reader_hash_map, SCM_ELISP_NIL, SCM_EOL);
         break;
       default:
         scm_i_input_error (FUNC_NAME, port,
@@ -443,10 +445,12 @@ scm_read_sexp (scm_t_wchar chr, int list_for_curly, SCM port, scm_t_read_opts *o
 
   switch (start_char)
     {
-    case '[': ans = scm_cons(lokke_sym_reader_vector, ans); break;
+    case '[':
+      ans = scm_cons2(lokke_sym_reader_vector, SCM_ELISP_NIL, ans);
+      break;
     case '{':
       if (!list_for_curly)
-        ans = scm_cons(lokke_sym_reader_hash_map, ans);
+        ans = scm_cons2(lokke_sym_reader_hash_map, SCM_ELISP_NIL, ans);
       break;
     }
 
@@ -1384,7 +1388,7 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
     case '{':
       {
         SCM exp = scm_read_sexp (chr, 1, port, opts);
-        return scm_cons(lokke_sym_reader_hash_set, exp);
+        return scm_cons2(lokke_sym_reader_hash_set, SCM_ELISP_NIL, exp);
       }
     case '!':
       return (scm_read_shebang (chr, port, opts));

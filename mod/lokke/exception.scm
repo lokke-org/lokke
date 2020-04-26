@@ -209,7 +209,7 @@
   ;; Actually accepts either a list or lokke-vector of bindings.
   (lambda (x)
     (syntax-case x ()
-      ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta binding ...) body ...)  (vec-tag? #'vec-tag)
        #'(with-open (binding ...) body ...))
       ((_ (resource value binding ...) body ...)
        #'(let (resource value)
@@ -235,7 +235,7 @@
   ;; Actually accepts either a list or lokke-vector of bindings.
   (lambda (x)
     (syntax-case x ()
-      ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta binding ...) body ...)  (vec-tag? #'vec-tag)
        #'(with-final (binding ...) body ...))
       ((_ (resource value #:always action binding ...) body ...)
        #'(let (resource value)

@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -49,6 +49,7 @@
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
   #:use-module ((lokke base util)
                 #:select (global-identifier? map-tag? pairify vec-tag?))
+  #:use-module ((lokke reader literal) #:select (reader-vector?))
   #:use-module (oop goops)
   #:re-export (binding defdyn defdynloc)
   #:export (->
@@ -144,7 +145,7 @@
                 (syntax->datum `(let* ,bindings ,@body)))
          result))
     (syntax-case x ()
-      ((_ (vec-tag binding ...) body ...)  (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta binding ...) body ...)  (vec-tag? #'vec-tag)
        (expand #'(binding ...) #'(body ...)))
       ;; Lists of bindings
       ((_ ()) #nil)
@@ -187,7 +188,7 @@
 (define-syntax if-let
   (lambda (x)
     (syntax-case x ()
-      ((_ (vec-tag var test) body ...) (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta var test) body ...) (vec-tag? #'vec-tag)
        #'(if-let (var test) body ...))
       ((_ (var test) then)
        #'(if-let (var test) then #nil))
@@ -200,7 +201,7 @@
 (define-syntax when-let
   (lambda (x)
     (syntax-case x ()
-      ((_ (vec-tag var test) body ...) (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta var test) body ...) (vec-tag? #'vec-tag)
        #'(when-let (var test) body ...))
       ((_ (var test)) #'(begin test #nil))
       ((_ (var test) body ...) #'(if-let (var test) (begin #nil body ...))))))
@@ -230,7 +231,7 @@
     ;; Note that both clauses have to have the recur literal -- was
     ;; very confusing before realizing that....
     (syntax-case x ()
-      ((_ (vec-tag binding ...) body ...) (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta binding ...) body ...) (vec-tag? #'vec-tag)
        (expand x #'(binding ...) #'(body ...)))
       ((_ (binding ...) body ...)
        (expand x #'(binding ...) #'(body ...))))))
@@ -238,7 +239,7 @@
 (define-syntax dotimes
   (lambda (x)
     (syntax-case x ()
-      ((dotimes (vec-tag var n) body ...) (vec-tag? #'vec-tag)
+      ((dotimes (vec-tag meta var n) body ...) (vec-tag? #'vec-tag)
        #'(dotimes (var n) body ...))
       ((dotimes (var n)) #nil)
       ((dotimes (var n) body ...)
@@ -311,9 +312,7 @@
     (define (single-arity? args-syn)
       (let* ((args (syntax->datum args-syn)))
         (or (vector? args)
-            (and (list? args)
-                 (not (null? args))
-                 (eq? '/lokke/reader-vector (car args))))))
+            (reader-vector? args))))
     (define (single-arity context args body)
       (define (expand args body)
         (if (null? body)
@@ -323,9 +322,9 @@
               #`(letrec ((recur #,(make-fn args body)))
                   recur))))
       (syntax-case args (&)
-        ((vec-tag arg ... & rst) (vec-tag? #'vec-tag)
+        ((vec-tag meta arg ... & rst) (vec-tag? #'vec-tag)
          (expand #'(arg ... . rst) body))
-        ((vec-tag arg ...) (vec-tag? #'vec-tag)
+        ((vec-tag meta arg ...) (vec-tag? #'vec-tag)
          (expand #'(arg ...) body))
         (#(arg ... & rst) (expand #'(arg ... . rst) body))
         (#(arg ...) (expand #'(arg ...) body))))
@@ -339,9 +338,9 @@
                          (recur #,(make-fn args body)))
                   recur))))
       (syntax-case args (&)
-        ((vec-tag arg ... & rst) (vec-tag? #'vec-tag)
+        ((vec-tag meta arg ... & rst) (vec-tag? #'vec-tag)
          (expand #'(arg ... . rst) body))
-        ((vec-tag arg ...) (vec-tag? #'vec-tag)
+        ((vec-tag meta arg ...) (vec-tag? #'vec-tag)
          (expand #'(arg ...) body))
         (#(arg ... & rst) (expand #'(arg ... . rst) body))
         (#(arg ...) (expand #'(arg ...) body))))
@@ -354,9 +353,9 @@
         (define (add-method-for-arity arity)
           (syntax-case arity (&)
             ;; Always put & patterns first
-            (((vec-tag arg ... & rst) body ...) (vec-tag? #'vec-tag)
+            (((vec-tag meta arg ... & rst) body ...) (vec-tag? #'vec-tag)
              (method-adder #'recur #'(arg ... . rst) #'(body ...)))
-            (((vec-tag arg ...) body ...) (vec-tag? #'vec-tag)
+            (((vec-tag meta arg ...) body ...) (vec-tag? #'vec-tag)
              (method-adder #'recur #'(arg ...) #'(body ...)))
             ((#(arg ... & rst) body ...)
              (method-adder #'recur #'(arg ... . rst) #'(body ...)))
@@ -372,9 +371,9 @@
         (define (add-method-for-arity arity)  ;; FIXME: identical to above
           (syntax-case arity (&)
             ;; Always put & patterns first
-            (((vec-tag arg ... & rst) body ...) (vec-tag? #'vec-tag)
+            (((vec-tag meta arg ... & rst) body ...) (vec-tag? #'vec-tag)
              (method-adder #'recur #'(arg ... . rst) #'(body ...)))
-            (((vec-tag arg ...) body ...) (vec-tag? #'vec-tag)
+            (((vec-tag meta arg ...) body ...) (vec-tag? #'vec-tag)
              (method-adder #'recur #'(arg ...) #'(body ...)))
             ((#(arg ... & rst) body ...)
              (method-adder #'recur #'(arg ... . rst) #'(body ...)))
@@ -416,19 +415,19 @@
   (lambda (x)
     (syntax-case x ()
       ;; doc and attrs
-      ((_ name doc (map-tag attr ...) expr ...)
+      ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
        #'(begin
            (def name doc (fn expr ...))
            (alter-meta! (module-variable (current-module) 'name)
-                        (lambda (prev) (map-tag attr ...)))
+                        (lambda (prev) (map-tag meta attr ...)))
            (var name)))
       ;; just attrs
-      ((_ name (map-tag attr ...) expr ...) (map-tag? #'map-tag)
+      ((_ name (map-tag meta attr ...) expr ...) (map-tag? #'map-tag)
        #'(begin
            (def name (fn expr ...))
            (alter-meta! (module-variable (current-module) 'name)
-                        (lambda (prev) (map-tag attr ...)))
+                        (lambda (prev) (map-tag meta attr ...)))
            (var name)))
       ;; just doc
       ((_ name doc expr ...) (string? (syntax->datum #'doc))
@@ -445,7 +444,7 @@
 (define-syntax %doseq
   (lambda (x)
     (syntax-case x ()
-      ((_ (vec-tag exp ...) body ...)  (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta exp ...) body ...)  (vec-tag? #'vec-tag)
        #'(%doseq (exp ...) body ...))
       ((_ (#:let bindings exp ...) body ...)
        #'(let** bindings (%doseq (exp ...) body ...)))
@@ -477,7 +476,7 @@
 (define-syntax %for
   (lambda (x)
     (syntax-case x ()
-      ((_ terminator inner (vec-tag exp ...) body ...)  (vec-tag? #'vec-tag)
+      ((_ terminator inner (vec-tag meta exp ...) body ...)  (vec-tag? #'vec-tag)
        #'(%for terminator inner (exp ...) body ...))
       ((_ terminator inner (#:let bindings exp ...) body ...)
        #'(let** bindings (%for terminator inner (exp ...) body ...)))

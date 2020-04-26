@@ -15,7 +15,7 @@
   #:version (0 0 0)
   #:use-module ((lokke base collection) #:select (<coll> get))
   #:use-module ((lokke base invoke) #:select (invoke))
-  #:use-module ((lokke collection) #:select (contains? count every? seq))
+  #:use-module ((lokke base collection) #:select (contains? count every? seq))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module (oop goops)
   #:export (<set>

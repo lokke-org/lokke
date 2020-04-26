@@ -31,9 +31,12 @@
                           cond
                           cond-expand
                           cons
+                          cons*
                           datum->syntax
                           define
                           define-syntax
+                          define-syntax-rule
+                          eq?
                           error
                           format
                           lambda
@@ -53,9 +56,15 @@
                           unsyntax-splicing
                           use-modules))
   #:use-module ((lokke ns) #:select (ns))
+  #:use-module ((lokke metadata) #:select (with-meta))
+  #:use-module ((lokke reader literal)
+                #:select (reader-hash-map-elts
+                          reader-hash-set-elts
+                          reader-vector-elts))
   #:use-module ((srfi srfi-1) #:select (append-map take))
   #:export (/lokke/reader-hash-map
             /lokke/reader-hash-set
+            /lokke/reader-meta
             /lokke/reader-vector
             syntax-quote)
   #:re-export (ns)
@@ -77,9 +86,12 @@
      ((null? expr) expr)
      ((list? expr)
       (case (car expr)
-        ((/lokke/reader-hash-map) (cons (%scm-quote hash-map) (map convert (cdr expr))))
-        ((/lokke/reader-hash-set) (cons (%scm-quote hash-set) (map convert (cdr expr))))
-        ((/lokke/reader-vector) (cons (%scm-quote vector) (map convert (cdr expr))))
+        ((/lokke/reader-vector)
+         (cons (%scm-quote vector) (map convert (reader-vector-elts expr))))
+        ((/lokke/reader-hash-map)
+         (cons (%scm-quote hash-map) (map convert (reader-hash-map-elts expr))))
+        ((/lokke/reader-hash-set)
+         (cons (%scm-quote hash-set) (map convert (reader-hash-set-elts expr))))
         (else (map convert-for-public-message expr))))
      (else expr)))
   (convert expr))
@@ -94,18 +106,18 @@
 ;; and hash-set (to avoid circular references via ns, etc.), we could
 ;; just use-module above and avoid needing the direct @ refs here.
 
-(define-syntax /lokke/reader-hash-map
-  (syntax-rules ()
-    ((_ x ...) ((@ (lokke hash-map) hash-map) x ...))))
+(define-syntax-rule (/lokke/reader-hash-map meta exp ...)
+  (with-meta ((@ (lokke hash-map) hash-map) exp ...) meta))
 
-(define-syntax /lokke/reader-hash-set
-  (syntax-rules ()
-    ((_ x ...) ((@ (lokke hash-set) hash-set) x ...))))
+(define-syntax-rule (/lokke/reader-hash-set meta exp ...)
+  (with-meta ((@ (lokke hash-set) hash-set) exp ...) meta))
 
-(define-syntax /lokke/reader-vector
-  (syntax-rules ()
-    ((_ x ...) ((@ (lokke vector) vector) x ...))))
+(define-syntax-rule (/lokke/reader-vector meta exp ...)
+  (with-meta ((@ (lokke vector) vector) exp ...) meta))
 
+(define-syntax-rule (/lokke/reader-meta x ...)
+  (warn (format #f "Ignoring metadata in unsupported position: ~s"
+                '(/lokke/reader-meta x ...))))
 
 (define-syntax quote
   ;; Note that ~ and ~@ (i.e. unquote and unquote-splicing) still
@@ -119,14 +131,25 @@
                     /lokke/reader-hash-set
                     /lokke/reader-vector)
 
-      ((_ (/lokke/reader-vector exp ...))
-       #`(/lokke/reader-vector #,@(map (lambda (e) #`(quote #,e)) #'(exp ...))))
+      ((_ (/lokke/reader-vector meta exp ...))
+       #`(/lokke/reader-vector #,@(map (lambda (e) #`(quote #,e)) #'(meta exp ...))))
 
-      ((_ (/lokke/reader-hash-map exp ...))
-       #`(/lokke/reader-hash-map #,@(map (lambda (e) #`(quote #,e)) #'(exp ...))))
+      ((_ (/lokke/reader-hash-map meta exp ...))
+       #`(/lokke/reader-hash-map #,@(map (lambda (e) #`(quote #,e)) #'(meta exp ...))))
 
-      ((_ (/lokke/reader-hash-set exp ...))
-       #`(/lokke/reader-hash-set #,@(map (lambda (e) #`(quote #,e)) #'(exp ...))))
+      ((_ (/lokke/reader-hash-set meta exp ...))
+       #`(/lokke/reader-hash-set #,@(map (lambda (e) #`(quote #,e)) #'(meta exp ...))))
+
+      ((_ (/lokke/reader-vector))
+       (synerr "quote" x "internal error, reader vector missing argument"))
+      ((_ (/lokke/reader-hash-map))
+       (synerr "quote" x "internal error, reader hash-map missing argument"))
+      ((_ (/lokke/reader-hash-set))
+       (synerr "quote" x "internal error, reader hash-set missing argument"))
+
+      ;; Explicitly match #nil, so it doesn't match (exp ...) below.
+      ((_ nil) (eq? #nil (syntax->datum #'nil))
+       #nil)
 
       ((_ (exp ...)) #`(list #,@(map (lambda (e) #`(quote #,e)) #'(exp ...))))
 
@@ -150,7 +173,7 @@
       (cond
        ((null? rest) '())
        ((null? (cdr rest)) (error "Can't pairify odd length list" exps))
-       (else (cons (cons rvec-syn (take rest 2))
+       (else (cons (cons* rvec-syn #nil (take rest 2))
                    (loop (cddr rest))))))))
 
 (define-syntax syntax-quote
@@ -170,32 +193,72 @@
                             unquote
                             unquote-splicing)
 
-        ((unquote) (synerr 'unquote x "unquote: no arguments"))
+        ((unquote) (synerr "unquote" x "no arguments"))
         ((unquote exp) #'(exp))
 
-        ((unquote-splicing) (synerr 'unquote-splicing x "unquote: no arguments"))
-        ((unquote-splicing (/lokke/reader-vector exp ...)) #'(exp ...))
-        ((unquote-splicing (/lokke/reader-hash-set exp ...)) #'(exp ...))
+        ((unquote-splicing) (synerr "unquote-splicing" x "no arguments"))
 
-        ((unquote-splicing (/lokke/reader-hash-map exp ...))
+        ((unquote-splicing (/lokke/reader-vector meta exp ...)) #'(exp ...))
+
+        ((unquote-splicing (/lokke/reader-hash-map meta exp ...))
          (pairify-map-entries #'sub-syn #'(exp ...)))
+
+        ((unquote-splicing (/lokke/reader-hash-set meta exp ...)) #'(exp ...))
 
         ((unquote-splicing exp) #'(exp))
 
-        ((/lokke/reader-vector exp ...)
+
+        ((/lokke/reader-vector nil exp ...) (eq? #nil (syntax->datum #'nil))
+         #`(/lokke/reader-vector
+            #nil
+            #,@(map (lambda (e) #`(syntax-quote #,e))
+                    #'(exp ...))))
+
+        ((/lokke/reader-vector (/lokke/reader-hash-map kvs ...) exp ...)
          #`(/lokke/reader-vector
             #,@(map (lambda (e) #`(syntax-quote #,e))
+                    #'((/lokke/reader-hash-map kvs ...) exp ...))))
+
+        ((/lokke/reader-vector)
+         (synerr "syntax-quote" x
+                 "internal error, reader vector missing argument"))
+
+
+        ((/lokke/reader-hash-map nil exp ...) (eq? #nil (syntax->datum #'nil))
+         #`(/lokke/reader-hash-map
+            #nil
+            #,@(map (lambda (e) #`(syntax-quote #,e))
                     #'(exp ...))))
 
-        ((/lokke/reader-hash-map exp ...)
+        ((/lokke/reader-hash-map (/lokke/reader-hash-map kvs ...) exp ...)
          #`(/lokke/reader-hash-map
             #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'(exp ...))))
+                    #'((/lokke/reader-hash-map kvs ...) exp ...))))
 
-        ((/lokke/reader-hash-set exp ...)
+        ((/lokke/reader-hash-map)
+         (synerr "syntax-quote" x
+                 "internal error, reader hash-map missing argument"))
+
+
+        ((/lokke/reader-hash-set nil exp ...) (eq? #nil (syntax->datum #'nil))
          #`(/lokke/reader-hash-set
+            #nil
             #,@(map (lambda (e) #`(syntax-quote #,e))
                     #'(exp ...))))
+
+        ((/lokke/reader-hash-set (/lokke/reader-hash-map kvs ...) exp ...)
+         #`(/lokke/reader-hash-set
+            #,@(map (lambda (e) #`(syntax-quote #,e))
+                    #'((/lokke/reader-hash-map kvs ...) exp ...))))
+
+        ((/lokke/reader-hash-set)
+         (synerr "syntax-quote" x
+                 "internal error, reader hash-set missing argument"))
+
+
+        ;; Explicitly match #nil, so it doesn't match (exp ...) below.
+        (nil (eq? #nil (syntax->datum #'nil))
+         (list #nil))
 
         ((exp ...)
          #`((list
@@ -211,12 +274,12 @@
                     unquote
                     unquote-splicing)
 
-      ((_ (unquote)) (synerr 'unquote x "no arguments"))
+      ((_ (unquote)) (synerr "unquote" x "no arguments"))
       ((_ (unquote exp)) #'exp)
 
-      ((_ (unquote-splicing)) (synerr 'unquotes-splicing x "no arguments"))
+      ((_ (unquote-splicing)) (synerr "unquotes-splicing" x "no arguments"))
       ((_ (unquote-splicing exp ...))
-       (synerr 'unquote-splicing x "not inside list"))
+       (synerr "unquote-splicing" x "not inside list"))
 
       ((_ (/lokke/reader-vector exp ...))
        #`(/lokke/reader-vector #,@(append-map synquote #'(exp ...))))
@@ -226,6 +289,10 @@
 
       ((_ (/lokke/reader-hash-set exp ...))
        #`(/lokke/reader-hash-set #,@(append-map synquote #'(exp ...))))
+
+      ;; Explicitly match #nil, so it doesn't match (exp ...) below.
+      ((_ nil) (eq? #nil (syntax->datum #'nil))
+       #nil)
 
       ((_ (exp ...))
        #`(list #,@(append-map synquote #'(exp ...))))

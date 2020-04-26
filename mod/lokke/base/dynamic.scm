@@ -56,7 +56,7 @@
 (define-syntax binding
   (lambda (x)
     (syntax-case x ()
-      ((_ (vec-tag rest ...) body ...) (vec-tag? #'vec-tag)
+      ((_ (vec-tag meta rest ...) body ...) (vec-tag? #'vec-tag)
        #'(binding (rest ...) body ...))
       ((_ () body ...) #'(begin #nil body ...))
       ((_ (name init rest ...) body ...)

@@ -19,6 +19,7 @@
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke pr) #:select (pr-str))
+  #:use-module ((lokke reader literal) #:select (reader-vector-elts))
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
   #:use-module ((lokke symbol)
                 #:select (ns-sym->mod-name
@@ -236,7 +237,7 @@
 (define (strip-reader-vec x)
   (cond
    ((null? x) x)
-   ((eq? '/lokke/reader-vector (car x)) (cdr x))
+   ((eq? '/lokke/reader-vector (car x)) (reader-vector-elts x))
    (else x)))
 
 (define (refer-spec->list x)
@@ -493,21 +494,24 @@
     ;; i.e. (ns foo {:x (inc 1)}) is an error.
     (syntax-case x ()
       ;; doc and attrs
-      ((_ name doc (map-tag attr ...) expr ...)
+      ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
        #'(begin
            (ns name expr ...)
            (eval-when (expand load eval)
+             ;; FIXME: should this match defn and preserve the literal
+             ;; (map-tag)?
              (alter-meta! (current-module)
                           (lambda (prev) (hash-map #:doc doc attr ...))))
            #nil))
       ;; just attrs
-      ((_ name (map-tag attr ...) expr ...) (map-tag? #'map-tag)
+      ((_ name (map-tag meta attr ...) expr ...) (map-tag? #'map-tag)
        #'(begin
            (ns name expr ...)
            (eval-when (expand load eval)
              (alter-meta! (current-module)
-                          (lambda (prev) (hash-map attr ...))))
+                          (lambda (prev) (with-meta (hash-map attr ...)
+                                                    meta))))
            #nil))
       ;; just doc
       ((_ name doc expr ...) (string? (syntax->datum #'doc))

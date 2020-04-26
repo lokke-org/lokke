@@ -14,7 +14,12 @@
 (define-module (lokke base destructure)
   ;;((language tree-il) #:prefix tree-il/)
   #:use-module ((lokke base collection) #:select (drop get nth seq seq?))
-  #:use-module ((lokke base util) #:select (pairify vec-tag?))
+  #:use-module ((lokke base util) #:select (pairify))
+  #:use-module ((lokke reader literal)
+                #:select (reader-hash-map?
+                          reader-hash-map-elts
+                          reader-vector?
+                          reader-vector-elts))
   #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1)
@@ -45,41 +50,29 @@
 ;; FIXME: what about duplicate names?  keys: [x y x], etc.  If nothing
 ;; else, perhaps just add a distinct on :keys, etc.
 
-(define (reader-map? x)
-  (and (proper-list? x) (not (null? x))
-       (eq? '/lokke/reader-hash-map (car x))
-       (begin
-         (unless (odd? (length x))
-           (error "Invalid reader map content:" (cdr x)))
-         #t)))
-
-(define (reader-vec? x)
-  (and (proper-list? x) (not (null? x))
-       (eq? '/lokke/reader-vector (car x))))
-
 (define (syn-vecish? syn)
   (let ((x (syntax->datum syn)))
-    (or (vector? x) (reader-vec? x))))
+    (or (vector? x) (reader-vector? x))))
 
 (define (syn-vecish->list syn)
   (let ((x (syntax->datum syn)))
     (cond
      ((vector? x) (map (lambda (d) (datum->syntax syn d))
                        (vector->list x)))
-     ((reader-vec? x)
-      (map (lambda (d) (datum->syntax syn d)) (cdr x)))
+     ((reader-vector? x)
+      (map (lambda (d) (datum->syntax syn d)) (reader-vector-elts x)))
      (else
       (scm-error 'wrong-type-arg 'syn-vecish->list
                  "Wrong type argument in position 1: ~S"
                  (list syn) (list syn))))))
 
 (define (syn-map? syn)
-  (reader-map? (syntax->datum syn)))
+  (reader-hash-map? (syntax->datum syn)))
 
 (define (syn-map->list syn)
   (let ((x (syntax->datum syn)))
-    (if (reader-map? x)
-        (map (lambda (d) (datum->syntax syn d)) (cdr x))
+    (if (reader-hash-map? x)
+        (map (lambda (d) (datum->syntax syn d)) (reader-hash-map-elts x))
         (scm-error 'wrong-type-arg 'syn-map->list
                    "Wrong type argument in position 1: ~S"
                    (list syn) (list syn)))))
@@ -252,7 +245,5 @@
                           (cons (list tmp init) result)))))
        (else
         (error "Unsupported destructuring form" binding)))))
-  (reverse! (destructure binding init '())))
 
-;; FIXME: double-check that we still need vec-tag? as compared to
-;; normal pattern matching against the /lokke/ symbols.
+  (reverse! (destructure binding init '())))

@@ -14,7 +14,7 @@
 (define-module (lokke metadata)
   #:use-module ((lokke base metadata)
                 #:select (alter-meta! meta vary-meta with-meta))
-  #:use-module ((lokke base syntax) #:select (defdyn))
+  #:use-module ((lokke base dynamic) #:select (defdyn))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke pr) #:select (pr-str))
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
@@ -44,18 +44,8 @@
 
 (define-method (meta obj) #nil)
 
-(define-method (with-meta obj map)
-  (scm-error 'wrong-type-arg
-             "with-meta"
-             "Persistent metadata not supported for ~a: ~s"
-             (list (class-of obj) obj)
-             (list obj)))
-
 (define (vary-meta obj f . args)
   (with-meta obj (apply f (meta obj) args)))
-
-(define-method (alter-meta! obj f . args)
-  (error "Mutable metadata not supported for " (class-of obj)))
 
 
 ;; module variables (var)

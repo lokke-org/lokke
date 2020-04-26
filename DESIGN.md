@@ -39,10 +39,12 @@ vectors, i.e. `[(some-macro x)]` must expand `some-macro` at compile
 time.
 
 To support that, those literals are always represented to the compiler
-as pseudo-function invocations like `(/lokke/reader-hash-map ...)` and
-`(/lokke/reader-hash-set ...)`, which the macroexpander can traverse.
-The reader creates this representation when invoked via
-`read-for-compiler`.
+as pseudo-function invocations like `(/lokke/reader-hash-map metadata ...)`
+and `(/lokke/reader-hash-set metadata ...)`, which the
+macroexpander can traverse.  The reader creates this representation
+when invoked via `read-for-compiler`.  The `metadata` will either be
+#nil or a `(/lokke/reader-hash-map ...)` derived from any reader
+metadata preceeding the literal, e.g. via `^{:x 1} [1]`.
 
 These pseudo-functions present a problem for Clojure syntax expanders
 (created with the Clojure side defmacro) since the expanders expect to
@@ -55,7 +57,7 @@ corresponding pseudo-function calls.
 That is, `#{foo}` will be an actual hash-set instance containing the
 symbol `foo` whenever it is encountered by Clojure code during
 compilation, for example whenever a Clojure defmacro expander sees it,
-but it will be `(/lokke/reader-hash-set foo)` whenever it is
+but it will be `(/lokke/reader-hash-set #nil foo)` whenever it is
 encountered by the Scheme syntax expander.
 
 In part, we've started with this approach because we wanted to try
@@ -77,10 +79,10 @@ compared to syntax-case).
 In order to support this domain shifting approach there are two
 flavors of the reader functions, one for the compiler, and then the
 "normal" flavor.  The former produces input suitable for the compiler,
-including, for example, the`(/lokke/vector 1 2 3)` style forms instead
-of native Clojure instances.  The normal reader returns native data
-structures as you might expect, though of course the contents will be
-unevaluated.
+including, for example, the`(/lokke/reader-vector #nil 1 2 3)` style
+forms instead of native Clojure instances.  The normal reader returns
+native data structures as you might expect, though of course the
+contents will be unevaluated.
 
 The compiler represents lists as scheme lists so that the syntax
 expander will handle expansions normally.  The intention is for any
@@ -137,13 +139,30 @@ Modules and namespaces
 Metadata
 --------
 
-- ...is currently quite broken, particularly reader metadata, but the
-  plan is to continue to incrementally improve it.
+- vectors, hash-sets, and hash-maps, vars, namespaces, and atoms
+  support metadata; lists and symbols do not.
 
-- We're also planning to see if we can avoid supporting metadata for
-  some things, symbols being a clear example, or at least making
-  support optional, since doing so would introduce overhead, and it
-  would add a substantial impedence mismatch with the Scheme side.
+- Reader metadata is supported for the literals (i.e., [] {} #{}) by
+  storing it as the first argument to the literal's pseudo-function
+  invocations, e.g. `(/lokke/reader-hash-map metadata ...)`.  The
+  `metadata` will either be #nil or a `(/lokke/reader-hash-map ...)`
+  derived from any reader metadata preceeding the literal, e.g. via
+  `^{:x 1} [1]`.
+
+- There is no metadata support for lists because at the moment, they
+  may be represented by Scheme lists.  While that makes them very
+  efficient and compatible with Scheme, it means that in addition to
+  not supporting metadata, they can't be `counted?` or hashed.
+  Accordingly, we may eventually want to change them to a custom
+  persistent type.  Doing so may or may not be difficult given the
+  scattered effect of the current assumption that lists may just be
+  pairs, and it will require some accommodation for passing Clojure
+  lists to Scheme functions, even if just via manual conversion.
+
+- We're planning to see if we can avoid supporting metadata for
+  some types, symbols being a clear example, or at least making
+  support optional, since metadata support would add overhead, and
+  introduce  a substantial impedence mismatch with the Scheme side.
   The former because symbols could no longer be simple unique pointers
   (because immutability requires a new object every time the metadata
   changes), and the latter because Clojure and Scheme symbols wouldn't
@@ -202,10 +221,20 @@ TODO
 - Investigate GOOPS read-only slots -- daviid mentioned that GNOME
   uses them, e.g. <read-only-slot> in gobject/gtype.scm.
 
-- Continue adding metadata support as-needed.  e.g. consider adding it
-  to vector, hash-map, hash-set, etc.
-
 - Add doc and attr args to defmacro.
+
+- Perhaps augment `def` to recognize a `(/lokke/reader-meta ...)` form
+  before the `name` as a special case (as the JVM dialect does in a
+  different way) so that it can support `^:dynamic` etc., possibly
+  obivating `defdyn` (cf. `defn`).  This may require
+  `uninstantiated-read` to provide some kind of caching (or other
+  accommodation) so that it can return `(/lokke/reader-meta ...)` and
+  then `x` across two consecutive invocations when reading `^:dynamic
+  x`.  The issue is that we don't know whether or not it will need to
+  do that until after the metadata and `x` have both been read.  One
+  possibility might be a custom port type, and note that this is
+  irrelevant to the normal `read` because it has no representation for
+  standalone metadata, though it might want to at least warn about it.
 
 - Review handling of cons pairs.  Right now we use/allow them in
   various places, but for example, doing so doesn't support metadata,

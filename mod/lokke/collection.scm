@@ -13,8 +13,8 @@
 
 (define-module (lokke collection)
   #:version (0 0 0)
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((guile) #:hide (peek))
+  #:use-module ((ice-9 format) #:select (format))
   #:use-module (oop goops)
   #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
   #:use-module ((srfi srfi-1) #:select (circular-list? proper-list?))
@@ -43,6 +43,7 @@
                           dissoc
                           drop
                           empty
+                          empty?
                           every?
                           ffirst
                           find
@@ -59,6 +60,8 @@
                           nfirst
                           nnext
                           nth
+                          peek
+                          pop
                           reduce
                           reduce-kv
                           rest
@@ -85,14 +88,12 @@
   #:use-module ((lokke pr) #:select (pr-on print-on))
   #:export (doall
             dorun
-            empty?
             filterv
             iterate
             list*
             mapv
             not-any?
             not-every?
-            pop
             range
             repeat
             repeatedly
@@ -115,6 +116,7 @@
                dissoc
                drop
                empty
+               empty?
                every?
                ffirst
                find
@@ -134,6 +136,7 @@
                nfirst
                nnext
                nth
+               pop
                pr-on
                print-on
                reduce
@@ -152,10 +155,9 @@
                update-in
                val
                vals)
-  #:replace (peek)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'cons 'list? 'merge)
+(re-export-and-replace! 'apply 'assoc 'cons 'list? 'merge 'peek)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)
@@ -270,30 +272,6 @@
           (loop (cons (first n) result) (next rst))
           result))))
 
-(define-method (empty? (coll <coll>))
-  (if (counted? coll)
-      (zero? (count coll))
-      (not (seq coll))))
-
-(define-method (empty? (v <vector>))
-  (zero? (vector-length v)))
-
-(define-method (empty? (v <list>))
-  (null? v))
-
-(define-method (empty? (v <sequential>))
-  (eq? #nil (seq v)))
-
-(define-method (empty? (v <null>))
-  #t)
-
-(define-method (empty? (v <pair>))
-  #f)
-
-(define-method (empty? (b <boolean>))
-  (require-nil 'empty? b)
-  #t)
-
 (define-method (into to from)
   (reduce conj to from))
 
@@ -394,15 +372,3 @@
           (cons c)
           (cons b)
           (cons a)))))
-
-
-;; The jvm has a persistent stack interface...
-;; FIXME: improper lists, etc.  See DESIGN <pair>s TODO.
-
-(define-method (peek (x <boolean>)) (require-nil 'peek x) #nil)
-(define-method (peek (x <null>)) #nil)
-(define-method (peek (x <pair>)) (car x))
-
-(define-method (pop (x <boolean>)) (require-nil 'pop x) #nil)
-(define-method (pop (x <null>)) (error "cannot pop empty list"))
-(define-method (pop (x <pair>)) (cdr x))
