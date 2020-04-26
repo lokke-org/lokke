@@ -12,7 +12,6 @@
 ;;;      option) any later version.
 
 (define-module (lokke compile)
-  #:use-module ((ice-9 match) #:select (match))
   #:use-module ((ice-9 pretty-print) #:select (pretty-print))
   #:use-module ((ice-9 receive) #:select (receive))
   #:use-module ((ice-9 sandbox)
