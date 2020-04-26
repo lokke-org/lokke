@@ -29,7 +29,7 @@
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
-  #:use-module ((lokke base util) #:select (require-nil vec-tag?))
+  #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
