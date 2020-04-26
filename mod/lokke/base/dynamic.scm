@@ -67,7 +67,7 @@
               (format #f
                       "binding: unable to resolve dynamic variable ~a in ns ~a"
                       'name
-                      (module-name->ns-str mod))))
+                      (module-name->ns-str (module-name mod)))))
            (with-fluid*
                f init
                (lambda () (binding (rest ...) body ...))))))))
