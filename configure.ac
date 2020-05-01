@@ -36,6 +36,8 @@ LT_INIT
 GUILE_PKG([3.0 2.2])
 GUILE_FLAGS
 
+AC_SUBST(LOKKE_EFFECTIVE_VERSION, [${VERSION%.*}])
+
 AC_CONFIG_FILES([Makefile gnulib/Makefile])
 AC_CONFIG_FILES([guile], [chmod +x guile])
 

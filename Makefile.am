@@ -13,7 +13,8 @@ AM_CFLAGS = \
   -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
   -fno-strict-aliasing
 
-pkglib_LTLIBRARIES = lib/lokke-reader.la  lib/lokke-pcre2.la lib/lokke-vector.la
+vpkglibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)
+vpkglib_LTLIBRARIES = lib/lokke-reader.la  lib/lokke-pcre2.la lib/lokke-vector.la
 
 # -module can't go here because automake only detects it directly in LDFLAGS
 lokke_lib_ldflags = -release $(VERSION) @GUILE_LDFLAGS@ @GUILE_LIBS@
