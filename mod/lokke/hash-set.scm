@@ -12,7 +12,7 @@
 ;;;      option) any later version.
 
 (define-module (lokke hash-set)
-  #:use-module ((fash)
+  #:use-module ((lokke fash)
                 #:select (make-fash
                           fash-fold
                           fash-ref

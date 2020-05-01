@@ -44,7 +44,7 @@
                           vals))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base map) #:select (<map>))
-  #:use-module ((fash)
+  #:use-module ((lokke fash)
                 #:select (make-fash
                           fash-fold
                           fash-ref

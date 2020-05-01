@@ -20,7 +20,7 @@
 ;;;
 ;;; Code:
 
-(define-module (fash)
+(define-module (lokke fash)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-9 gnu)
   #:use-module (srfi srfi-11)
