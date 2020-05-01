@@ -1,6 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-export GUILE_LOAD_PATH="${GUILE_LOAD_PATH:+$GUILE_LOAD_PATH:}$(pwd)/mod"
-export LTDL_LIBRARY_PATH="${LTDL_LIBRARY_PATH:+$LTDL_LIBRARY_PATH:}$(pwd)/lib/.libs"
+top="$(cd "$(dirname "$0")" && pwd -P)"
+export GUILE_LOAD_PATH="${GUILE_LOAD_PATH:+$GUILE_LOAD_PATH:}$top/mod"
+export LTDL_LIBRARY_PATH="${LTDL_LIBRARY_PATH:+$LTDL_LIBRARY_PATH:}$top/lib/.libs"
 
 exec guile-@GUILE_EFFECTIVE_VERSION@ "$@"
