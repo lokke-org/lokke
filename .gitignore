@@ -24,6 +24,7 @@
 /gnulib/Makefile
 /gnulib/Makefile.in
 /gnulib/libgnu.a
+/guile
 /lib/*.la
 /lib/*.lo
 /lib/*.o
