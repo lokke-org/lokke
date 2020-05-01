@@ -318,6 +318,10 @@ TODO
 - Improve hash-map and hash-set seqs, which may require improvements
   to fash or...
 
+- Stop altering `LTDL_LIBRARY_PATH` to load module libs.  Ludovic
+  suggested we might add `GUILE_EXTENSIONS_PATH` to guile (hopefully
+  with a parallel `%extensions-path`, which would solve the problem.
+
 - Finish fixing up the pr-related functions (prn, pr-str, etc.) and
   augment the tests.
 
