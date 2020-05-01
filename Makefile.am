@@ -15,17 +15,20 @@ AM_CFLAGS = \
 
 pkglib_LTLIBRARIES = lib/lokke-reader.la  lib/lokke-pcre2.la lib/lokke-vector.la
 
+# -module can't go here because automake only detects it directly in LDFLAGS
+lokke_lib_ldflags = -release $(VERSION) @GUILE_LDFLAGS@ @GUILE_LIBS@
+
 lib_lokke_reader_la_SOURCES = lib/lokke-reader.c
 lib_lokke_reader_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS)
-lib_lokke_reader_la_LDFLAGS = -module @GUILE_LDFLAGS@ @GUILE_LIBS@
+lib_lokke_reader_la_LDFLAGS = -module $(lokke_lib_ldflags)
 
 lib_lokke_vector_la_SOURCES = lib/lokke-vector.c
 lib_lokke_vector_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS)
-lib_lokke_vector_la_LDFLAGS = -module @GUILE_LDFLAGS@ @GUILE_LIBS@
+lib_lokke_vector_la_LDFLAGS = -module $(lokke_lib_ldflags)
 
 lib_lokke_pcre2_la_SOURCES = lib/lokke-pcre2.c
 lib_lokke_pcre2_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS) @PCRE2_CFLAGS@
-lib_lokke_pcre2_la_LDFLAGS = -module @GUILE_LDFLAGS@ @GUILE_LIBS@ @PCRE2_LIBS@
+lib_lokke_pcre2_la_LDFLAGS = -module $(lokke_lib_ldflags) @PCRE2_LIBS@
 
 # Avoids the otherwise circular dependency
 BUILT_SOURCES = lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x
