@@ -10,6 +10,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ['$(top_srcdir)/guile.in'])
+
 # Checks for programs.
 AM_PROG_AR
 AC_PROG_CC
