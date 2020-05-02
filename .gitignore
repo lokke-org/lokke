@@ -44,3 +44,5 @@
 /m4/lt~obsolete.m4
 /stamp-h1
 /state/
+/test/*.log
+/test/*.trs

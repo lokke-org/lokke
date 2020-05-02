@@ -188,6 +188,3 @@ install-data-hook:
 
 clean-local:
 	rm -rf $(lokke_clean)
-	for f in $(TESTS); do \
-	  rm -f "$$f.log"; \
-	done
