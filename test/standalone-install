@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -uxeo pipefail
+
+echo '1..1'
+
+exit_rm_paths=()
+
+on_exit()
+{
+    if test "${#exit_rm_paths[@]}" -gt 0; then
+        rm -rf "${exit_rm_paths[@]}"
+    fi
+}
+trap on_exit EXIT
+
+mkdir -p tmp
+tmpdir=$(mktemp -d "tmp/test-standalone-install-XXXXXX")
+tmpdir=$(cd "$tmpdir" && pwd)
+exit_rm_paths+="$tmpdir"
+
+git clone . "$tmpdir/lokke"
+cd "$tmpdir/lokke"
+./setup-deps
+autoreconf -fi
+./configure --prefix=$(pwd)/../install
+make install
+cd /
+result=$("$tmpdir/install/bin/lokke" -e "(println :howdy)")
+rc=$?
+if test "$result" != ':howdy'; then
+    echo "$result"
+    exit $rc
+fi
+echo 'ok'

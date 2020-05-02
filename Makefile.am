@@ -162,7 +162,8 @@ TESTS = \
   test/clojure-math \
   test/clojure-metadata \
   test/clojure-walk \
-  test/clojure-zip
+  test/clojure-zip \
+  test/standalone-install
 
 
 SUFFIXES = .x
