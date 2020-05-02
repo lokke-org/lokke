@@ -119,6 +119,11 @@
               (hash-table-ref opts 'actions))
     0))
 
+(define (configure-history)
+  (setenv "GUILE_HISTORY"
+          (or (getenv "LOKKE_HISTORY")
+              (string-append (getenv "HOME") "/.lokke_history"))))
+
 ;; load-user-init adapted from the version in Guile 2.2.6 (LGPL 3)
 ;; FIXME: propose accommodations upstream
 (define (load-user-init)
@@ -206,6 +211,7 @@ converting all but the keywords to strings."
   (let ((len (length args)))
     (if (= len 1)
         (begin
+          (configure-history)
           (load-user-init)
           ((@ (lokke repl) repl)))
         (if (string-prefix? "--#!" (cadr args))

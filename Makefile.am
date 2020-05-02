@@ -1,4 +1,6 @@
 
+CLEANFILES =
+
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
@@ -7,6 +9,7 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver
 
 EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
 
+noinst_SCRIPTS = lokke
 man1_MANS = lokke.1
 
 AM_CFLAGS = \
@@ -78,3 +81,9 @@ clean-local:
 SUFFIXES = .x
 .c.x:
 	guile-snarf -o $@ $< @GUILE_CFLAGS@ $(AM_CFLAGS)
+
+lokke: gen-lokke config.status Makefile
+	./gen-lokke '$(GUILE)' '' '' > $@.tmp.$$PID
+	chmod 0755 $@.tmp.$$PID
+	mv $@.tmp.$$PID $@
+CLEANFILES += lokke lokke.tmp.*
