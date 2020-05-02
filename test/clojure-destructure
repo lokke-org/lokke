@@ -1,4 +1,6 @@
-":"; exec ./lokke -i "$0"  # -*-clojure-*-
+#!./lokke --#!
+-i :this -- :args
+!#
 
 ;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
 ;;;

@@ -7,60 +7,140 @@ lokke \- a Clojure dialect for Guile
 .
 .SH SYNOPSIS
 .SY lokke
+.RB ( help | \-\-help | \-h | \-? )
 .YS
 .SY lokke
-.RB { \-\-help | \-h | \-? }
+.B repl
 .YS
 .SY lokke
+.B clj
 .OP \-i file
 .OP \-e code
-.RB [ OPTION
+.RB [ CLJ_OPTION
 \&.\|.\|.\&]
-.YS
-.SY lokke
-.OP \-i file
-.OP \-e code
-.RB [ OPTION
-\&.\|.\|.\&]
-.B \-\-
-.RI [ arg
-\&.\|.\|.\&]
+.RB [ \-\- ]
+.B COMMAND_LINE_ARG
+\&.\|.\|.
 .YS
 .SY lokke
 .B \-\-!#
 .YS
+.SY cljl
+.RB ( help | \-\-help | \-h | \-? )
+.YS
+.SY cljl
+.OP \-i file
+.OP \-e code
+.RB [ CLJ_OPTION
+\&.\|.\|.\&]
+.RB [ \-\- ]
+.B COMMAND_LINE_ARG
+\&.\|.\|.
+.YS
+.SY cljl-strict
+.RB ( help | \-\-help | \-h | \-? )
+.YS
+.SY cljl-strict
+.OP \-i file
+.OP \-e code
+.RB [ CLJ_OPTION
+\&.\|.\|.\&]
+.RB [ \-\- ]
+.B COMMAND_LINE_ARG
+\&.\|.\|.
+.YS
 .
 .SH DESCRIPTION
-Lokke is a Clojure dialect for Guile, and the primary lokke command
-may be run in a number of distinct modes.
+Lokke is a Clojure dialect for Guile, and may be invoked in three
+ways.
+.B lokke
+is the most general command, acting as specified by an initial
+subcommand argument (e.g.
+.BR repl ,
+.BR clj ,
+etc.).  The
+.B cljl
+and
+.B cljl-strict
+commands
+behave exactly as if
+.B lokke clj
+had been invoked with the same arguments.
+.B cljl-strict
+also acts as if
+.B --strict
+had been included in the arguments.
 .P
-When no arguments are provided it presents a Read-Eval-Print-Loop
-(REPL) on the terminal for interactive use.
+When no arguments are provided to
+.B cljl
+or
+.B cljl-strict
+they present a Read-Eval-Print-Loop (REPL) on the terminal for
+interactive use.
 .P
-Arguments after
-.B \-\-
-will not be examined and will be available via
+The
+.BR COMMAND_LINE_ARGs
+will be available via
 .B *command-line-args*
-in Clojure.
+in Clojure, and when specified
+.B \-\-
+causes all subsequent arguments to be interpreted solely as
+.BR COMMAND_LINE_ARG s.
 .P
 The
 .B \-!#
 option allows lokke to act as a script interpreter.  See
 .B SCRIPT EVALUATION
 below for additional information.
+.P
+In general,
+.B cljl
+is intended for convenient interactive use,
+.B cljl-strict
+is intended for situations where
+.B lokke
+needs to match the JVM
+.B clj
+tool's behavior more closely, say to attempt to stand in for the JVM
+.B clojure
+tool in #!/usr/bin/clojure scripts, and
+.B lokke --!#
+should be preferred for most #! invocations (when portability isn't a
+primary concern).
+.P
+Note that as yet
+.B lokke
+doesn't provide anything like the JVM's distinction between the
+.B clj
+and
+.B clojure
+commands because it appears that the distintion is just between
+whether or not readline support is available, and Guile provides that
+for
+.B lokke.
+See
+.B READLINE SUPPORT
+below.
 .
 .SH HELP
 .TP
-.BI \-\-help\fR,\ \fB\-h\fR,\ \fB\-?
+.BI help\fR,\ \fB\-\-help\fR,\ \fB\-h\fR,\ \fB\-?
 Show help and exit.
 .
-.SH OPTION
+.SH CLJ_OPTION
 .TP
 .BI \-i " file" \fR,\ \fB\-\-init " file"
 Execute code in file.
 .TP
 .BI \-e " code" \fR,\ \fB\-\-eval " code"
 Evaluate code, printing any values that are not nil or unspecified.
+.TP
+.B \-\-strict
+Provide stricter compatibility with JVM
+.B clojure/clj
+options.  Treat
+.B \-\-
+as a normal argument.
 .
 .SH SCRIPT EVALUATION
 In most cases, lokke scripts should begin like this:
@@ -120,6 +200,21 @@ this:
 \&.\|.\|.\&
 .EE
 .RE
+.
+.SH READLINE SUPPORT
+Assuming your guile was compiled with readline support, it's likely
+you'll want to add something like this to
+.B ~/.lokke_guile
+to enable it in the REPL:
+.P
+.RS
+.EX
+;;; -*-scheme-*-
+(use-modules (ice-9 readline))
+(activate-readline)
+.EE
+.RE
+.
 .SH SEE ALSO
 .
 .IR guile (1),

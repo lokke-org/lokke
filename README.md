@@ -85,18 +85,19 @@ to select a particular version at configuration time like this:
 
     $ ./configure GUILE_EFFECTIVE_VERSION=2.2
 
-Now you should be able to run a Clojure program via the convenience
-wrapper:
+Now you should be able to run a Clojure program like this:
 
-    $ ./lokke -i hello.clj
+    $ ./cljl -i hello.clj
     ...
     hello
 
 or run the REPL:
 
-    $ ./lokke
+    $ ./cljl
     ...
     lokke@(lokke user)>
+
+`./cljl ...` is equivalent to `./lokke clj ...`.
 
 Currently the Lokke repl *is* the Guile repl, with the initial
 language and environment set for Lokke, and so all of the Guile
@@ -375,6 +376,14 @@ git can can add the appropriate pseudo-header for you via the
 Additional information, conventions, etc. may be found in the Hacking
 section in the DESIGN.
 
+Additional tests
+----------------
+
+You can run the *full* test suite (requires all changes in the working
+tree to be committed) like this:
+
+    make LOKKE_TEST_EXT_BEHAVIOR=true check
+
 Lokke (Danish)
 --------------
 
@@ -421,7 +430,7 @@ describing the applicable terms, including, but not limited to:
   - mod/lokke/ns/clojure/zip.clj
   - test/clojure-walk
 
-Copyright © 2015-2019 Rob Browning <rlb@defaultvalue.org>
+Copyright © 2015-2020 Rob Browning <rlb@defaultvalue.org>
 
 Local Variables:
 mode: markdown

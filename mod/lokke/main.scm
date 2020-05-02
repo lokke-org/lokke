@@ -18,6 +18,7 @@
 
 (define-module (lokke main)
   #:use-module ((ice-9 eval-string) #:select (eval-string))
+  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 rdelim) #:select (read-delimited))
   #:use-module ((ice-9 textual-ports) #:select (get-string-n))
   #:use-module ((lokke core) #:select (println))
@@ -32,25 +33,48 @@
                           hash-table-set!
                           hash-table-update!
                           hash-table-update!/default))
-  #:export (main))
+  #:export (cljl-main lokke-main))
 
 (define not-even-started 254)
 
 (define err current-error-port)
 (define str string-append)
 
-(define usage
-  (string-append
-   "Usage:\n"
-   "  lokke\n"
-   "  lokke {--help | -h | -?}\n"
-   "  lokke OPTS\n"
-   "  lokke OPTS -- CLOJURE_PROGRAM_ARG...\n"
-   "  lokke --#!\n"
-   "OPTS:\n"
+;; FIXME: implement --strict
+
+(define (clj-opts strict?)
+  (apply
+   string-append
+   "CLJ_OPTS:\n"
    "  -i, --init PATH    load path\n"
    "  -e, --eval CODE    evaluate code, printing any values that are\n"
-   "                     not nil or unspecified\n"))
+   "                         not nil or unspecified\n"
+   (if strict?
+       '()
+       '("  --                 Make all subsequent arguments *command-line-args*\n"
+         "  --strict           Provide stricter compatibiity with JVM options:\n"
+         "                         Don't support --\n"))))
+
+(define (lokke-usage)
+  (string-append
+   "Usage:\n"
+   "  lokke (help | --help | -h | -?)\n"
+   "  lokke repl\n"
+   "  lokke clj CLJ_OPTS [--] COMMAND_LINE_ARGS\n"
+   "  lokke --#!\n"
+   (clj-opts #f)))
+
+(define (cljl-usage strict?)
+  (let ((name (if strict? "cljl-strict" "cljl"))) ;; FIXME
+    (string-append
+     (format
+      #f
+      (string-append
+       "Usage:\n"
+       "  ~a (--help | -h | -?)\n"
+       "  ~a CLJ_OPTS~a COMMAND_LINE_ARGS\n")
+      name name (if strict? "" " [--]"))
+     (clj-opts strict?))))
 
 (define* (quit msg status)
   (display msg (err))
@@ -60,8 +84,8 @@
   (apply format (err) msg args)
   (exit not-even-started))
 
-(define (misuse)
-  (quit-early usage))
+(define (misuse usage)
+  (quit-early (usage)))
 
 (define (make-options-hash)
   (let ((result (make-hash-table)))
@@ -69,7 +93,7 @@
     (hash-table-set! result 'args '())
     result))
 
-(define (parse-args args)
+(define (parse-clj-args args usage)
   (define (clean-up result)
     (hash-table-update! result 'actions (lambda (x) (reverse! x)))
     result)
@@ -83,13 +107,13 @@
                 (unless (or (nil? result) (eq? *unspecified* result))
                   (println result))))
             actions)))
-  (let loop ((args (cdr args))
+  (let loop ((args args)
              (result (make-options-hash)))
     (if (null? args)
-        result
+        (clean-up result)
         (let ((arg (car args)))
           (cond
-           ((equal? "--help" arg) (quit usage 0))
+           ((equal? "--help" arg) (quit (usage) 0))
            ((member arg '("-i" "--init"))
             (when (null? (cdr args))
               (quit-early "lokke: no argument for ~a\n" arg))
@@ -100,24 +124,27 @@
               (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-evaluator (cadr args)))
             (loop (cddr args) result))
-           ((member arg '("-?" "-h" "--help")) (quit usage 0))
+           ((member arg '("-?" "-h" "--help")) (quit (usage) 0))
            ((equal? "--" arg)
             (hash-table-set! result 'args (cdr args))
             result)
+           ((equal? "--strict" arg) (loop (cdr args) result))
            (else
             (format (err) "lokke: unrecognized argument: ~s\n" arg)
-            (quit-early usage)))))))
+            (quit-early (usage))))))))
 
-(define (process-arguments args)
-  (let ((opts (parse-args args)))
-    ;; FIXME: is this what we want or should *command-line-args* just
-    ;; be a subset?  This is also a fluid...
-    (set-program-arguments (cons (car (program-arguments))
-                                 (hash-table-ref opts 'args)))
-    (set-current-module (default-environment))
-    (for-each (lambda (action) (action))
-              (hash-table-ref opts 'actions))
-    0))
+(define (run-clj script-name args usage)
+  (let ((opts (parse-clj-args args usage)))
+    (let ((actions (hash-table-ref opts 'actions)))
+      (if (null? actions)
+          (present-repl '()) ;; Might get here with args via --strip
+          (begin
+            ;; FIXME: is this what we want or should *command-line-args* just
+            ;; be a subset?  This is also a fluid...
+            (set-program-arguments (cons script-name (hash-table-ref opts 'args)))
+            (set-current-module (default-environment))
+            (for-each (lambda (action) (action)) actions)
+            0)))))
 
 (define (configure-history)
   (setenv "GUILE_HISTORY"
@@ -129,7 +156,7 @@
 (define (load-user-init)
   (let* ((home (or (getenv "HOME")
                    (false-if-exception (passwd:dir (getpwuid (getuid))))
-                   file-name-separator-string))  ;; fallback for cygwin etc.
+                   file-name-separator-string)) ;; fallback for cygwin etc.
          (init-file (in-vicinity home ".lokke_guile")))
     ;; FIXME: add support for suppressing the init file (e.g. Guile's -q)
     ;; FIXME: either add support for loading a clj ~/.lokke after
@@ -190,35 +217,49 @@ converting all but the keywords to strings."
 
 ;; FIXME: do we want to adopt guile's guess-encoding?
 
-(define (run-script args)
+(define (run-script args usage)
+  (when (< (length args) 3)
+    (display (usage) (err))
+    (quit-early "lokke: script argument ~s not followed by path\n" (cadr args)))
   (let* ((interpreter (car args))
          (script (caddr args))
          (script-args (cdddr args))
          (terminator "!#"))
     (let* ((src (open-input-file script))
            (preamble (read-preamble src terminator))
-           (final-args (cons interpreter
-                             (append-map (lambda (x)
-                                           (case x
-                                             ((#:args) script-args)
-                                             ((#:this) (list script))
-                                             (else (list x))))
-                                         preamble))))
-      (process-arguments final-args))))
+           (clj-args (append-map (lambda (x)
+                                   (case x
+                                     ((#:args) script-args)
+                                     ((#:this) (list script))
+                                     (else (list x))))
+                                 preamble)))
+      (run-clj interpreter clj-args usage))))
 
-(define (main args)
-  ;; FIXME: which args does clj (or should we) allow you to use with the repl?
+(define (present-repl args)
+  (unless (null? args)
+    (quit-early "lokke: repl invocation currently accepts no arguments\n"))
+  (configure-history)
+  (load-user-init)
+  ((@ (lokke repl) repl)))
+
+(define (cljl-main strict? args)
+  (run-clj (car args)
+           (if strict?
+               (cons "--strict" (cdr args))
+               (cdr args))
+           (lambda () (cljl-usage strict?))))
+
+(define (lokke-main args)
   (let ((len (length args)))
-    (if (= len 1)
-        (begin
-          (configure-history)
-          (load-user-init)
-          ((@ (lokke repl) repl)))
-        (if (string-prefix? "--#!" (cadr args))
-            (begin
-              (when (= len 2)
-                (display usage (err))
-                (quit-early "lokke: script argument ~s not followed by path\n"
-                            (cadr args)))
-              (run-script args))
-            (process-arguments args)))))
+    (unless (> len 1)
+      (display (lokke-usage) (err))
+      (quit-early "lokke: no subcommand specified\n"))
+    (let ((cmd (cadr args)))
+      (cond
+       ((member cmd '("-?" "-h" "--help" "help")) (quit (lokke-usage) 0))
+       ((string-prefix? "--#!" cmd) (run-script args lokke-usage))
+       ((string=? "repl" cmd) (present-repl (cddr args)))
+       ((string=? "clj" cmd) (run-clj (car args) (cddr args) lokke-usage))
+       (else
+        (display (lokke-usage) (err))
+        (quit-early "lokke: unrecognized subcommand ~s\n" cmd))))))

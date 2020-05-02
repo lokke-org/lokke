@@ -2,8 +2,6 @@
 
 set -uxeo pipefail
 
-echo '1..1'
-
 exit_rm_paths=()
 
 on_exit()
@@ -13,6 +11,19 @@ on_exit()
     fi
 }
 trap on_exit EXIT
+
+if test -z "${LOKKE_TEST_EXT_BEHAVIOR:-}"; then
+    echo '1..0 # skip standalone-install tests (LOKKE_TEST_EXT_BEHAVIOR unset)'
+    exit 0
+fi
+
+dirty_tree=$(git status --porcelain -uno)
+if test "$dirty_tree"; then
+    echo '1..0 # skipping standalone-install tests (uncommitted changes)'
+    exit 0
+fi
+
+echo '1..3'
 
 mkdir -p tmp
 tmpdir=$(mktemp -d "tmp/test-standalone-install-XXXXXX")
@@ -26,10 +37,21 @@ autoreconf -fi
 ./configure --prefix=$(pwd)/../install
 make install
 cd /
-result=$("$tmpdir/install/bin/lokke" -e "(println :howdy)")
-rc=$?
-if test "$result" != ':howdy'; then
-    echo "$result"
-    exit $rc
-fi
-echo 'ok'
+
+i=0
+
+check-cmd()
+(
+    result=$("$@")
+    rc=$?
+    if test $rc -eq 0 && test "$result" = ':howdy'; then
+        echo 'ok $i'
+    else
+        echo "not ok $i ($rc) $@ => $result"
+    fi
+    ((i++)) || true
+)
+
+check-cmd "$tmpdir/install/bin/cljl" -e '(println :howdy)'
+check-cmd "$tmpdir/install/bin/cljl-strict" -e '(println :howdy)'
+check-cmd "$tmpdir/install/bin/lokke" clj -e '(println :howdy)'

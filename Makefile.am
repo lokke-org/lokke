@@ -3,6 +3,7 @@
 
 CLEANFILES =
 lokke_clean =
+lokke_uninstall =
 
 state:
 	mkdir state
@@ -24,8 +25,10 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver
 
 EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
 
-noinst_SCRIPTS = lokke
-man1_MANS = lokke.1
+noinst_SCRIPTS = cljl cljl-strict lokke
+
+# FIXME: preserve symlinks in install tree?
+man1_MANS = cljl.1 cljl-strict.1 lokke.1
 
 AM_CFLAGS = \
   -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
@@ -170,21 +173,37 @@ SUFFIXES = .x
 .c.x:
 	guile-snarf -o $@ $< @GUILE_CFLAGS@ $(AM_CFLAGS)
 
-lokke: gen-lokke config.status Makefile
-	./gen-lokke '$(GUILE)' '' '' > $@.tmp.$$PID
+cljl cljl-strict lokke: gen-lokke config.status Makefile
+	./gen-lokke $@ '$(GUILE)' '' '' > $@.tmp.$$PID
 	chmod 0755 $@.tmp.$$PID
 	mv $@.tmp.$$PID $@
+CLEANFILES += cljl cljl.tmp.*
+CLEANFILES += cljl-strict cljl-strict.tmp.*
 CLEANFILES += lokke lokke.tmp.*
 
-# Install a slightly different version of ./lokke
+lokke_dest_scripts = \
+  "$(DESTDIR)$(bindir)"/cljl \
+  "$(DESTDIR)$(bindir)"/cljl-strict \
+  "$(DESTDIR)$(bindir)"/lokke
+
+lokke_uninstall += $(lokke_dest_scripts)
+
+$(lokke_dest_scripts): gen-lokke config.status Makefile
+	$(install_sh) -d "$(DESTDIR)$(bindir)"
+	./gen-lokke $$(basename "$@") '$(GUILE)' '$(vpkglibdir)' '$(moduledir)' \
+	  > $$(basename "$@")-install.tmp
+	chmod 0755 $$(basename "$@")-install.tmp
+	mv $$(basename "$@")-install.tmp $@
+CLEANFILES += cljl-install.tmp.* cljl-strict-install.tmp.* lokke-install.tmp.*
+
+
+# Install a slightly different version of the tools
 # moduledir is defined by gen-makefile
 # FIXME: tmp files?
-install-data-hook:
-	$(install_sh) -d "$(DESTDIR)$(bindir)"
-	./gen-lokke '$(GUILE)' '$(vpkglibdir)' '$(moduledir)' \
-	  > "$(DESTDIR)$(bindir)"/lokke.tmp
-	chmod 0755 "$(DESTDIR)$(bindir)"/lokke.tmp
-	mv "$(DESTDIR)$(bindir)"/lokke.tmp "$(DESTDIR)$(bindir)"/lokke
+install-data-hook: $(lokke_dest_scripts)
+
+uninstall-local:
+	rm -rf $(lokke_uninstall)
 
 clean-local:
 	rm -rf $(lokke_clean)
