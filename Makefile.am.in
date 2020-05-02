@@ -1,0 +1,121 @@
+
+# Makefile.am is automatically generated from Makefile.am.in via ./gen-makefile
+
+CLEANFILES =
+lokke_clean =
+
+state:
+	mkdir state
+lokke_clean += state
+
+state/module-paths:: state
+	git ls-files 'mod/*.clj' 'mod/*.scm' > $@.tmp.$$PPID
+	cmp $@.tmp.$$PPID $@ || mv $@.tmp.$$PPID $@
+	rm -f $@.tmp.$$PPID
+
+Makefile.am: Makefile.am.in gen-makefile state/module-paths
+	./gen-makefile state/module-paths
+
+AUTOMAKE_OPTIONS = subdir-objects
+ACLOCAL_AMFLAGS = -I m4
+
+SUBDIRS = gnulib
+LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver.sh
+
+EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
+
+noinst_SCRIPTS = lokke
+man1_MANS = lokke.1
+
+AM_CFLAGS = \
+  -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
+  -fno-strict-aliasing
+
+vpkglibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)
+vpkglib_LTLIBRARIES = lib/lokke-reader.la  lib/lokke-pcre2.la lib/lokke-vector.la
+
+# -module can't go here because automake only detects it directly in LDFLAGS
+lokke_lib_ldflags = -release $(VERSION) @GUILE_LDFLAGS@ @GUILE_LIBS@
+
+lib_lokke_reader_la_SOURCES = lib/lokke-reader.c
+lib_lokke_reader_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS)
+lib_lokke_reader_la_LDFLAGS = -module $(lokke_lib_ldflags)
+
+lib_lokke_vector_la_SOURCES = lib/lokke-vector.c
+lib_lokke_vector_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS)
+lib_lokke_vector_la_LDFLAGS = -module $(lokke_lib_ldflags)
+
+lib_lokke_pcre2_la_SOURCES = lib/lokke-pcre2.c
+lib_lokke_pcre2_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS) @PCRE2_CFLAGS@
+lib_lokke_pcre2_la_LDFLAGS = -module $(lokke_lib_ldflags) @PCRE2_LIBS@
+
+# Avoids the otherwise circular dependency
+BUILT_SOURCES = lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x
+
+
+# This section is automatically generated
+@MODULE_FILES@
+# End of automatically generated section
+
+
+export LOKKE_TEST_PROTOCOL = tap
+
+TESTS = \
+  test/equality \
+  test/clojure-comparisons \
+  test/clojure-defmacro \
+  test/clojure-dynamic \
+  test/clojure-evaluation \
+  test/clojure-exceptions \
+  test/clojure-ns \
+  test/clojure-string \
+  test/clojure-vector \
+  test/clojure-pr \
+  test/lokke-compare \
+  test/lokke-core \
+  test/lokke-destructure \
+  test/lokke-exception \
+  test/lokke-hash-map \
+  test/lokke-hash-set \
+  test/lokke-ns \
+  test/lokke-pr \
+  test/lokke-scm-atom \
+  test/lokke-scm-vector \
+  test/lokke-symbol \
+  test/metadata-handling \
+  test/ns-lokke-io \
+  test/reader-basics \
+  test/clojure-collection \
+  test/clojure-destructure \
+  test/clojure-fn \
+  test/clojure-math \
+  test/clojure-metadata \
+  test/clojure-walk \
+  test/clojure-zip
+
+
+SUFFIXES = .x
+.c.x:
+	guile-snarf -o $@ $< @GUILE_CFLAGS@ $(AM_CFLAGS)
+
+lokke: gen-lokke config.status Makefile
+	./gen-lokke '$(GUILE)' '' '' > $@.tmp.$$PID
+	chmod 0755 $@.tmp.$$PID
+	mv $@.tmp.$$PID $@
+CLEANFILES += lokke lokke.tmp.*
+
+# Install a slightly different version of ./lokke
+# moduledir is defined by gen-makefile
+# FIXME: tmp files?
+install-data-hook:
+	$(install_sh) -d "$(DESTDIR)$(bindir)"
+	./gen-lokke '$(GUILE)' '$(vpkglibdir)' '$(moduledir)' \
+	  > "$(DESTDIR)$(bindir)"/lokke.tmp
+	chmod 0755 "$(DESTDIR)$(bindir)"/lokke.tmp
+	mv "$(DESTDIR)$(bindir)"/lokke.tmp "$(DESTDIR)$(bindir)"/lokke
+
+clean-local:
+	rm -rf $(lokke_clean)
+	for f in $(TESTS); do \
+	  rm -f "$$f.log"; \
+	done

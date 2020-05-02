@@ -1,0 +1,96 @@
+#!/usr/bin/env guile
+!#
+
+;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(setlocale LC_CTYPE "C")
+
+(use-modules
+ ((ice-9 match) #:select (match-let))
+ ((ice-9 popen) #:select (open-input-pipe))
+ ((ice-9 pretty-print) #:select (pretty-print))
+ ((ice-9 rdelim) #:select (read-line))
+ ((ice-9 regex) #:select (regexp-substitute/global))
+ ((ice-9 textual-ports) #:select (get-string-all))
+ ((srfi srfi-1) #:select (append-map delete-duplicates drop-right)))
+
+(define (usage port)
+  (display "Usage: gen-makefile module-paths\n" port))
+
+(define (misuse)
+  (usage (current-error-port))
+  (exit 2))
+
+(define (lines port)
+  (let loop ()
+    (let ((l (read-line port)))
+      (if (eof-object? l)
+          '()
+          (cons l (loop))))))
+
+(define (autoconf-dir-var p)
+  ;; Drop the filename
+  (let ((dir-parts (drop-right (string-split p #\/) 1)))
+    (format #f "module_~adir = $(moduledir)/~a"
+            (string-join dir-parts "_")
+            (string-join (cdr dir-parts) "/"))))
+
+(define (autoconf-data-var p)
+  ;; Drop the filename
+  (let ((dir-parts (drop-right (string-split p #\/) 1)))
+    (format #f "module_~a_DATA =" (string-join dir-parts "_"))))
+
+(define (autoconf-mod-data-files paths)
+  ;; Drop the filename
+  (map (lambda (p)
+         (let ((dir-parts (drop-right (string-split p #\/) 1)))
+           (format #f "module_~a_DATA += ~a" (string-join dir-parts "_") p)))
+       (sort paths string<?)))
+
+;; For now, let's just be lazy about this (not in the clojure sense)...
+
+(define (module-directives paths)
+  (string-join
+   (apply append
+          '("moduledir = $(pkgdatadir)/$(LOKKE_EFFECTIVE_VERSION)")
+          (sort (delete-duplicates (map autoconf-dir-var paths))
+                string<?)
+          '("")
+          (sort (delete-duplicates (map autoconf-data-var paths))
+                string<?)
+          '("")
+          (autoconf-mod-data-files paths)
+          '())
+   "\n"))
+
+(define (expand template module-paths)
+  (regexp-substitute/global #f (make-regexp "@MODULE_FILES@")
+                            template
+                            'pre (module-directives module-paths) 'post))
+
+(define (gen-makefile args)
+  (unless (= 2 (length args))
+    (misuse))
+  (let* ((module-paths (cadr args))
+         (module-paths (call-with-input-file module-paths lines))
+         (template (call-with-input-file "Makefile.am.in"
+                     (lambda (in) (get-string-all in))))
+         ;; FIXME: clean up on error...
+         (tmp-name (string-copy "Makefile.am.XXXXXX"))
+         (tmp (mkstemp! tmp-name)))
+    (call-with-output-file "Makefile.am"
+      (lambda (out) (display (expand template module-paths) out)))
+    (delete-file tmp-name)))
+
+(gen-makefile (program-arguments))
