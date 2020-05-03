@@ -58,7 +58,9 @@
        `(let* (,@abspath
                (mod-dir ,mod-dir)
                (lib-dir ,lib-dir))
-          (primitive-load (string-append mod-dir "/lokke/sysenv.scm"))
+          (save-module-excursion
+           (lambda ()
+             (primitive-load (string-append mod-dir "/lokke/sysenv.scm"))))
           ((@ (lokke sysenv) prepare-environment) lib-dir mod-dir)
           (exit ,main))))
     (newline)
