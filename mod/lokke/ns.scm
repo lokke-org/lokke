@@ -48,7 +48,6 @@
             refer
             refer-clojure
             require
-            resolve-sym-aliases
             use)
   #:re-export (alter-meta!)
   #:duplicates (merge-generics replace warn-override-core warn last))
