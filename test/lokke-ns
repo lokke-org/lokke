@@ -17,6 +17,7 @@
 (use-modules
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke ns) #:prefix t/)
+ ((lokke pr) #:select (*out*))
  ((srfi srfi-64)
   #:select (test-assert
             test-begin
@@ -32,6 +33,9 @@
 (test-begin (basename (car (program-arguments))))
 
 ;; FIXME: no error tests (well nearly no tests at all, really)
+
+(test-equal "x/y" ((module-ref (t/resolve-ns 'clojure.string) 'join)
+                   "/" '("x" "y")))
 
 (test-equal 'clojure.core (t/ns-name (resolve-module '(lokke ns clojure core))))
 (test-equal 'guile.srfi.srfi-1 (t/ns-name (resolve-module '(srfi srfi-1))))

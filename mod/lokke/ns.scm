@@ -47,6 +47,7 @@
             re-export-all!
             refer
             refer-clojure
+            resolve-ns
             require
             use)
   #:re-export (alter-meta!)
@@ -434,6 +435,10 @@
                    cmds
                    (cons '(refer 'clojure.core) cmds))))
     cmds))
+
+(define (resolve-ns ns-sym)
+  (require ns-sym)
+  (resolve-module (ns-sym->mod-name ns-sym) #:ensure #f))
 
 (define (clj-syntax->scm syn)
   (literals->scm-instances (syntax->datum syn)))
