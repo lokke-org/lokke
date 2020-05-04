@@ -54,6 +54,18 @@ lib_lokke_pcre2_la_LDFLAGS = -module $(lokke_lib_ldflags) @PCRE2_LIBS@
 BUILT_SOURCES = lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x
 
 
+# FIXME: see guile's am/guilec for a way to order the install wrt timestamps
+
+mod_clj_srcs =
+mod_scm_srcs =
+compiled_go = $(mod_clj_srcs:%.clj=%.go) $(mod_scm_srcs:%.scm=%.go)
+
+$(compiled_go): $(vpkglib_LTLIBRARIES)
+
+moddatadir = $(pkgdatadir)/$(LOKKE_EFFECTIVE_VERSION)
+modlibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)
+CLEANFILES += $(compiled_go)
+
 # This section is automatically generated
 @MODULE_FILES@
 # End of automatically generated section
@@ -96,12 +108,30 @@ TESTS = \
   test/standalone-install
 
 
-SUFFIXES = .x
+SUFFIXES = .x .clj.go .scm.go
+
 .c.x:
 	guile-snarf -o $@ $< @GUILE_CFLAGS@ $(AM_CFLAGS)
 
+.clj.go:
+	GUILE=$(CURDIR)/guile \
+	GUILE_AUTO_COMPILE=0 \
+	$(GUILD) compile \
+	  -Wunbound-variable -Wmacro-use-before-definition \
+	  -Warity-mismatch -Wformat \
+	--from=lokke -o $@ $<
+
+.scm.go:
+	GUILE=$(CURDIR)/guile \
+	GUILE_AUTO_COMPILE=0 \
+	$(GUILD) compile \
+	  -Wunbound-variable -Wmacro-use-before-definition \
+	  -Warity-mismatch -Wformat \
+	-o $@ $<
+
+
 cljl cljl-strict lokke: gen-lokke config.status Makefile
-	./gen-lokke $@ '$(GUILE)' '' '' > $@.tmp.$$PID
+	./gen-lokke $@ '$(GUILE)' '' '' '' > $@.tmp.$$PID
 	chmod 0755 $@.tmp.$$PID
 	mv $@.tmp.$$PID $@
 CLEANFILES += cljl cljl.tmp.*
@@ -117,7 +147,8 @@ lokke_uninstall += $(lokke_dest_scripts)
 
 $(lokke_dest_scripts): gen-lokke config.status Makefile
 	$(install_sh) -d "$(DESTDIR)$(bindir)"
-	./gen-lokke $$(basename "$@") '$(GUILE)' '$(vpkglibdir)' '$(moduledir)' \
+	./gen-lokke $$(basename "$@") '$(GUILE)' \
+	  '$(vpkglibdir)' '$(moddatadir)' '$(modlibdir)' \
 	  > $$(basename "$@")-install.tmp
 	chmod 0755 $$(basename "$@")-install.tmp
 	mv $$(basename "$@")-install.tmp $@

@@ -23,7 +23,7 @@
 
 (define (gen-lokke args main)
   ;; When lib-dir or mod-dir are "", find them relative to $0's parent dir
-  (match-let (((guile lib-dir mod-dir) args))
+  (match-let (((guile lib-dir mod-dir comp-dir) args))
     (format #t "#!~a -s\n" guile)
     (format #t "!#\n")
     (format #t
@@ -46,7 +46,8 @@
 ")
     (let* ((lib-dir (adjust-lib-path lib-dir))
            (mod-dir (adjust-mod-path mod-dir))
-           (abspath (if (or (list? lib-dir) (list? mod-dir))
+           (comp-dir (adjust-mod-path comp-dir))
+           (abspath (if (or (list? comp-dir) (list? mod-dir) (list? mod-dir))
                         '((abspath
                            (let ((cwd (getcwd)))
                              (lambda (x)
@@ -57,11 +58,12 @@
       (pretty-print
        `(let* (,@abspath
                (mod-dir ,mod-dir)
+               (comp-dir ,comp-dir)
                (lib-dir ,lib-dir))
           (save-module-excursion
            (lambda ()
              (primitive-load (string-append mod-dir "/lokke/sysenv.scm"))))
-          ((@ (lokke sysenv) prepare-environment) lib-dir mod-dir)
+          ((@ (lokke sysenv) prepare-environment) lib-dir mod-dir comp-dir)
           (exit ,main))))
     (newline)
     (for-each display

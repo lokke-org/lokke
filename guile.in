@@ -2,6 +2,7 @@
 
 top="$(cd "$(dirname "$0")" && pwd -P)"
 export GUILE_LOAD_PATH="${GUILE_LOAD_PATH:+$GUILE_LOAD_PATH:}$top/mod"
+export GUILE_LOAD_COMPILED_PATH="${GUILE_LOAD_COMPILED_PATH:+$GUILE_LOAD_COMPILED_PATH:}$top/mod"
 export LTDL_LIBRARY_PATH="${LTDL_LIBRARY_PATH:+$LTDL_LIBRARY_PATH:}$top/lib/.libs"
 
 exec guile-@GUILE_EFFECTIVE_VERSION@ "$@"
