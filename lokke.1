@@ -215,6 +215,17 @@ to enable it in the REPL:
 .EE
 .RE
 .
+.SH ENVIRONMENT
+.TP
+.B LOKKE_HISTORY
+When set, specifies the path to the REPL history file.  When not set,
+defaults to
+.B $XDG_CACHE_HOME/lokke/history
+when
+.B XDG_CACHE_HOME
+is set, otherwise
+.BR $HOME/.cache/lokke/history .
+.
 .SH SEE ALSO
 .
 .IR guile (1),

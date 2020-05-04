@@ -21,6 +21,7 @@
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 rdelim) #:select (read-delimited))
   #:use-module ((ice-9 textual-ports) #:select (get-string-n))
+  #:use-module ((lokke config) #:select (ensure-config-dir))
   #:use-module ((lokke core) #:select (println))
   #:use-module ((lokke compile) #:select (load-file))
   #:use-module ((lokke ns) #:select (default-environment))
@@ -149,7 +150,7 @@
 (define (configure-history)
   (setenv "GUILE_HISTORY"
           (or (getenv "LOKKE_HISTORY")
-              (string-append (getenv "HOME") "/.lokke_history"))))
+              (string-append (ensure-config-dir) "/history"))))
 
 ;; load-user-init adapted from the version in Guile 2.2.6 (LGPL 3)
 ;; FIXME: propose accommodations upstream

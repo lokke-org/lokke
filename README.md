@@ -125,7 +125,8 @@ you'll want to add something like this to `~/.lokke_guile`:
 
 The REPL history will be stored in the file indicated by the
 environment variable `LOKKE_HISTORY` if set, otherwise
-`~/.lokke_history`.
+`$XDG_CACHE_HOME/lokke/history` if `$XDG_CACHE_HOME` is set, otherwise
+`~/.cache/lokke/history`.
 
 There is also a `./guile` wrapper which just runs Guile with the
 correct environment for Lokke (and which `./lokke` relies on).  It can
