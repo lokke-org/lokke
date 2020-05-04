@@ -216,6 +216,7 @@
                bit-xor
                boolean?
                bounded-count
+               butlast
                char?
                (class-of . class)
                (clj-cond . cond)
@@ -295,6 +296,7 @@
                keys
                keyword
                keyword?
+               last
                lazy-seq
                let
                letfn

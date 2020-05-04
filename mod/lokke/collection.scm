@@ -86,10 +86,12 @@
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
-  #:export (doall
+  #:export (butlast
+            doall
             dorun
             filterv
             iterate
+            last
             list*
             mapv
             not-any?

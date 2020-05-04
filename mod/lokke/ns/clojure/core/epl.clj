@@ -31,6 +31,7 @@
 (eval-when
  (expand load eval)
  ;; FIXME
+ (defn chunk-append [x y] false)
  (defn chunked-seq? [x] false)
  (defn chunk [x] false)
  (defn chunk-first [x] false)
