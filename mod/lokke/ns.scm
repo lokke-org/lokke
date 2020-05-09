@@ -98,11 +98,11 @@
   (let* ((path-fragment (string-join (map symbol->string mod-name) "/"))
          (path (search-path %load-path path-fragment '(".cljc" ".clj" ".scm"))))
     (and path
-         (let ((ext (substring/read-only path (- (string-length path) 4))))
-           (cond
-            ((member ext '(".clj" ".cljc")) path)
-            ((string=? ".scm" ext) path)
-            (else #f))))))
+         (cond
+          ((string-suffix? ".clj" path) path)
+          ((string-suffix? ".cljc" path) path)
+          ((string-suffix? ".scm" path) path)
+          (else #f)))))
 
 (define (exports->import-set module-name)
   (cons module-name
@@ -184,12 +184,12 @@
                                   (and (= (stat:mtime st-src) (stat:mtime st-com))
                                        (<= (stat:mtimensec st-com) (stat:mtimensec st-src))))))
                     (dbgf "compiling in ~s: ~s\n" env path)
-                    (let* ((ext (substring/read-only path (- (string-length path) 4)))
-                           (lang (cond
-                                  ((member ext '(".clj" ".cljc")) 'lokke)
-                                  ((string=? ".scm" ext) 'scheme)
-                                  (else
-                                   (error "Unexpected namespace source file extension:" path)))))
+                    (let ((lang (cond
+                                 ((string-suffix? ".clj" path) 'lokke)
+                                 ((string-suffix? ".cljc" path) 'lokke)
+                                 ((string-suffix? ".scm" path) 'scheme)
+                                 (else
+                                  (error "Unexpected namespace source file extension:" path)))))
                       (compile-it path lang env)))
                   (dbgf "loading: ~s\n" compiled)
                   (save-module-excursion (lambda () (load-compiled compiled)))
