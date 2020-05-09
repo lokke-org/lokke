@@ -122,6 +122,8 @@
 
 (test-equal (eof-object) (t/read-string ""))
 
+(test-equal '(re-pattern "x") (t/read-string "#\"x\""))
+
 (test-equal '() (t/read-string "()"))
 
 (test-assert (clj= (hash-map) (t/read-string "{}")))

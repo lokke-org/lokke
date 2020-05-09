@@ -164,6 +164,9 @@ Differences from Clojure/JVM (an incomplete list)
 * The implementation should be properly tail-recursive.
 * Argument evaluation order is unspecified.
 * Regular expressions by default are PCRE2 regular expressions.
+* Reader literal patterns `#"x"` currently just translate to an
+  equivalent `(re-pattern ...)` at read time.  That is, they are not
+  compiled at read time.
 * Various functions handle Scheme vectors as they would Clojure
   vectors, i.e. many collection and sequence operations, etc.
 * Various functions handle Scheme lists as they would Clojure

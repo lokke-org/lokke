@@ -252,6 +252,9 @@ TODO
   macroexpansion (e.g. do we still need the make-pair-seq eval-when
   difference?).
 
+- Consider "read time" instantiation of #"x" literals, given our
+  evaluation semantics.
+
 - Implement defmacro `&form` and `&env`?
 
 - Examine (srfi srfi-45) wrt lazy seqs.

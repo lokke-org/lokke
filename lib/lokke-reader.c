@@ -39,6 +39,7 @@ SCM_SYMBOL (lokke_sym_reader_meta, "/lokke/reader-meta");
 SCM_SYMBOL (lokke_sym_reader_hash_map, "/lokke/reader-hash-map");
 SCM_SYMBOL (lokke_sym_reader_hash_set, "/lokke/reader-hash-set");
 SCM_SYMBOL (lokke_sym_reader_vector, "/lokke/reader-vector");
+SCM_SYMBOL (sym_re_pattern, "re-pattern");
 SCM_SYMBOL (sym_syntax_quote, "syntax-quote");
 SCM_SYMBOL (sym_var, "var");
 SCM_SYMBOL (sym_ISO_8859_1, "ISO-8859-1");
@@ -619,6 +620,51 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
   return maybe_annotate_source (str, port, opts, line, column);
 }
 #undef FUNC_NAME
+
+
+static SCM
+lokke_read_regex_literal (SCM port, scm_t_read_opts *opts)
+#define FUNC_NAME "lokke_read_regex_literal"
+{
+  // Assumes the leading " has already been read
+  SCM str = SCM_EOL;
+  size_t c_str_len = 0;
+  scm_t_wchar c, c_str[READER_STRING_BUFFER_SIZE];
+
+  /* Need to capture line and column numbers here. */
+  long line = scm_to_long (scm_port_line (port));
+  int column = scm_to_int (scm_port_column (port)) - 1;
+
+  while ('"' != (c = scm_getc (port)))
+    {
+      if (c == EOF)
+          scm_i_input_error (FUNC_NAME, port, "end of file in #"" literal",
+                             SCM_EOL);
+      if (c_str_len + 1 >= READER_STRING_BUFFER_SIZE)
+	{
+	  str = scm_cons (scm_from_utf32_stringn (c_str, c_str_len), str);
+	  c_str_len = 0;
+	}
+      c_str[c_str_len++] = c;
+    }
+
+  if (scm_is_null (str))
+    /* Fast path: we got a string that fits in C_STR.  */
+    str = scm_from_utf32_stringn (c_str, c_str_len);
+  else
+    {
+      if (c_str_len > 0)
+	str = scm_cons (scm_from_utf32_stringn (c_str, c_str_len), str);
+
+      str = scm_string_concatenate_reverse (str, SCM_UNDEFINED, SCM_UNDEFINED);
+    }
+
+  str = scm_c_substring_read_only (str, 0, scm_c_string_length (str));
+  return maybe_annotate_source (str, port, opts, line, column);
+}
+#undef FUNC_NAME
+
+
 
 static SCM
 scm_read_string (int chr, SCM port, scm_t_read_opts *opts)
@@ -1381,6 +1427,9 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
         SCM exp = scm_read_sexp (chr, 1, port, opts);
         return scm_cons2(lokke_sym_reader_hash_set, SCM_ELISP_NIL, exp);
       }
+    case '"':
+      return  scm_list_2 (sym_re_pattern,
+                          lokke_read_regex_literal (port, opts));
     case '!':
       return (scm_read_shebang (chr, port, opts));
     case '_':
