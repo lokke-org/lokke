@@ -1177,22 +1177,13 @@ scm_read_character (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
 static SCM
 scm_read_keyword (int chr, SCM port, scm_t_read_opts *opts)
 {
-  /* Read the symbol that comprises the keyword.  Doing this instead of
-     invoking a specific symbol reader function allows `scm_read_keyword ()'
-     to adapt to the delimiters currently valid for symbols.
-
+  /* Read the symbol that comprises the keyword.
      XXX: This implementation allows sloppy syntaxes like `#:  key'.  */
-
-  SCM name = scm_read_expression (port, opts);
-  if (scm_is_keyword (name))  // say via ::foo...
-    // FIXME: more efficient
-    {
-      SCM s = scm_keyword_to_symbol (name);
-      s = scm_symbol_to_string (s);
-      s = scm_string_append(scm_list_2 (scm_from_latin1_string (":"), s));
-      s = scm_string_to_symbol (s);
-      return (scm_symbol_to_keyword (s));
-    }
+  chr = scm_getc (port);
+  if (chr == EOF)
+    scm_i_input_error ("scm_read_keyword", port,
+                       "end of file at start of keyword", SCM_EOL);
+  SCM name = scm_read_mixed_case_symbol (chr, port, opts);
   if (!scm_is_symbol (name))
     scm_i_input_error ("scm_read_keyword", port,
 		       "keyword prefix `~a' not followed by a symbol: ~s",

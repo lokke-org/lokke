@@ -33,7 +33,8 @@
             test-equal
             test-group
             test-runner-current
-            test-runner-fail-count)))
+            test-runner-fail-count))
+ ((srfi srfi-88) #:select (string->keyword)))
 
 (define (scm-read-string s)
   (call-with-input-string s (lambda (p) (read p))))
@@ -97,6 +98,10 @@
    "1.1e-1"
    "+1.1e-1"
    "-1.1e-1"))
+
+(test-equal #:x (t/read-string ":x"))
+(test-equal (string->keyword "1.2") (t/read-string ":1.2"))
+(test-equal (string->keyword "-1.2") (t/read-string ":-1.2"))
 
 (test-equal #\newline (t/read-string "\\newline"))
 (test-equal #\space (t/read-string "\\space"))
