@@ -61,7 +61,9 @@
             condp
             declare
             def
+            def-
             defn
+            defn-
             doseq
             dotimes
             for
@@ -101,26 +103,43 @@
     ((_ x (f args ...) expr ...) (->> (f args ... x) expr ...))
     ((_ x f expr ...) (->> (f x) expr ...))))
 
+(define (expand-def sym doc value export?)
+  (with-syntax ((sym sym) (doc doc) (value value))
+    (let* ((maybe-export (%scm-if export?
+                                  (list #'(export sym))
+                                  '())))
+      (%scm-if #'doc
+               #`(begin
+                   (define sym value)
+                   (maybe-set-def-doc! (module-variable (current-module) 'sym)
+                                       sym
+                                       #,(global-identifier? #'sym) doc)
+                   (when (procedure? sym)
+                     (set-procedure-property! sym 'name 'sym))
+                   #,@maybe-export
+                   (var sym))
+               #`(begin
+                   (define sym value)
+                   (clear-def-doc! (module-variable (current-module) 'sym)
+                                   #,(global-identifier? #'sym))
+                   #,@maybe-export
+                   (var sym))))))
+
 (define-syntax def
   (lambda (x)
     (syntax-case x ()
       ((_ sym doc value) (string? (syntax->datum #'doc))
-       #`(begin
-           (define sym value)
-           (maybe-set-def-doc! (module-variable (current-module) 'sym)
-                               sym
-                               #,(global-identifier? #'sym) doc)
-           (when (procedure? sym)
-             (set-procedure-property! sym 'name 'sym))
-           (export sym)
-           (var sym)))
+       (expand-def #'sym #'doc #'value #t))
       ((_ sym value)
-       #`(begin
-           (define sym value)
-           (clear-def-doc! (module-variable (current-module) 'sym)
-                           #,(global-identifier? #'sym))
-           (export sym)
-           (var sym))))))
+       (expand-def #'sym #f #'value #t)))))
+
+(define-syntax def-
+  (lambda (x)
+    (syntax-case x ()
+      ((_ sym doc value) (string? (syntax->datum #'doc))
+       (expand-def #'sym #'doc #'value #f))
+      ((_ sym value)
+       (expand-def #'sym #f #'value #f)))))
 
 ;; FIXME: think we might have a redundant expansion, i.e. not sure
 ;; let** needs to cons the initial extra binding.
@@ -455,6 +474,31 @@
       ;; none
       ((_ name expr ...)
        #'(def name (fn expr ...))))))
+
+(define-syntax defn-
+  (lambda (x)
+    (syntax-case x ()
+      ;; doc and attrs
+      ((_ name doc (map-tag meta attr ...) expr ...)
+       (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
+       #'(begin
+           (def- name doc (fn expr ...))
+           (alter-meta! (module-variable (current-module) 'name)
+                        (lambda (prev) (map-tag meta attr ...)))
+           (var name)))
+      ;; just attrs
+      ((_ name (map-tag meta attr ...) expr ...) (map-tag? #'map-tag)
+       #'(begin
+           (def- name (fn expr ...))
+           (alter-meta! (module-variable (current-module) 'name)
+                        (lambda (prev) (map-tag meta attr ...)))
+           (var name)))
+      ;; just doc
+      ((_ name doc expr ...) (string? (syntax->datum #'doc))
+       #'(def- name doc (fn expr ...)))
+      ;; none
+      ((_ name expr ...)
+       #'(def- name (fn expr ...))))))
 
 (define-syntax-rule (letfn ((fn-name fn-body ...) ...) body ...)
   (letrec ((fn-name (fn fn-name fn-body ...)) ...)

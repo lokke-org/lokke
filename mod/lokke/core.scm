@@ -27,7 +27,9 @@
                           condp
                           declare
                           def
+                          def-
                           defn
+                          defn-
                           defdyn
                           defdynloc
                           doseq
@@ -242,9 +244,11 @@
                dec'
                declare
                def
+               def-
                defdyn
                defdynloc
                defn
+               defn-
                deref
                disj
                dissoc

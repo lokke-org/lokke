@@ -1,5 +1,5 @@
 #!./lokke --#!
--i :this -- :args
+-i :this -- :args ;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
@@ -17,7 +17,8 @@
 
 (ns test.clojure-ns
   (:require
-   [clojure.string :as str])
+   [clojure.string :as str]
+   [guile.guile :refer [module-public-interface module-variable]])
   (:require
    [clojure.test :refer [begin-tests end-tests is testing]]))
 
@@ -60,5 +61,24 @@
 (is (= 'test-ns-behavior-doc-and-attr (ns-name *ns*)))
 (is (= {:doc "doc" :x 1} (meta *ns*)))
 (ns test.clojure-ns)
+
+
+(ns test-def-private)
+(def yep true)
+(def yep-doc "doc" true)
+(def- nope true)
+(def- nope-doc "doc" true)
+(defn yepfn [] true)
+(defn- nopefn [] true)
+(ns test.clojure-ns)
+
+(let [mod (find-ns 'test-def-private)
+      public? (fn [m sym] (module-variable (module-public-interface m) sym))]
+  (is (public? mod 'yep))
+  (is (public? mod 'yep-doc))
+  (is (public? mod 'yepfn))
+  (is (not (public? mod 'nope)))
+  (is (not (public? mod 'nope-doc)))
+  (is (not (public? mod 'nopefn))))
 
 (end-tests (ns-name *ns*) :exit? true)
