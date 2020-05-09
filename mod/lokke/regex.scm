@@ -31,7 +31,9 @@
                           pcre2-match-ovector))
   #:use-module ((lokke pr) #:select (pr-on pr-str print-on))
   #:use-module ((lokke vector) #:select (conj vector))
-  #:export (re-find
+  #:export (matcher-end
+            matcher-start
+            re-find
             re-groups
             re-matcher
             re-pattern
@@ -58,9 +60,20 @@
 (define-class <re-matcher> ()
   (pattern #:init-keyword #:pattern)
   (string #:init-keyword #:string)
-  (offset #:init-keyword #:offset #:init-value 0)
+  (start #:init-keyword #:start #:init-value 0)
+  (end #:init-keyword #:end #:init-value 0)
   (data #:init-keyword #:data)
   (match? #:init-keyword #:match? #:init-value #f))
+
+(define (matcher-end m)
+  (unless (slot-ref m 'match?)
+    (error "no match"))
+  (slot-ref m 'end))
+
+(define (matcher-start m)
+  (unless (slot-ref m 'match?)
+    (error "no match"))
+  (slot-ref m 'start))
 
 (define (require-code! re width)
   (let* ((slot (case width
@@ -148,7 +161,7 @@
             (rc (pcre2-match-utf code-8 code-32
                                  #f ;; coerce
                                  string
-                                 (slot-ref matcher 'offset)
+                                 (slot-ref matcher 'end)
                                  0 ;; opts
                                  (slot-ref matcher 'data))))
        (cond
@@ -156,7 +169,8 @@
         ((= rc PCRE2_ERROR_PARTIAL) (slot-set! matcher 'match? #f) #nil) ;; for now?
         ((positive? rc)
          (let ((ov (pcre2-match-ovector (slot-ref matcher 'data))))
-           (slot-set! matcher 'offset (array-ref ov 1))
+           (slot-set! matcher 'start (array-ref ov 0))
+           (slot-set! matcher 'end (array-ref ov 1))
            (slot-set! matcher 'match? #t)
            (groups-for-ovector string ov)))
         ((zero? rc)

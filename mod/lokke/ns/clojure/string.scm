@@ -16,7 +16,10 @@
                 #:select (string-locale-downcase string-locale-upcase))
   #:use-module ((lokke base syntax) #:select (if-let))
   #:use-module ((lokke collection) #:select (first next seq))
+  #:use-module ((lokke scm vector) #:select (lokke-vector lokke-vector-conj))
   #:use-module ((lokke pr) #:select (str))
+  #:use-module ((lokke regex)
+                #:select (matcher-end matcher-start re-find re-matcher))
   #:use-module ((srfi srfi-1) #:select (every proper-list?))
   #:export (blank?
             capitalize
@@ -59,3 +62,22 @@
                           (loop (next s) (cons (str (first s)) result))
                           (reverse! result))))))
     (string-join ls (str separator))))
+
+(define* (split s re #:optional limit)
+  (let ((m (re-matcher re s)))
+    (let loop ((result (lokke-vector))
+               (prev-end 0)
+               (limit limit))
+      (if (and limit (zero? limit))
+          result
+          (let ((next (re-find m)))
+            (cond
+             (next
+              (let* ((part (substring/read-only s prev-end (matcher-start m))))
+                (loop (lokke-vector-conj result part)
+                      (matcher-end m)
+                      (and limit (1- limit)))))
+             ((< prev-end (string-length s))
+              (lokke-vector-conj (substring/read-only s prev-end)
+                                 result))
+             (else result)))))))
