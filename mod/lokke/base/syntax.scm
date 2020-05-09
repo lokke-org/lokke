@@ -55,6 +55,7 @@
   #:export (->
             ->>
             cond
+            condp
             declare
             def
             defn
@@ -509,3 +510,18 @@
       ((_ exp ...)
        #'(let ((terminator (cons #f #f)))
            (%for terminator (lambda () #nil) exp ...))))))
+
+(define-syntax condp
+  (lambda (x)
+    (syntax-case x ()
+      ((_ pred expr default) #'default)
+      ((_ pred expr comparable #:>> result-fn clauses ...)
+       #'(if-let (result (pred comparable expr))
+           (result-fn result)
+           (condp pred expr clauses ...)))
+      ((_ pred expr comparable result clauses ...)
+       #'(if (pred comparable expr)
+             result
+             (condp pred expr clauses ...)))
+      ((_ pred expr)
+       #'(error "No matching clause for" '(pred _ expr))))))

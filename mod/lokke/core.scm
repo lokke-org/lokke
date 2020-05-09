@@ -23,6 +23,7 @@
                 #:select (and
                           binding
                           (cond . clj-cond)
+                          condp
                           declare
                           def
                           defn
@@ -228,6 +229,7 @@
                compare
                complement
                concat
+               condp
                conj
                constantly
                contains?

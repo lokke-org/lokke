@@ -1,0 +1,31 @@
+#!./lokke --#!
+-i :this -- :args  ;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-basics
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "condp"
+  (is (= :yep (condp < 0 -1 :yep)))
+  (is (= :nope (condp < 0 0 :yep :nope)))
+  (is (= :yep (condp < 0 0 :nope -3 :yep)))
+  (is (= :yep (condp < 0 0 :nope -3 :yep :nope)))
+  (is (= true (condp < 0 0 :nope -3 :>> identity :nope))))
+
+(end-tests (ns-name *ns*) :exit? true)
