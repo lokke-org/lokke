@@ -28,4 +28,12 @@
   (is (= :yep (condp < 0 0 :nope -3 :yep :nope)))
   (is (= true (condp < 0 0 :nope -3 :>> identity :nope))))
 
+(testing "sort"
+  ;; FIXME: test stability
+  (is (= [1 2 3 4 5] (sort '(1 2 3 4 5))))
+  (is (= [1 2 3 4 5] (sort '(5 2 1 4 3))))
+  (is (= [1 2 3 4 5] (sort [1 2 3 4 5])))
+  (is (= [1 2 3 4 5] (sort [5 2 1 4 3])))
+  (is (= [2 2 3 4 5] (sort [5 2 2 4 3]))))
+
 (end-tests (ns-name *ns*) :exit? true)

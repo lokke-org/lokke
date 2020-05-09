@@ -17,6 +17,7 @@
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
+  #:use-module ((srfi srfi-43) #:select (vector-unfold))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base syntax)
@@ -175,7 +176,7 @@
             num
             short
             some?)
-  #:replace (= do instance? nil?)
+  #:replace (= do instance? nil? sort)
   #:re-export (*
                *err*
                *in*
@@ -500,3 +501,11 @@
   (if (zero? (string-length s))
       #nil
       (make <string-seq> #:items s)))
+
+(define-method (sort s)
+  ;; FIXME: double check that the seq elements are only realized once.
+  (let* ((v (vector-unfold (lambda (i s) (values (first s) (rest s)))
+                           (count s)
+                           (seq s))))
+    (stable-sort! v (lambda (x y) (neg? (compare x y))))
+    (seq v)))
