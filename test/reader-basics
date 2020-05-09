@@ -100,6 +100,9 @@
 
 (test-equal #\newline (t/read-string "\\newline"))
 (test-equal #\space (t/read-string "\\space"))
+;; Test newline again - previously an accidentally static reader local
+;; variable would cause the search for the alias to fail here.
+(test-equal #\newline (t/read-string "\\newline"))
 (test-equal #\tab (t/read-string "\\tab"))
 (test-equal #\page (t/read-string "\\formfeed"))
 (test-equal #\backspace (t/read-string "\\backspace"))

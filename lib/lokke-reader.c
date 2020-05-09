@@ -1160,7 +1160,7 @@ scm_read_character (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
   }
 
   /* aliased characters like \newline \return, etc. */
-  static struct char_and_c_name_t *alias = aliased_characters;
+  struct char_and_c_name_t *alias = aliased_characters;
   while (alias->name) {
     if (strcmp(buffer, alias->name) == 0)
       return alias->chr;
