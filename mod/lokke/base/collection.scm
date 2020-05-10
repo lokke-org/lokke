@@ -34,7 +34,7 @@
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
-  #:use-module ((srfi srfi-43) #:select (vector-append))
+  #:use-module ((srfi srfi-43) #:select (vector-append vector-unfold))
   #:export (<coll>
             <lazy-seq>
             <pair-seq>
@@ -63,6 +63,8 @@
             get
             get-in
             into
+            into-array
+            into-list
             keys
             lazy-seq
             make-pair-seq
@@ -652,3 +654,23 @@
 (define-method (pop (x <boolean>)) (require-nil 'pop x) #nil)
 (define-method (pop (x <null>)) (error "cannot pop empty list"))
 (define-method (pop (x <pair>)) (cdr x))
+
+(define-method (into-array (s <seq>))
+  (vector-unfold (lambda (i s) (values (first s) (rest s)))
+                 (count s)
+                 (seq s)))
+
+(define-method (into-list (b <boolean>))
+  (require-nil 'into-list b)
+  '())
+
+(define-method (into-list (l <list>))
+  l)
+
+(define-method (into-list (s <seq>))
+  (let loop ((s s)
+             (result '()))
+    (let ((s (seq s)))
+      (if s
+          (loop (next s) (%scm-cons (first s) result))
+          (reverse! result)))))

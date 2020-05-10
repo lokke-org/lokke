@@ -295,6 +295,7 @@
                inc'
                int?
                into
+               into-array
                invoke
                iterate
                key

@@ -34,6 +34,8 @@
                           find
                           first
                           get
+                          into-array
+                          into-list
                           nth
                           peek
                           pop
@@ -62,6 +64,7 @@
                           lokke-vector?
                           vector->lokke-vector))
   #:use-module ((srfi srfi-1) #:select (fold))
+  #:use-module ((srfi srfi-43) #:select (vector-unfold))
   #:use-module ((srfi srfi-67) #:select (vector-compare))
   #:use-module ((srfi srfi-71) #:select (let let*))
   #:replace (vector vector?)
@@ -78,6 +81,8 @@
                find
                first
                get
+               into-array
+               into-list
                meta
                nth
                peek
@@ -445,3 +450,16 @@
     (when (zero? len)
       (error "cannot pop empty vector"))
     (subvec-of (subvec-offset v) (subvec-length v) (subvec-vec v) 0 (1- len))))
+
+(define-method (into-list (v <lokke-vector>))
+  (let ((len (lokke-vector-length v)))
+    (let loop ((i 0)
+               (result '()))
+      (if (= len i)
+          (reverse! result)
+          (loop (1+ i) (cons (lokke-vector-ref v i) result))))))
+
+(define-method (into-array (v <lokke-vector>))
+  (vector-unfold (lambda (i _) (values (lokke-vector-ref v i) #nil))
+                 (lokke-vector-length v)
+                 #nil))

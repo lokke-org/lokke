@@ -52,6 +52,7 @@
                           get
                           get-in
                           into
+                          into-array
                           keys
                           lazy-seq
                           list?
