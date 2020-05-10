@@ -549,6 +549,7 @@ SCM_DEFINE (pcre2_match, "pcre2-match-utf", 7, 0, 0,
 #undef FUNC_NAME
 
 #define def_intmax_sym(x) scm_c_define(#x, scm_from_intmax(x))
+#define def_uintmax_sym(x) scm_c_define(#x, scm_from_uintmax(x))
 #define def_u32_sym(x) scm_c_define(#x, scm_from_uint32(x))
 
 static void*
@@ -835,8 +836,8 @@ init_pcre2()
     def_intmax_sym (PCRE2_ERROR_INTERNAL_DUPMATCH);
     def_intmax_sym (PCRE2_ERROR_DFA_UINVALID_UTF);
 
-    def_intmax_sym (PCRE2_ZERO_TERMINATED);
-    def_intmax_sym (PCRE2_UNSET);
+    def_uintmax_sym (PCRE2_ZERO_TERMINATED);
+    def_uintmax_sym (PCRE2_UNSET);
 
 #ifndef SCM_MAGIC_SNARFER
 #  include "lib/lokke-pcre2.x"
