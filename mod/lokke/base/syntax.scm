@@ -155,15 +155,15 @@
         (cons #`(#,var #,init)
               (destructure-binding-syntax context binding var))))
     (define (expand bindings body)
-      (let* ((bindings (append-map!
+      (let* ((destructured (append-map!
                         (lambda (p)
                           (apply destructured-bindings (append p (list body))))
                         (pairify bindings)))
-             (result #`(let* #,bindings #,@body)))
+             (result #`(let* #,destructured #,@body)))
         (dbglet "expanded let:\n  ~s\n->\n  ~s\n->\n  ~s\n"
                 (syntax->datum `(let ,bindings ,@body))
                 result
-                (syntax->datum `(let* ,bindings ,@body)))
+                (syntax->datum `(let* ,destructured ,@body)))
          result))
     (syntax-case x ()
       ((_ (vec-tag meta binding ...) body ...)  (vec-tag? #'vec-tag)
