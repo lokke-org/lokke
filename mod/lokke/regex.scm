@@ -22,6 +22,7 @@
                 #:select (PCRE2_ERROR_NOMATCH
                           PCRE2_ERROR_PARTIAL
                           PCRE2_JIT_COMPLETE
+                          PCRE2_UNSET
                           pcre2-compile-utf
                           pcre2-get-error-message
                           pcre2-jit-compile
@@ -121,22 +122,23 @@
 
 (define (groups-for-ovector string ovector)
   ;; FIXME: add ovector accessors and avoid creating intermediate vec?
-  (let ((len (array-length ovector)))
+  (let ((len (array-length ovector))
+        (ovec-str (lambda (offset)
+                    (let ((start (array-ref ovector offset)))
+                      (if (= start PCRE2_UNSET)
+                          #nil
+                          (substring/read-only string
+                                               start
+                                               (array-ref ovector
+                                                          (1+ offset))))))))
     (cond
-     ((= len 2)
-      (substring/read-only string
-                           (array-ref ovector 0)
-                           (array-ref ovector 1)))
+     ((= len 2) (ovec-str 0))
      ((> len 2)
       (let loop ((i 0)
                  (result (vector)))
         (if (= i len)
             result
-            (loop (+ i 2)
-                  (conj result
-                        (substring/read-only string
-                                             (array-ref ovector i)
-                                             (array-ref ovector (1+ i))))))))
+            (loop (+ i 2) (conj result (ovec-str i))))))
      ((zero? len) #nil)  ;; Should be impossible.
      (else (error "invalid ovector length" len)))))
 

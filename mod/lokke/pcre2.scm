@@ -24,6 +24,7 @@
             PCRE2_ERROR_NOMATCH
             PCRE2_ERROR_PARTIAL
             PCRE2_JIT_COMPLETE
+            PCRE2_UNSET
             pcre2-compile-u32 ;; quashes PCRE2_NO_UTF_CHECK if PCRE2_UTF or PCRE2_MATCH_INVALID_UTF
             pcre2-compile-u8  ;; quashes PCRE2_NO_UTF_CHECK if PCRE2_UTF or PCRE2_MATCH_INVALID_UTF
             pcre2-compile-utf
