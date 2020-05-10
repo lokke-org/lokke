@@ -27,13 +27,16 @@
 
 (define-module (lokke base syntax)
   #:use-module ((guile)
-                #:select ((do . %scm-do)
+                #:select ((cond . %scm-cond)
+                          (do . %scm-do)
                           (if . %scm-if)
-                          (let . %scm-let)))
+                          (let . %scm-let)
+                          (or . %scm-or)))
   #:use-module ((srfi srfi-1)
                 #:select (append-map!
                           dotted-list?
                           drop-right
+                          find
                           last
                           take-right))
   #:use-module ((lokke base collection)
@@ -75,7 +78,8 @@
 
 (eval-when (expand load eval)
   (define debug-fn? #f)
-  (define debug-let? #f))
+  (define debug-let? #f)
+  (define debug-loop? #f))
 
 (define-syntax-rule (var name)
   (module-variable (current-module) 'name))
@@ -128,12 +132,28 @@
                             #'(format (current-error-port) arg ...)
                             #t)))))
 
+(define (find-id exp)
+        (syntax-case exp ()
+          (() #f)
+          ((() exp ...) (find-id #'(exp ...)))
+          (((x subexp ...) exp ...)
+           (%scm-if (identifier? #'x) #'x (find-id #'((subexp ...) exp ...))))
+          ((x exp ...)
+           (%scm-if (identifier? #'x) #'x (find-id #'(exp ...))))))
+
 (define-syntax let**
   (lambda (x)
     (define (destructured-bindings binding init body)
-      (let ((var (car (generate-temporaries '(#t)))))
+      ;; Suspect there's a more correct way to handle this (imagine we
+      ;; may want to rework destructuring), but for now, just search
+      ;; the body for an identifier to use to establish the context
+      ;; (scoping) when insinuating destructuring-related bindings
+      ;; (e.g. :keys), so that x will be in scope in the body of say
+      ;; (fn [{:keys [x]}] x) ...).
+      (let ((var (car (generate-temporaries '(#t))))
+            (context (%scm-or (find-id body) x)))
         (cons #`(#,var #,init)
-              (destructure-binding-syntax x binding var))))
+              (destructure-binding-syntax context binding var))))
     (define (expand bindings body)
       (let* ((bindings (append-map!
                         (lambda (p)
@@ -214,28 +234,27 @@
 
 (define-syntax loop
   (lambda (x)
-    (define (expand context bindings body)
+    (define (expand bindings body)
       (with-syntax ((((var val) ...) (pairify bindings))
-                    (recur (datum->syntax context 'recur)))
-        (let* ((shim-args (generate-temporaries #'((var val) ...)))
+                    (recur (datum->syntax x 'recur)))
+        (let* ((var-vals #'((var val) ...))
+               (shim-args (generate-temporaries var-vals))
                (recur-args (map (lambda (shim var-val)
                                   (list shim (cadr var-val)))
                                 shim-args
-                                #'((var val) ...)))
+                                var-vals))
                (let-args (append-map! (lambda (shim var-val)
                                         (list (car var-val) shim))
                                       shim-args
-                                      #'((var val) ...))))
+                                      var-vals)))
           #`(%scm-let recur #,recur-args
                       (let** #,let-args
-                        #,@body)))))
-    ;; Note that both clauses have to have the recur literal -- was
-    ;; very confusing before realizing that....
+                             #,@body)))))
     (syntax-case x ()
       ((_ (vec-tag meta binding ...) body ...) (vec-tag? #'vec-tag)
-       (expand x #'(binding ...) #'(body ...)))
+       (expand #'(binding ...) #'(body ...)))
       ((_ (binding ...) body ...)
-       (expand x #'(binding ...) #'(body ...))))))
+       (expand #'(binding ...) #'(body ...))))))
 
 (define-syntax dotimes
   (lambda (x)
