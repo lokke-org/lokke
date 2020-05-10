@@ -163,8 +163,10 @@
                 #:select (gensym ident? keyword name namespace symbol))
   #:use-module ((system base compile)
                 #:select (compile-file compiled-file-name))
-  #:export (*command-line-args* ;; this is wrong...
+  #:export (*assert*
+            *command-line-args* ;; this is wrong...
             *file*
+            assert
             byte
             (do . %scm-do)
             distinct?
@@ -418,6 +420,14 @@
                         'peek
                         'quote
                         'read)
+
+(defdyn *assert* #t)
+
+(define-syntax assert
+  (syntax-rules ()
+    ((_ x) (when-not x (error "Assertion failed:" (pr-str x))))
+    ((_ x message)
+     (when-not x (error (str "Assertion failed: " message "\n" (pr-str x)))))))
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))
