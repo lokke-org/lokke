@@ -227,6 +227,7 @@
 
   (define (destructure binding init result)
     (let* ((tmp (car (generate-temporaries '(#t)))))
+      (dbg "destructure: ~s\n" (list tmp binding init result))
       (cond
        ((syn-symbol? binding) (cons #`(#,binding #,init) result))
        ((syn-vecish? binding)
@@ -240,7 +241,6 @@
               (init #`(let ((v #,init))
                         (if (seq? v) (apply hash-map v) v))))
           (let-values (((specs defaults) (extract-map-defaults specs)))
-            (dbg "sdfsdf: ~s\n" (cons (list tmp init) result))
             (destruct-map tmp defaults specs
                           (cons (list tmp init) result)))))
        (else
