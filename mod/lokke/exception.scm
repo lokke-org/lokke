@@ -180,7 +180,7 @@
        #'(%scm-catch
           tag
           (lambda () (try expr ...))
-          (lambda ex catch-expr ...)))
+          (lambda ex #nil catch-expr ...)))
 
       ((_ expr ...) (has-finally-clauses? (syntax->datum #'(expr ...)))
        (error "finally clause must be last and unique"))
