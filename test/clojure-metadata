@@ -28,7 +28,7 @@
   (is (= {:x 1} (meta (with-meta [] {:x 1}))))
   (is (= {:x 1} (meta (conj (with-meta [] {:x 1}) 0 1))))
 
-  (is (= {:tag 'x} (meta ^x [])))
+  (is (= {:tag 'x} (let [x 'x] (meta ^x []))))
   (is (= {:tag "x"} (meta ^"x" [])))
   (is (= {:x true} (meta ^:x [])))
   (is (= {:x :y} (meta ^{:x :y} [])))

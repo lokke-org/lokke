@@ -19,7 +19,7 @@
 (define-module (lokke reader literal)
   #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke hash-map) #:select (hash-map? kv-list)) 
-  #:use-module ((lokke base metadata) #:select (meta with-meta))
+  #:use-module ((lokke base metadata) #:select (with-meta))
   #:use-module ((lokke transmogrify) #:select (clj-instances->literals))
   #:use-module ((srfi srfi-1) #:select (proper-list?))
   #:export (reader-hash-map
@@ -29,15 +29,24 @@
             reader-hash-set
             reader-hash-set-elts
             reader-hash-set-meta
+            reader-meta
+            reader-meta?
             reader-vector
             reader-vector?
             reader-vector-elts
             reader-vector-meta
+            supports-reader-meta?
             with-reader-meta))
 
 ;; For now, we'll still promise that the first item is the symbol
 ;; distinguishing the item, i.e. not require require the use of
 ;; reader-hash-set? predicates, etc.
+
+(define (reader-meta x)
+  (list '/lokke/reader-meta x))
+
+(define (reader-meta? x)
+  (and (pair? x) (eq? '/lokke/reader-meta (car x))))
 
 (define (reader-vector meta . elts)
   (cons* '/lokke/reader-vector meta elts))
@@ -61,7 +70,7 @@
   (cons* '/lokke/reader-hash-set meta elts))
 
 (define (reader-hash-set? x)
-  (and (list? x) (eq? '/lokke/reader-hash-set (car x))))
+  (and (pair? x) (eq? '/lokke/reader-hash-set (car x))))
 
 (define (reader-hash-set-meta m) (cadr m))
 (define (reader-hash-set-elts m) (cddr m))
@@ -86,6 +95,12 @@
 (define (reader-hash-map-meta m) (cadr m))
 (define (reader-hash-map-elts m) (cddr m))
 
+(define (supports-reader-meta? x)
+  (and (pair? x)
+       (memq (car x) '(/lokke/reader-hash-set
+                       /lokke/reader-hash-map
+                       /lokke/reader-vector))
+       #t))
 
 (define (with-reader-meta x meta)
   (unless (or (eq? #nil meta) (hash-map? meta))

@@ -18,6 +18,7 @@
   #:export (global-identifier?
             keyword->string
             map-tag?
+            meta-tag?
             module-name->ns-str
             module-name->ns-sym
             pairify
@@ -53,6 +54,7 @@
 
 ;; We use these as a syntax-pattern fender to detect reader-types.
 (define (map-tag? x) (eq? '/lokke/reader-hash-map (syntax->datum x)))
+(define (meta-tag? x) (eq? '/lokke/reader-meta (syntax->datum x)))
 (define (vec-tag? x) (eq? '/lokke/reader-vector (syntax->datum x)))
 
 (define (pairify lst)

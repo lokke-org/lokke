@@ -26,13 +26,17 @@
   #:use-module ((lokke ns) #:select (ns-aliases))
   #:use-module ((lokke reader literal)
                 #:select (reader-hash-map?
+                          reader-meta
+                          reader-meta?
                           reader-vector
                           reader-vector-elts
+                          supports-reader-meta?
                           with-reader-meta))
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
   #:use-module ((lokke transmogrify)
-                #:select (literals->clj-instances
+                #:select (clj-instances->literals
+                          literals->clj-instances
                           preserve-meta-if-new!
                           quote-empty-lists))
   #:use-module (oop goops)
@@ -306,9 +310,10 @@
        ((keyword? expr) (values expr bindings))
        (else (error "Unexpected expression:" expr)))))
 
-(define (merge-metadata-into-items lst)
-  ;; Does not need to handle literals because we instantiate them
-  ;; later.
+(define (merge-mergeable-metadata lst)
+  ;; Merges reader metadata inside list into subsequent forms when
+  ;; possible, otherwise leaves them in place.  Does not need to
+  ;; handle literals because we instantiate them later.
   (let loop ((lst lst)
              (pending-meta (hash-map))
              (result '()))
@@ -320,7 +325,7 @@
       (reverse! result))
      ((pair? lst)
       (let ((expr (car lst)))
-        (if (and (pair? expr) (eq? '/lokke/reader-meta (car expr)))
+        (if (reader-meta? expr)
             ;; For now, assume the meta expr is valid
             (let ((m (cadr expr)))
               (cond
@@ -348,10 +353,13 @@
             (let ((x (apply-internal-metadata expr (hash-map))))
               (loop (cdr lst)
                     (hash-map)
-                    (cons (if (empty? pending-meta)
-                              x
-                              (with-reader-meta x pending-meta))
-                          result))))))
+                    (if (empty? pending-meta)
+                        (cons x result)
+                        (if (supports-reader-meta? x)
+                            (cons (with-reader-meta x pending-meta) result)
+                            (cons* x
+                                   (reader-meta (clj-instances->literals pending-meta))
+                                   result))))))))
      (else
       (error "Argument must be a list:" lst)))))
 
@@ -364,7 +372,7 @@
    ((number? expr) expr)
    ((keyword? expr) expr)
    ((null? expr) expr)
-   ((list? expr) (merge-metadata-into-items expr))
+   ((list? expr) (merge-mergeable-metadata expr))
    ((boolean? expr) expr)
    ((char? expr) expr)
    (else (error "Unexpected expression from primitive reader:" expr))))
@@ -445,6 +453,9 @@
                      (cdr expr))))
            (else (car result)))))))
 
+;; FIXME: drop/adjust "meta pending at end of file/form" errors?
+;; FIXME: can we ignore (/lokke/reader-meta ...) forms in some passes now now?
+
 (define (uninstantiated-read port env aliases)
   (let loop ((expr (read-conditionally port))
              (pending-meta (hash-map)))
@@ -453,7 +464,8 @@
       (unless (empty? pending-meta)
         (error "metadata pending at end of file:" pending-meta))
       expr)
-     ((and (pair? expr) (eq? '/lokke/reader-meta (car expr)))
+     ((reader-meta? expr)
+      ;; FIXME: could/should at least cheap validation go in reader-meta?
       (unless (null? (cddr expr))
         (error "Expected only one argument to /lokke/reader-meta:" expr))
       ;; For now, assume the meta expr is valid
@@ -492,7 +504,13 @@
                   (format (current-error-port) "reader finishing up: ~s\n" result)))
              (result (if (empty? pending-meta)
                          result
-                         (with-reader-meta result pending-meta))))
+                         (if (supports-reader-meta? result)
+                             (with-reader-meta result pending-meta)
+                             (begin
+                               (format (current-error-port)
+                                       "Ignoring metadata in unsupported position: ~s\n"
+                                       pending-meta)
+                               result)))))
         (when debug-reader?
           (format (current-error-port) "reader returning: ~s\n" result))
         result)))))

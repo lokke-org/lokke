@@ -230,19 +230,6 @@ TODO
 
 - Add doc and attr args to defmacro.
 
-- Perhaps augment `def` to recognize a `(/lokke/reader-meta ...)` form
-  before the `name` as a special case (as the JVM dialect does in a
-  different way) so that it can support `^:dynamic` etc., possibly
-  obivating `defdyn` (cf. `defn`).  This may require
-  `uninstantiated-read` to provide some kind of caching (or other
-  accommodation) so that it can return `(/lokke/reader-meta ...)` and
-  then `x` across two consecutive invocations when reading `^:dynamic
-  x`.  The issue is that we don't know whether or not it will need to
-  do that until after the metadata and `x` have both been read.  One
-  possibility might be a custom port type, and note that this is
-  irrelevant to the normal `read` because it has no representation for
-  standalone metadata, though it might want to at least warn about it.
-
 - Review handling of cons pairs.  Right now we use/allow them in
   various places, but for example, doing so doesn't support metadata,
   or hashing (if we need that), and printing cons pairs as clj

@@ -68,6 +68,8 @@
 (def yep-doc "doc" true)
 (def- nope true)
 (def- nope-doc "doc" true)
+(def ^:private nope-key true)
+(def ^{:private true} nope-map true)
 (defn yepfn [] true)
 (defn- nopefn [] true)
 (ns test.clojure-ns)
@@ -79,6 +81,8 @@
   (is (public? mod 'yepfn))
   (is (not (public? mod 'nope)))
   (is (not (public? mod 'nope-doc)))
+  (is (not (public? mod 'nope-key)))
+  (is (not (public? mod 'nope-map)))
   (is (not (public? mod 'nopefn))))
 
 (end-tests (ns-name *ns*) :exit? true)

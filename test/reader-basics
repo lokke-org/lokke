@@ -25,6 +25,7 @@
             lokke-vector?
             lokke-vector-length
             lokke-vector-ref))
+ ((lokke vector) #:select ())  ;; load generics like with-meta
  ((rnrs io ports) #:select (eof-object))
  ((srfi srfi-64)
   #:select (test-assert

@@ -29,7 +29,6 @@
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke scm vector)
                 #:select (lokke-vec lokke-vector? lokke-vector->list))
-  #:use-module ((lokke vector) #:select (meta with-meta))
   #:use-module (oop goops)
   #:export (clj-instances->literals
             literals->clj-instances

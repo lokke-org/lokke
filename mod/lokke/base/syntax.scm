@@ -27,7 +27,8 @@
 
 (define-module (lokke base syntax)
   #:use-module ((guile)
-                #:select ((cond . %scm-cond)
+                #:select ((and . %scm-and)
+                          (cond . %scm-cond)
                           (do . %scm-do)
                           (if . %scm-if)
                           (let . %scm-let)
@@ -51,7 +52,11 @@
   #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
   #:use-module ((lokke base util)
-                #:select (global-identifier? map-tag? pairify vec-tag?))
+                #:select (global-identifier?
+                          map-tag?
+                          meta-tag?
+                          pairify
+                          vec-tag?))
   #:use-module ((lokke reader literal) #:select (reader-vector?))
   #:use-module (oop goops)
   #:re-export (binding defdyn defdynloc)
@@ -103,43 +108,63 @@
     ((_ x (f args ...) expr ...) (->> (f args ... x) expr ...))
     ((_ x f expr ...) (->> (f x) expr ...))))
 
-(define (expand-def sym doc value export?)
-  (with-syntax ((sym sym) (doc doc) (value value))
-    (let* ((maybe-export (%scm-if export?
-                                  (list #'(export sym))
-                                  '())))
-      (%scm-if #'doc
-               #`(begin
-                   (define sym value)
-                   (maybe-set-def-doc! (module-variable (current-module) 'sym)
-                                       sym
-                                       #,(global-identifier? #'sym) doc)
-                   (when (procedure? sym)
-                     (set-procedure-property! sym 'name 'sym))
-                   #,@maybe-export
-                   (var sym))
-               #`(begin
-                   (define sym value)
-                   (clear-def-doc! (module-variable (current-module) 'sym)
-                                   #,(global-identifier? #'sym))
-                   #,@maybe-export
-                   (var sym))))))
+(define (expand-def sym metadata doc value must-be-private?)
+  (with-syntax ((sym sym)
+                (metadata metadata)
+                (doc doc)
+                (value value)
+                (must-be-private? must-be-private?))
+    (%scm-if #'doc
+             #`(begin
+                 (define sym value)
+                 (maybe-set-def-doc! (module-variable (current-module) 'sym)
+                                     sym
+                                     #,(global-identifier? #'sym) doc)
+                 (when metadata
+                   (alter-meta! (module-variable (current-module) 'sym)
+                                (lambda (prev) metadata)))
+                 (when (procedure? sym)
+                   (set-procedure-property! sym 'name 'sym))
+                 (unless (or must-be-private? (get metadata #:private))
+                   (export sym))
+                 (var sym))
+             #`(begin
+                 (define sym value)
+                 (clear-def-doc! (module-variable (current-module) 'sym)
+                                 #,(global-identifier? #'sym))
+                 (when metadata
+                   (alter-meta! (module-variable (current-module) 'sym)
+                                (lambda (prev) metadata)))
+                 ;; Appropriate to do this at runtime?
+                 (when (and (not must-be-private?) (not (get metadata #:private)))
+                   (export sym))
+                 (var sym)))))
 
 (define-syntax def
   (lambda (x)
     (syntax-case x ()
+      ((_ (meta-tag mdata) sym doc value)
+       (%scm-and (meta-tag? #'meta-tag) (string? (syntax->datum #'doc)))
+       (expand-def #'sym #'mdata #'doc #'value #f))
+      ((_ (meta-tag mdata) sym value) (meta-tag? #'meta-tag)
+       (expand-def #'sym #'mdata #f #'value #f))
       ((_ sym doc value) (string? (syntax->datum #'doc))
-       (expand-def #'sym #'doc #'value #t))
+       (expand-def #'sym #nil #'doc #'value #f))
       ((_ sym value)
-       (expand-def #'sym #f #'value #t)))))
+       (expand-def #'sym #nil #f #'value #f)))))
 
 (define-syntax def-
   (lambda (x)
     (syntax-case x ()
+      ((_ (meta-tag mdata) sym doc value)
+       (%scm-and (meta-tag? #'meta-tag) (string? (syntax->datum #'doc)))
+       (expand-def #'sym #'mdata #'doc #'value #t))
+      ((_ (meta-tag mdata) sym value) (meta-tag? #'meta-tag)
+       (expand-def #'sym #'mdata #f #'value #t))
       ((_ sym doc value) (string? (syntax->datum #'doc))
-       (expand-def #'sym #'doc #'value #f))
+       (expand-def #'sym #nil #'doc #'value #t))
       ((_ sym value)
-       (expand-def #'sym #f #'value #f)))))
+       (expand-def #'sym #nil #f #'value #t)))))
 
 ;; FIXME: think we might have a redundant expansion, i.e. not sure
 ;; let** needs to cons the initial extra binding.
