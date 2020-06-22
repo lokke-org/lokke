@@ -20,6 +20,7 @@
   #:use-module ((lokke pr) #:select (str))
   #:use-module ((lokke regex)
                 #:select (matcher-end matcher-start re-find re-matcher))
+  #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (every proper-list?))
   #:export (blank?
             capitalize
@@ -51,7 +52,7 @@
 (define (trimr s) (read-only (string-trim-right s)))
 (define (upper-case s) (read-only (string-locale-upcase s)))
 
-(define (join separator coll)
+(define-method (join separator coll)
   ;; Does this short-circuit help?
   (let ((ls (if (and (proper-list? coll) (every string? coll))
                 coll
@@ -62,6 +63,8 @@
                           (loop (next s) (cons (str (first s)) result))
                           (reverse! result))))))
     (string-join ls (str separator))))
+
+(define-method (join coll) (join "" coll))
 
 (define* (split s re #:optional limit)
   (let ((m (re-matcher re s)))
