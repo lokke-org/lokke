@@ -1,5 +1,4 @@
-#!./lokke --#!
--i :this -- :args
+#!./lokke -0
 !#
 
 ;   Copyright (c) Rich Hickey. All rights reserved.

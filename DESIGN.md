@@ -363,6 +363,20 @@ TODO
     reasons, the default is "#t".  Use "parameterize" to bind it to
     "#f".  *Note Parameters::.
 
+Notes
+-----
+
+- A (@...) reference inside a function in a module appeared to be
+  unconditionally forcing the creation of the referred module, which
+  was empty because it was a clojure module (since guile has no idea
+  that a .clj file may produce a guile module).  This caused trouble
+  because code that checks for the existence of the module
+  (i.e. perhaps ns/require), was fooled.  The resulting error was
+
+    no code for module (lokke ns some thing)
+
+  We should perhaps double-check, but in that case, adding/using
+  `resolve-ns` instead was the preferable solution.
 
 Hacking
 -------

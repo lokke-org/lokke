@@ -73,15 +73,12 @@
                 ";; end:\n"))))
 
 (match (program-arguments)
+  ((gen "lok" arg ...)
+   (gen-lokke (cddr (program-arguments))
+              '((@ (lokke main) lok-main) (program-arguments))))
   ((gen "lokke" arg ...)
    (gen-lokke (cddr (program-arguments))
-              '((@ (lokke main) lokke-main) (program-arguments))))
-  ((gen "cljl" arg ...)
-   (gen-lokke (cddr (program-arguments))
-              '((@ (lokke main) cljl-main) #f (program-arguments))))
-  ((gen "cljl-strict" arg ...)
-   (gen-lokke (cddr (program-arguments))
-              '((@ (lokke main) cljl-main) #t (program-arguments)))))
+              '((@ (lokke main) lokke-main) (program-arguments)))))
 
 ;; local variables:
 ;; mode: scheme

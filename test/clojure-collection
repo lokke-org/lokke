@@ -1,5 +1,4 @@
-#!./lokke --#!
--i :this -- :args
+#!./lokke -0
 !#
 
 ;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>

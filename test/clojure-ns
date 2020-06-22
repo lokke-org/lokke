@@ -1,5 +1,4 @@
-#!./lokke --#!
--i :this -- :args ;; -*-clojure-*-
+#!./lokke -0
 !#
 
 ;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>

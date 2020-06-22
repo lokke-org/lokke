@@ -10,147 +10,123 @@ lokke \- a Clojure dialect for Guile
 .RB ( help | \-\-help | \-h | \-? )
 .YS
 .SY lokke
-.B repl
+.RB [ repl ]
 .YS
 .SY lokke
-.B clj
-.OP \-i file
-.OP \-e code
-.RB [ CLJ_OPTION
-\&.\|.\|.\&]
-.RB [ \-\- ]
-.B COMMAND_LINE_ARG
-\&.\|.\|.
+.B \-0
 .YS
 .SY lokke
-.B \-\-!#
-.YS
-.SY cljl
-.RB ( help | \-\-help | \-h | \-? )
-.YS
-.SY cljl
-.OP \-i file
-.OP \-e code
-.RB [ CLJ_OPTION
+.B run
+.OP \-l path
+.OP \-e expr
+.OP \-a function
+.RB [ RUN_OPT
 \&.\|.\|.\&]
-.RB [ \-\- ]
-.B COMMAND_LINE_ARG
-\&.\|.\|.
-.YS
-.SY cljl-strict
-.RB ( help | \-\-help | \-h | \-? )
-.YS
-.SY cljl-strict
-.OP \-i file
-.OP \-e code
-.RB [ CLJ_OPTION
+.RB [ \-\-
+.B argument
 \&.\|.\|.\&]
-.RB [ \-\- ]
-.B COMMAND_LINE_ARG
-\&.\|.\|.
+.YS
+.SY lok
+.RB ( \-\-help | \-h | \-? )
+.YS
+.SY lok
+.OP \-l path
+.OP \-e expr
+.OP \-a function
+.RB [ RUN_OPT
+\&.\|.\|.\&]
+.RB [ \-\-
+.B argument
+\&.\|.\|.\&]
 .YS
 .
 .SH DESCRIPTION
-Lokke is a Clojure dialect for Guile, and may be invoked in three
-ways.
+Lokke is a Clojure dialect for Guile, and may be invoked in two ways.
 .B lokke
 is the most general command, acting as specified by an initial
 subcommand argument (e.g.
 .BR repl ,
-.BR clj ,
-etc.).  The
-.B cljl
-and
-.B cljl-strict
-commands
-behave exactly as if
-.B lokke clj
-had been invoked with the same arguments.
-.B cljl-strict
-also acts as if
-.B --strict
-had been included in the arguments.
+.BR run ,
+etc.), while
+.B lok
+is a convenience for interactive use, and behaves exactly as if
+.B lokke run
+had been invoked with the same arguments.  When no arguments are
+provided, both commands present an interactive Read-Eval-Print-Loop
+(REPL) on the terminal.
 .P
-When no arguments are provided to
-.B cljl
-or
-.B cljl-strict
-they present a Read-Eval-Print-Loop (REPL) on the terminal for
-interactive use.
-.P
-The
-.BR COMMAND_LINE_ARGs
-will be available via
+Any
+.BR argument s
+will be available as
 .B *command-line-args*
-in Clojure, and when specified
-.B \-\-
-causes all subsequent arguments to be interpreted solely as
-.BR COMMAND_LINE_ARG s.
+in Clojure, and must be delimited from the others by
+.BR \-\- .
 .P
 The
-.B \-!#
-option allows lokke to act as a script interpreter.  See
+.B \-0
+option allows lokke to act as a script interpreter in a flexible,
+portable manner, given that the handling of
+.B #!
+interpeter lines is not standardized across platforms.  See
 .B SCRIPT EVALUATION
 below for additional information.
 .P
-In general,
-.B cljl
-is intended for convenient interactive use,
-.B cljl-strict
-is intended for situations where
-.B lokke
-needs to match the JVM
-.B clj
-tool's behavior more closely, say to attempt to stand in for the JVM
-.B clojure
-tool in #!/usr/bin/clojure scripts, and
-.B lokke --!#
-should be preferred for most #! invocations (when portability isn't a
-primary concern).
-.P
-Note that as yet
-.B lokke
-doesn't provide anything like the JVM's distinction between the
-.B clj
-and
-.B clojure
-commands because it appears that the distintion is just between
-whether or not readline support is available, and Guile provides that
-for
-.B lokke.
-See
-.B READLINE SUPPORT
-below.
 .
-.SH HELP
+.SH RUN_OPT
 .TP
-.BI help\fR,\ \fB\-\-help\fR,\ \fB\-h\fR,\ \fB\-?
-Show help and exit.
-.
-.SH CLJ_OPTION
-.TP
-.BI \-i " file" \fR,\ \fB\-\-init " file"
+.BI \-l \fR,\ \fB\-\-load \fI\ file
 Execute code in file.
 .TP
-.BI \-e " code" \fR,\ \fB\-\-eval " code"
+.BI \-e \fR,\ \fB\-\-eval \fI\ code
 Evaluate code, printing any values that are not nil or unspecified.
 .TP
-.B \-\-strict
-Provide stricter compatibility with JVM
-.B clojure/clj
-options.  Treat
-.B \-\-
-as a normal argument.
+.BI \-a \fR,\ \fB\-\-apply \fI\ some.ns/function
+Apply some.ns/function to the
+.BR *command-line-args* .
+.TP
+.B -
+Execute any code provided on standard input.
+.TP
+.I file
+Execute code in
+.IR file ,
+which must not start with a dash (-).
 .
 .SH SCRIPT EVALUATION
-In most cases, lokke scripts should begin like this:
+If, and only if, you don't need to specify any additional arguments,
+you may begin your scripts like this:
 .P
 .RS
 .EX
-#!/path/to/lokke-0.0 --!#
-;; Place any additional lokke arguments as (roughly) EDN here.
-;; For the typical case:
--i :this -- :args
+#!/path/to/lokke-0.0 -0 ;; -*-clojure-*-
+!#
+(prn :hello-world)
+\&.\|.\|.\&
+.EE
+.RE
+.P
+When lokke executes the program, the content between the
+.B #!
+.B !#
+pair is ignored as a block comment, just as with Guile itself.
+.P
+Whenever you do need to specify additional arguments, you should not
+put them on the
+.B #!
+line because the handling of additional text on that line varies from
+platform to platform.  Sometimes the remainder of the line becomes a
+single arrgument, sometimes it is split on whitespace, and (more
+rarely), sometimes part of the line is ignored.
+
+Accordingly, if you need to make adjustments, you may do something
+like this:
+.P
+.RS
+.EX
+#!/path/to/lokke-0.0 -0 ;; -*-clojure-*-
+;; We're in a Guile preamble module defining a procedure for each
+;; lokke subcommand.
+(run (cons* "-l" %0 "--" %&))
 !#
 ;; Place your Clojure code here, after the !#
 (prn :hello-world)
@@ -158,36 +134,36 @@ In most cases, lokke scripts should begin like this:
 .EE
 .RE
 .P
-The
-.B \-\-!#
-argument will be replaced by the arguments in the "EDN" section, each
-of which must be a string, symbol, number, boolean, or nil, or one of
-the keywords
-.B :this
-or
-.B :args.
+This will behave exactly the same as the previous example.  When no
+code is provided in the block comment, lokke will act as if
+.B (run (cons* """-l""" %0 """--""" %&))
+had been specified, but you can of course adjust the
+.B run
+invocation to suit your needs, or provide something else entirely.
 .P
-Symbol, number, boolean, or nil arguments will be converted to
-strings,
-.B :this
-will be replaced with the path to the script itself (i.e. $0 in sh),
-and
-.B :args
-will be replaced with all of the arguments provided to the invocation
-of the script, (i.e. $@ in sh).  Without any EDN arguments, lokke will
-present a REPL.  That is, lokke will not actually run the script if
-not requested by
-.B -i :this
-or the equivalent.
+Everything after the
+.B \-0
+and before the
+.B !#
+is executed as Scheme code by Guile in a module that has definitions
+for each of the lokke subcommands.  Note that the code Guile executes
+will begin with the character immediately after the zero in
+.B \-0
+no matter what it is (i.e. even if it is not whitespace).  The zero
+actually specifies a compatibility level, and for now zero is the only
+valid number.
 .P
-Note that the EDN argument text will begin with the character
-immediately after the exclamation point in
-.B \-\-#!
-no matter what it is (i.e. even if it is not whitespace).
-.P
-Among other reasons, this approach has been chosen for portability
-since the semantics and flexibility of #! directives varies across
-platforms.
+As you may have guessed, the preamble module binds
+.B %0
+to the script path (like
+.B $0
+in POSIX shells),
+.B %&
+to a list of all of the subsequent command line arguments, and
+.BR %1 ,
+.BR %2 ,
+etc. to the elements of
+.BR %& .
 .P
 At the moment lokke is not a binary executable.  If the system
 requires #! interpreters to be binary executables, or if you'd like to
@@ -196,7 +172,7 @@ this:
 .P
 .RS
 .EX
-#!/usr/bin/env lokke-0.0 --!#
+#!/usr/bin/env lokke-0.0 -0
 \&.\|.\|.\&
 .EE
 .RE
@@ -218,8 +194,7 @@ to enable it in the REPL:
 .SH ENVIRONMENT
 .TP
 .B LOKKE_HISTORY
-When set, specifies the path to the REPL history file.  When not set,
-defaults to
+Specifies the path to the REPL history file.  Defaults to
 .B $XDG_CACHE_HOME/lokke/history
 when
 .B XDG_CACHE_HOME
@@ -229,10 +204,12 @@ is set, otherwise
 .SH SEE ALSO
 .
 .IR guile (1),
-and for much more detail, the guile info pages (perhaps via M-x info
-in emacs, or "info guile")
-.P
-.UR https://github.com/edn-format/edn
-Extensible Data Notataion (EDN)
+and for much more detail, the
+.UR https://www.gnu.org/software/guile/manual/html_node/index.html
+Guile Reference Manual
 .UE
-.AUTHORS
+which may also be available via
+.BR info\ guile
+or
+.B M-x info
+in emacs.

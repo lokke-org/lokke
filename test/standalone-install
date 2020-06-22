@@ -52,6 +52,5 @@ check-cmd()
     ((i++)) || true
 )
 
-check-cmd "$tmpdir/install/bin/cljl" -e '(println :howdy)'
-check-cmd "$tmpdir/install/bin/cljl-strict" -e '(println :howdy)'
-check-cmd "$tmpdir/install/bin/lokke" clj -e '(println :howdy)'
+check-cmd "$tmpdir/install/bin/lok" -e '(println :howdy)'
+check-cmd "$tmpdir/install/bin/lokke" run -e '(println :howdy)'

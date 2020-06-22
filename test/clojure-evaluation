@@ -1,5 +1,4 @@
-#!./lokke --#!
--i :this -- :args
+#!./lokke -0
 !#
 
 ;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>

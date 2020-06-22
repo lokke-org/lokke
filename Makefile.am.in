@@ -23,10 +23,10 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver
 
 EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
 
-noinst_SCRIPTS = cljl cljl-strict lokke
+noinst_SCRIPTS = lok lokke
 
 # FIXME: preserve symlinks in install tree?
-man1_MANS = cljl.1 cljl-strict.1 lokke.1
+man1_MANS = lok.1 lokke.1
 
 AM_CFLAGS = \
   -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
@@ -130,17 +130,15 @@ SUFFIXES = .x .clj.go .scm.go
 	-o $@ $<
 
 
-cljl cljl-strict lokke: gen-lokke config.status Makefile
+lok lokke: gen-lokke config.status Makefile
 	./gen-lokke $@ '$(GUILE)' '' '' '' > $@.tmp.$$PID
 	chmod 0755 $@.tmp.$$PID
 	mv $@.tmp.$$PID $@
-CLEANFILES += cljl cljl.tmp.*
-CLEANFILES += cljl-strict cljl-strict.tmp.*
+CLEANFILES += lok lok.tmp.*
 CLEANFILES += lokke lokke.tmp.*
 
 lokke_dest_scripts = \
-  "$(DESTDIR)$(bindir)"/cljl \
-  "$(DESTDIR)$(bindir)"/cljl-strict \
+  "$(DESTDIR)$(bindir)"/lok \
   "$(DESTDIR)$(bindir)"/lokke
 
 lokke_uninstall += $(lokke_dest_scripts)
@@ -152,7 +150,7 @@ $(lokke_dest_scripts): gen-lokke config.status Makefile
 	  > $$(basename "$@")-install.tmp
 	chmod 0755 $$(basename "$@")-install.tmp
 	mv $$(basename "$@")-install.tmp $@
-CLEANFILES += cljl-install.tmp.* cljl-strict-install.tmp.* lokke-install.tmp.*
+CLEANFILES += lok-install.tmp.* lokke-install.tmp.*
 
 
 # Install a slightly different version of the tools

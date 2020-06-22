@@ -87,17 +87,17 @@ to select a particular version at configuration time like this:
 
 Now you should be able to run a Clojure program like this:
 
-    $ ./cljl -i hello.clj
+    $ ./lok hello.clj
     ...
     hello
 
 or run the REPL:
 
-    $ ./cljl
+    $ ./lok
     ...
     lokke@(lokke user)>
 
-`./cljl ...` is equivalent to `./lokke clj ...`.
+`./lok ...` is equivalent to `./lokke run ...`.
 
 Currently the Lokke repl *is* the Guile repl, with the initial
 language and environment set for Lokke, and so all of the Guile

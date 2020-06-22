@@ -14,8 +14,6 @@
 /build-aux/missing
 /build-aux/tap-driver.sh
 /build-aux/test-driver
-/cljl
-/cljl-strict
 /config.h
 /config.h.in
 /config.h.in
@@ -36,6 +34,7 @@
 /lib/.dirstamp
 /lib/.libs/
 /libtool
+/lok
 /lokke
 /m4/lib-ld.m4
 /m4/lib-link.m4
