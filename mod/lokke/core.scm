@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -294,6 +294,7 @@
                inc
                inc'
                int?
+               integer?
                into
                into-array
                invoke
