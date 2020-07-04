@@ -10,9 +10,7 @@ state:
 lokke_clean += state
 
 state/module-paths:: state
-	git ls-files 'mod/*.clj' 'mod/*.scm' > $@.tmp.$$PPID
-	cmp $@.tmp.$$PPID $@ || mv $@.tmp.$$PPID $@
-	rm -f $@.tmp.$$PPID
+	dev/gen-module-paths | dev/refresh "$@"
 
 Makefile.am: Makefile.am.in gen-makefile state/module-paths
 	./gen-makefile state/module-paths

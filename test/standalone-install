@@ -23,7 +23,7 @@ if test "$dirty_tree"; then
     exit 0
 fi
 
-echo '1..3'
+echo '1..2'
 
 mkdir -p tmp
 tmpdir=$(mktemp -d "tmp/test-standalone-install-XXXXXX")
@@ -32,10 +32,10 @@ exit_rm_paths+="$tmpdir"
 
 git clone . "$tmpdir/lokke"
 cd "$tmpdir/lokke"
-./setup-deps
+./setup
 autoreconf -fi
 ./configure --prefix=$(pwd)/../install
-make install
+make -j2 install
 cd /
 
 i=0

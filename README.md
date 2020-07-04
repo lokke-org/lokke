@@ -72,7 +72,7 @@ Then
 
     $ git clone ... lokke
     $ cd lokke
-    $ ./setup-deps
+    $ ./setup
     $ autoreconf -fi
     $ ./configure
     $ make check
