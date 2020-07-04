@@ -360,8 +360,8 @@ TODO
 
     A parameter that indicates whether the expander should support
     legacy syntax objects, as described above.  For ABI stability
-    reasons, the default is ‘#t’.  Use ‘parameterize’ to bind it to
-    ‘#f’.  *Note Parameters::.
+    reasons, the default is "#t".  Use "parameterize" to bind it to
+    "#f".  *Note Parameters::.
 
 
 Hacking
