@@ -12,7 +12,7 @@
 ;;;      option) any later version.
 
 (define-module (lokke config)
-  #:export (config-dir ensure-config-dir))
+  #:export (cache-dir config-dir ensure-cache-dir ensure-config-dir))
 
 (define (ensure-dir path)
   (catch 'system-error
@@ -24,13 +24,15 @@
         (throw key fname fmt-pattern fmt-args info))
       path)))
 
-(define (config-dir)
-  (let ((xdg (getenv "XDG_CONFIG_HOME")))
+(define (xdg-dir env-name dot-name)
+  (let ((xdg (getenv env-name)))
     (if xdg
         (if (string=? "" xdg)
-            (string-append (getenv "HOME") "/.config/lokke")
+            (string-append (getenv "HOME") "/" dot-name "/lokke")
             xdg)
-        (string-append (getenv "HOME") "/.config/lokke"))))
+        (string-append (getenv "HOME") "/" dot-name "/lokke"))))
 
-(define (ensure-config-dir)
-  (ensure-dir (config-dir)))
+(define (cache-dir) (xdg-dir "XDG_CACHE_HOME" ".cache"))
+(define (config-dir) (xdg-dir "XDG_CONFIG_HOME" ".config"))
+(define (ensure-cache-dir) (ensure-dir (cache-dir)))
+(define (ensure-config-dir) (ensure-dir (config-dir)))
