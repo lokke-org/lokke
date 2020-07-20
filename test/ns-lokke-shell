@@ -1,0 +1,48 @@
+#!./lokke -0 ;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.ns-lokke-shell
+  (:require
+   [lokke.shell :refer [double-quote sh]]
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [guile.rnrs.bytevectors :refer [string->utf8]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "escape"
+  (is (= "\"x\"" (double-quote "x")))
+  (is (= "\"\\$\"" (double-quote "$")))
+  (is (= "\"\\`\"" (double-quote "`")))
+  (is (= "\"\\\"\"" (double-quote "\"")))
+  (is (= "\"\\\\x\"" (double-quote "\\x")))
+  (is (= "\"\\\\\\$\"" (double-quote "\\$")))
+  (is (= "\"\\\\\\`\"" (double-quote "\\`")))
+  (is (= "\"\\\\\\\"\"" (double-quote "\\\""))))
+
+(testing "sh"
+  (is (= {:out (string->utf8 "yep\n") :err "" :exit 0 :status 0}
+         (sh "echo" "yep")))
+  (is (= {:out "yep\n" :err "" :exit 0 :status 0}
+         (sh "echo" "yep" :out-enc "utf-8")))
+  (is (= {:out "" :err "" :exit 3}
+         (dissoc (sh "sh" "-c" "exit 3" :out-enc "utf-8")
+                 :status)))
+  (is (= {:out "" :err "oops\n" :exit 0 :status 0}
+         (sh "sh" "-c" "echo oops 1>&2" :out-enc "utf-8")))
+  (is (= {:out "" :err (string->utf8 "oops\n")  :exit 0 :status 0}
+         (sh "sh" "-c" "echo oops 1>&2" :out-enc "utf-8" :err-enc :bytes))))
+
+(end-tests (ns-name *ns*) :exit? true)
