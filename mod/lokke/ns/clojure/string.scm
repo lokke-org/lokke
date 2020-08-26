@@ -66,6 +66,7 @@
 
 (define-method (join coll) (join "" coll))
 
+;; FIXME: test
 (define* (split s re #:optional limit)
   (let ((m (re-matcher re s)))
     (let loop ((result (lokke-vector))
@@ -81,6 +82,5 @@
                       (matcher-end m)
                       (and limit (1- limit)))))
              ((< prev-end (string-length s))
-              (lokke-vector-conj (substring/read-only s prev-end)
-                                 result))
+              (lokke-vector-conj result (substring/read-only s prev-end)))
              (else result)))))))
