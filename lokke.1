@@ -132,8 +132,9 @@ like this:
 #!/path/to/lokke-0.0 -0 ;; -*-clojure-*-
 ;; We're in a Guile preamble module defining a procedure for each
 ;; lokke subcommand.
-(run (cons* "-l" %0 "--" %&))
+(apply run "-l" %0 "--" %&)
 !#
+
 ;; Place your Clojure code here, after the !#
 (prn :hello-world)
 \&.\|.\|.\&
@@ -142,7 +143,7 @@ like this:
 .P
 This will behave exactly the same as the previous example.  When no
 code is provided in the block comment, lokke will act as if
-.B (run (cons* """-l""" %0 """--""" %&))
+.B (apply run """-l""" %0 """--""" %&)
 had been specified, but you can of course adjust the
 .B run
 invocation to suit your needs, or provide something else entirely.

@@ -194,7 +194,7 @@ terminator."
 ;; FIXME: do we want to adopt guile's guess-encoding?
 ;; FIXME: add all subcommands to the preamble module (and more cleanly)
 
-(define (cli-run args)
+(define (cli-run . args)
   (lokke-run args lok-usage))
 
 (define (run-script args usage)
@@ -222,7 +222,7 @@ terminator."
                                (reverse! result)
                                (loop (read port) (cons expr result)))))))
            (preamble (if (null? preamble)
-                         '(run (cons* "-l" %0 "--" %&))
+                         '(apply run "-l" %0 "--" %&)
                          (cons 'begin preamble)))
            (preamble-mod (let ((m (make-fresh-user-module)))
                            (module-define! m '%0 (caddr (program-arguments)))
