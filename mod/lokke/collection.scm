@@ -66,6 +66,7 @@
                           reduce
                           reduce-kv
                           rest
+                          reverse
                           second
                           select-keys
                           seq
@@ -144,6 +145,7 @@
                print-on
                reduce
                reduce-kv
+               reverse
                rest
                second
                select-keys

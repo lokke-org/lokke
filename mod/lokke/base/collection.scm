@@ -24,7 +24,7 @@
 (define-module (lokke base collection)
   #:version (0 0 0)
   #:use-module ((guile)
-                #:hide (peek)
+                #:hide (peek reverse)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base invoke) #:select (invoke))
@@ -91,7 +91,7 @@
             update-in
             vals)
   #:re-export (clj= invoke)
-  #:replace (apply assoc first list? merge peek)
+  #:replace (apply assoc first list? merge peek reverse)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'cons)
@@ -674,3 +674,15 @@
       (if s
           (loop (next s) (%scm-cons (first s) result))
           (reverse! result)))))
+
+(define (reverse coll)
+  ;; FIXME
+  (let ((s (seq coll)))
+    (if s
+        (let loop ((s s)
+                   (result '()))
+          (let ((s (seq s)))
+            (if s
+                (loop (next s) (%scm-cons (first s) result))
+                (seq result))))
+        '())))

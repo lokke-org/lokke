@@ -373,6 +373,7 @@
                require
                reset!
                rest
+               reverse
                second
                select-keys
                seq

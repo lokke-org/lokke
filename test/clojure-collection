@@ -1,4 +1,4 @@
-#!./lokke -0
+#!./lokke -0  ;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>
@@ -241,5 +241,11 @@
          (for [x (range 2) y (range 5) :while (< y 3)] [x y])))
   (is (= [[0 0] [0 1] [0 2]]
          (for [x (range 2) y (range 5) :while (< y 3) :when (even? x)] [x y]))))
+
+(testing "reverse"
+  (is (= () (reverse ())))
+  (is (= () (reverse [])))
+  (is (= [1] (reverse [1])))
+  (is (= [3 2 1] (reverse [1 2 3]))))
 
 (end-tests (ns-name *ns*) :exit? true)
