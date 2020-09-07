@@ -158,6 +158,7 @@
   (is (= ["y"] (matches (re-matcher (re-pattern "y") "xy")))))
 
 (testing "re-seq"
+  (is (= nil (re-seq (re-pattern "x") "y")))  ;; Match the jvm, not the docs
   (is (= ["" "" "" ""] (re-seq (re-pattern "") "xxx")))
   (is (= ["x" "x" "x"] (re-seq (re-pattern "x") "xxx")))
   (is (= [["x" "x"] ["x" "x"] ["x" "x"]] (re-seq (re-pattern "(x)") "xxx"))))

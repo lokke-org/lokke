@@ -15,7 +15,7 @@
   #:version (0 0 0)
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
-  #:use-module ((lokke collection) #:select (lazy-seq))
+  #:use-module ((lokke collection) #:select (lazy-seq seq))
   #:use-module ((lokke exception) #:select (ex-info throw))
   #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module ((lokke pcre2)
@@ -197,10 +197,14 @@
                                          #:code rc)))))))))))
 
 (define (re-seq re string)
-  (let ((matcher (re-matcher re string)))
-    (let loop ()
-      (lazy-seq
-       (let ((groups (re-find matcher)))
-         (if groups
-             (cons groups (loop))
-             #nil))))))
+  ;; Even though the documentation says it returns a lazy seq, clj/jvm
+  ;; returns nil, and tools.cli (for example) does (or did) depend on
+  ;; it, so do the same.
+  (seq
+   (let ((matcher (re-matcher re string)))
+     (let loop ()
+       (lazy-seq
+        (let ((groups (re-find matcher)))
+          (if groups
+              (cons groups (loop))
+              #nil)))))))
