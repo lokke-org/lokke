@@ -325,7 +325,7 @@
                      (let* ((v* (vector-ref array (1+ i)))
                             (v (apply f v* args)))
                        (if (eq? v* v)
-                           root
+                           (values root #f)
                            (let ((array* (vector-copy array)))
                              (vector-set! array* (1+ i) v)
                              (values (collision-branch array* #f) #f))))
