@@ -57,7 +57,8 @@
                           meta-tag?
                           pairify
                           vec-tag?))
-  #:use-module ((lokke reader literal) #:select (reader-vector?))
+  #:use-module ((lokke reader literal)
+                #:select (reader-hash-map? reader-vector?))
   #:use-module (oop goops)
   #:re-export (binding defdyn defdynloc)
   #:export (->
@@ -350,8 +351,24 @@
   ;; Always put & patterns first
   (lambda (x)
 
+    (define (strip-condition-map body)
+      ;; e.g. pre/post
+      ;; FIXME: support pre/post
+      ;; For now, we just drop the first map in any multi-form body.
+      ;; We don't want to vet the map strictly unless upstream
+      ;; specifies strict semantics, i.e. we assume we need to ignore
+      ;; future keys, etc.  This does mean that using such a map for
+      ;; evaluation side effects won't work.
+      (let* ((body-dat (syntax->datum body)))
+        (if (and (pair? body-dat)
+                 (pair? (cdr body-dat))
+                 (reader-hash-map? (car body-dat)))
+            (cdr body)
+            body)))
+
     (define (make-fn args body)
-      (let* ((dot? (dotted-list? args))
+      (let* ((body (strip-condition-map body))
+             (dot? (dotted-list? args))
              (proper-args (undotted args))
              (shim-args (generate-temporaries proper-args))
              (let-args (append-map! (lambda (shim orig) (list orig shim))
@@ -361,7 +378,8 @@
         #`(lambda #,shim-args (let** #,let-args #nil #,@body))))
 
     (define (method-adder m args body)
-      (let* ((dot? (dotted-list? args))
+      (let* ((body (strip-condition-map body))
+             (dot? (dotted-list? args))
              (proper-args (undotted args))
              (dummy (dbgfn "proper: ~s\n" proper-args))
              (shim-args (generate-temporaries proper-args))

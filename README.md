@@ -216,6 +216,7 @@ Differences from Clojure/JVM (an incomplete list)
 * Persistent lists are currently not `counted`, so `count` must
   traverse the list.
 * No agents or refs yet.
+* No support for `fn` condition maps yet (i.e. `:pre` `:post`, etc.).
 * `deftest` is very little more than a `do` right now, i.e. it
   executes immediately, there's no support for `*load-tests*`, and it
   doesn't create a test function to run later.
