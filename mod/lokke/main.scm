@@ -23,7 +23,7 @@
   #:use-module ((ice-9 textual-ports) #:select (get-string-n))
   #:use-module ((lokke base dynamic) #:select (binding))
   #:use-module ((lokke config) #:select (ensure-config-dir))
-  #:use-module ((lokke core) #:select (println *command-line-args*))
+  #:use-module ((lokke core) #:select (*command-line-args* prn))
   #:use-module ((lokke compile) #:select (load-file))
   #:use-module ((lokke ns) #:select (default-environment resolve-ns))
   #:use-module ((lokke reader) #:select ((read . read-edn)))  ; FIXME: real edn reader
@@ -100,7 +100,7 @@
       (cons (lambda ()
               (let ((result (eval-string code #:lang 'lokke #:compile? #t)))
                 (unless (or (nil? result) (eq? *unspecified* result))
-                  (println result))))
+                  (prn result))))
             actions)))
   (define (add-apply what)
     (lambda (actions)
