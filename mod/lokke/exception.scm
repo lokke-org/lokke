@@ -32,7 +32,9 @@
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) :select (find first second))
   #:replace (close throw)
-  #:export (ExceptionInfo
+  #:export (Exception
+            ExceptionInfo
+            Throwable
             ex-cause
             ex-data
             ex-info
@@ -66,6 +68,10 @@
 ;; i.e. (tag . args).
 
 (define ExceptionInfo (make-symbol "lokke-exception-info-catch-tag"))
+
+;; Compatibility hack
+(define Exception (make-symbol "lokke-exception-catch-tag"))
+(define Throwable (make-symbol "lokke-throwable-catch-tag"))
 
 ;; Exactly the args passed to throw
 (define (ex-info? x)

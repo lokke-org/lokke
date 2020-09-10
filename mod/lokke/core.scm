@@ -65,7 +65,9 @@
                           set-validator!
                           swap!))
   #:use-module ((lokke exception)
-                #:select (ExceptionInfo
+                #:select (Exception
+                          ExceptionInfo
+                          Throwable
                           close
                           ex-cause
                           ex-data
@@ -201,7 +203,9 @@
                <set>
                ==
                >
+               Exception
                ExceptionInfo
+               Throwable
                add-watch
                alias
                alter-meta!
