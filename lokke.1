@@ -71,6 +71,12 @@ interpeter lines is not standardized across platforms.  See
 .B SCRIPT EVALUATION
 below for additional information.
 .P
+You can invoke
+.B lokke run ... -e guile.guile/%load-path
+or
+.B lok ... -e guile.guile/%load-path
+to display the Guile load path (including any dependencies) for a
+given invocation.
 .
 .SH RUN_OPT
 .TP
