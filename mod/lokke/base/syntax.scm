@@ -496,6 +496,10 @@
 (define-syntax defn
   (lambda (x)
     (syntax-case x ()
+      ;; Just discard metadata for now
+      ;; FIXME: parse and rewrite :doc, etc.
+      ((_ (meta-tag m ...) expr ...) (meta-tag? #'meta-tag)
+       #'(defn expr ...))
       ;; doc and attrs
       ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
@@ -521,6 +525,10 @@
 (define-syntax defn-
   (lambda (x)
     (syntax-case x ()
+      ;; Just discard metadata for now
+      ;; FIXME: parse and rewrite :doc, etc.
+      ((_ (meta-tag m ...) expr ...) (meta-tag? #'meta-tag)
+       #'(defn- expr ...))
       ;; doc and attrs
       ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
