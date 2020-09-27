@@ -497,6 +497,9 @@
     ;; On the jvm, ns metadata appears to be restricted to literals,
     ;; i.e. (ns foo {:x (inc 1)}) is an error.
     (syntax-case x ()
+      ;; Just drop metadata for now
+      ;; FIXME: handle metadata
+      ((_ (meta-tag mdata) expr ...) #'(ns expr ...))
       ;; doc and attrs
       ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))

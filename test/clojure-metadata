@@ -74,7 +74,7 @@
 
 (testing "ns"
   (let [cur (ns-name *ns*)]
-    (ns meta-test-ns)
+    (ns ^{:author "someone"} meta-test-ns)
     (in-ns cur))
   (let [test-ns (find-ns 'meta-test-ns)]
     (is (= nil (meta test-ns)))
