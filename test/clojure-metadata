@@ -91,4 +91,8 @@
   (is (= 1 (let [^int x (one)] x)))
   (is (= [1 1] (let [^int x (one) ^int y (one)] [x y]))))
 
+(testing "for"
+  (is (= [1 2 3] (for [^int x [1 2 3]] x)))
+  (is (= [[1 2]] (for [^int x [1] ^int y [2]] [x y]))))
+
 (end-tests (ns-name *ns*) :exit? true)

@@ -603,6 +603,10 @@
     (syntax-case x ()
       ((_ terminator inner (vec-tag meta exp ...) body ...)  (vec-tag? #'vec-tag)
        #'(%for terminator inner (exp ...) body ...))
+      ;; Just discard metadata for now
+      ((_ terminator inner ((meta-tag m ...) exp ...) body ...)
+       (meta-tag? #'meta-tag)
+       #'(%for terminator inner (exp ...) body ...))
       ((_ terminator inner (#:let bindings exp ...) body ...)
        #'(let** bindings (%for terminator inner (exp ...) body ...)))
       ((_ terminator inner (#:when guard exp ...) body ...)
