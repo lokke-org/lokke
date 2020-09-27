@@ -90,12 +90,12 @@ TESTS = \
   test/lokke-exception \
   test/lokke-hash-map \
   test/lokke-hash-set \
+  test/lokke-metadata \
   test/lokke-ns \
   test/lokke-pr \
   test/lokke-scm-atom \
   test/lokke-scm-vector \
   test/lokke-symbol \
-  test/metadata-handling \
   test/ns-lokke-io \
   test/ns-lokke-shell \
   test/reader-basics \
