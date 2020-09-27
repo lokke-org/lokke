@@ -39,6 +39,7 @@
                           drop-right
                           find
                           last
+                          remove
                           take-right))
   #:use-module ((lokke base collection)
                 #:select ((cons . clj-cons)
@@ -58,7 +59,7 @@
                           pairify
                           vec-tag?))
   #:use-module ((lokke reader literal)
-                #:select (reader-hash-map? reader-vector?))
+                #:select (reader-hash-map? reader-meta? reader-vector?))
   #:use-module (oop goops)
   #:re-export (binding defdyn defdynloc)
   #:export (->
@@ -186,6 +187,14 @@
           ((x exp ...)
            (%scm-if (identifier? #'x) #'x (find-id #'(exp ...))))))
 
+(define (strip-top-level-metadata forms)
+  ;; e.g. (let [^Integer x 5] x)
+  ;;
+  ;; For now, just drop all the the metadata.  This does mean that
+  ;; using metadata values for side effects won't work.
+  (remove (lambda (x) (reader-meta? (syntax->datum x)))
+          forms))
+
 (define-syntax let**
   (lambda (x)
     (define (destructured-bindings binding init body)
@@ -200,10 +209,11 @@
         (cons #`(#,var #,init)
               (destructure-binding-syntax context binding var))))
     (define (expand bindings body)
-      (let* ((destructured (append-map!
-                        (lambda (p)
-                          (apply destructured-bindings (append p (list body))))
-                        (pairify bindings)))
+      (let* ((bindings (strip-top-level-metadata bindings))
+             (destructured (append-map!
+                            (lambda (p)
+                              (apply destructured-bindings (append p (list body))))
+                            (pairify bindings)))
              (result #`(let* #,destructured #,@body)))
         (dbglet "expanded let:\n  ~s\n->\n  ~s\n->\n  ~s\n"
                 (syntax->datum `(let ,bindings ,@body))

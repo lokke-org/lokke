@@ -85,4 +85,10 @@
     (alter-meta! test-ns (constantly nil))
     (is (= nil (meta test-ns)))))
 
+(defn one [] 1)
+
+(testing "let"
+  (is (= 1 (let [^int x (one)] x)))
+  (is (= [1 1] (let [^int x (one) ^int y (one)] [x y]))))
+
 (end-tests (ns-name *ns*) :exit? true)

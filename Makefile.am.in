@@ -80,6 +80,7 @@ TESTS = \
   test/clojure-dynamic \
   test/clojure-evaluation \
   test/clojure-exceptions \
+  test/clojure-metadata \
   test/clojure-ns \
   test/clojure-string \
   test/clojure-vector \
