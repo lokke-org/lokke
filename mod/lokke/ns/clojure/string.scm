@@ -16,7 +16,12 @@
                 #:select (string-locale-downcase string-locale-upcase))
   #:use-module ((lokke base syntax) #:select (if-let))
   #:use-module ((lokke collection) #:select (first next seq))
-  #:use-module ((lokke scm vector) #:select (lokke-vector lokke-vector-conj))
+  #:use-module ((lokke scm vector)
+                #:select (lokke-vector
+                          lokke-vector-conj
+                          lokke-vector-length
+                          lokke-vector-pop
+                          lokke-vector-ref))
   #:use-module ((lokke pr) #:select (str))
   #:use-module ((lokke regex)
                 #:select (matcher-end matcher-start re-find re-matcher))
@@ -28,6 +33,7 @@
             includes?
             join
             lower-case
+            split
             starts-with?
             trim
             trim-newline
@@ -66,21 +72,40 @@
 
 (define-method (join coll) (join "" coll))
 
-;; FIXME: test
-(define* (split s re #:optional limit)
-  (let ((m (re-matcher re s)))
-    (let loop ((result (lokke-vector))
-               (prev-end 0)
-               (limit limit))
-      (if (and limit (zero? limit))
-          result
-          (let ((next (re-find m)))
-            (cond
-             (next
-              (let* ((part (substring/read-only s prev-end (matcher-start m))))
-                (loop (lokke-vector-conj result part)
-                      (matcher-end m)
-                      (and limit (1- limit)))))
-             ((< prev-end (string-length s))
-              (lokke-vector-conj result (substring/read-only s prev-end)))
-             (else result)))))))
+(define* (split s re #:optional (limit 0))
+  ;; This somewhat matches the JVM version, i.e. a zero-width match at
+  ;; the beginning of the string does not produce an empty initial
+  ;; string in the result (changed in JVM 8). e.g. (split "x" #""), a
+  ;; limit of 0 drops trailing empty strings, and a negative limit is
+  ;; treated as infinite.
+  (let* ((substr substring/read-only)
+         (trim-end? (zero? limit))
+         (limit (and (positive? limit) (1- limit)))
+         (m (re-matcher re s))
+         (v (let loop ((result (lokke-vector))
+                       (prev-end 0)
+                       (find 0))
+              ;; Negative limits ignored as per the JVM
+              (if (and limit (= (lokke-vector-length result) limit))
+                  (lokke-vector-conj result (substr s prev-end))
+                  (if (re-find m)
+                      (let* ((start (matcher-start m))
+                             (end (matcher-end m)))
+                        ;; see zero-width comment above
+                        (loop (if (and (= find 0) (= 0 start end))
+                                  result
+                                  (lokke-vector-conj result
+                                                     (substr s prev-end start)))
+                              end (1+ find)))
+                      (lokke-vector-conj result (substr s prev-end))))))
+         (trim-end (lambda (v)
+                     (let loop ((v v))
+                       (let ((n (lokke-vector-length v)))
+                         (cond
+                          ((zero? n) v)
+                          ((zero? (string-length (lokke-vector-ref v (1- n))))
+                           (loop (lokke-vector-pop v)))
+                          (else v)))))))
+    (if trim-end?
+        (trim-end v)
+        v)))

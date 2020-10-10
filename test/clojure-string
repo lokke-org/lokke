@@ -23,6 +23,7 @@
             includes?
             join
             lower-case
+            split
             starts-with?
             trim
             trim-newline
@@ -160,5 +161,24 @@
   (is (= ["" "" "" ""] (re-seq (re-pattern "") "xxx")))
   (is (= ["x" "x" "x"] (re-seq (re-pattern "x") "xxx")))
   (is (= [["x" "x"] ["x" "x"] ["x" "x"]] (re-seq (re-pattern "(x)") "xxx"))))
+
+(testing "split"  ;; For now, this somewhat matches the JVM
+  (is (= ["xyz"] (split "xyz" #"w")))
+  (is (= ["x" "y" "z"] (split "x/y/z" #"/")))
+  (is (= ["" "y" "z"] (split "/y/z" #"/")))
+
+  ;; Leading empty match is dropped (matches JDK 8+)
+  (is (= ["x" "y" "z"] (split "xyz" #"")))
+
+  (is (= ["x/y/z"] (split "x/y/z" #"/" 1)))
+  (is (= ["x" "y/z"] (split "x/y/z" #"/" 2)))
+  (is (= ["x" "y" "z"] (split "x/y/z" #"/" 3)))
+  (is (= ["x" "y" "z"] (split "x/y/z" #"/" 4)))
+
+  (is (= ["xyz" "" "" ""] (split "xyz///" #"/" 10)))
+  (is (= ["xyz" "" "" ""] (split "xyz///" #"/" -10)))
+  ;; All trailing empty matches are dropped when limit is 0
+  (is (= ["xyz"] (split "xyz///" #"/")))
+  (is (= ["xyz"] (split "xyz///" #"/" 0))))
 
 (end-tests (ns-name *ns*) :exit? true)
