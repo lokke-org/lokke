@@ -61,6 +61,7 @@
 (define-class <re-matcher> ()
   (pattern #:init-keyword #:pattern)
   (string #:init-keyword #:string)
+  (pos #:init-keyword #:pos #:init-value 0)
   (start #:init-keyword #:start #:init-value 0)
   (end #:init-keyword #:end #:init-value 0)
   (data #:init-keyword #:data)
@@ -154,38 +155,46 @@
   (match-lambda*
     ((re string) (re-find (re-matcher re string)))
     ((matcher)
-     (let* ((width (string-width (slot-ref matcher 'string)))
-            (pattern (slot-ref matcher 'pattern))
-            (code-8 (and (= width 8) (slot-ref pattern 'code-8)))
-            (code-32 (and (= width 32) (slot-ref pattern 'code-32)))
-            (string (slot-ref matcher 'string))
-            ;; matcher constructor ensures code will be there
-            (rc (pcre2-match-utf code-8 code-32
-                                 #f ;; coerce
-                                 string
-                                 (slot-ref matcher 'end)
-                                 0 ;; opts
-                                 (slot-ref matcher 'data))))
-       (cond
-        ((= rc PCRE2_ERROR_NOMATCH) (slot-set! matcher 'match? #f) #nil)
-        ((= rc PCRE2_ERROR_PARTIAL) (slot-set! matcher 'match? #f) #nil) ;; for now?
-        ((positive? rc)
-         (let ((ov (pcre2-match-ovector (slot-ref matcher 'data))))
-           (slot-set! matcher 'start (array-ref ov 0))
-           (slot-set! matcher 'end (array-ref ov 1))
-           (slot-set! matcher 'match? #t)
-           (groups-for-ovector string ov)))
-        ((zero? rc)
-         ;; This should be impossible
-         (throw (ex-info "Not enough space to store match substrings"
-                         (hash-map #:kind #:lokke.regex/match-error
-                                   #:matcher matcher
-                                   #:code rc))))
-        (else
-         (throw (ex-info (pcre2-get-error-message rc)
-                         (hash-map #:kind #:lokke.regex/match-error
-                                   #:matcher matcher
-                                   #:code rc)))))))))
+     (let ((str (slot-ref matcher 'string))
+           (pos (slot-ref matcher 'pos)))
+       (if (> pos (string-length str))
+           #nil
+           (let* ((width (string-width str))
+                  (pattern (slot-ref matcher 'pattern))
+                  (code-8 (and (= width 8) (slot-ref pattern 'code-8)))
+                  (code-32 (and (= width 32) (slot-ref pattern 'code-32)))
+                  ;; matcher constructor ensures code will be there
+                  (rc (pcre2-match-utf code-8 code-32
+                                       #f ;; coerce
+                                       str
+                                       pos
+                                       0 ;; opts
+                                       (slot-ref matcher 'data))))
+             (cond
+              ((= rc PCRE2_ERROR_NOMATCH) (slot-set! matcher 'match? #f) #nil)
+              ((= rc PCRE2_ERROR_PARTIAL) (slot-set! matcher 'match? #f) #nil) ;; for now?
+              ((positive? rc)
+               (let* ((ov (pcre2-match-ovector (slot-ref matcher 'data)))
+                      (start (array-ref ov 0))
+                      (end (array-ref ov 1)))
+                 (slot-set! matcher 'start start)
+                 (slot-set! matcher 'end end)
+                 (if (= start end)
+                     (slot-set! matcher 'pos (1+ end))
+                     (slot-set! matcher 'pos end))
+                 (slot-set! matcher 'match? #t)
+                 (groups-for-ovector str ov)))
+              ((zero? rc)
+               ;; This should be impossible
+               (throw (ex-info "Not enough space to store match substrings"
+                               (hash-map #:kind #:lokke.regex/match-error
+                                         #:matcher matcher
+                                         #:code rc))))
+              (else
+               (throw (ex-info (pcre2-get-error-message rc)
+                               (hash-map #:kind #:lokke.regex/match-error
+                                         #:matcher matcher
+                                         #:code rc)))))))))))
 
 (define (re-seq re string)
   (let ((matcher (re-matcher re string)))

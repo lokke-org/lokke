@@ -1,4 +1,4 @@
-#!./lokke -0
+#!./lokke -0 ;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
@@ -143,6 +143,7 @@
                              groups))))
 
 (testing "re-find"
+  (is (= "" (re-find (re-pattern "") "")))
   (is (not (re-find (re-pattern "x") "y")))
   (is (= "x" (re-find (re-pattern "x") "x")))
   (is (= ["x" "x"] (re-find (re-pattern "(x)") "x")))
@@ -156,6 +157,7 @@
   (is (= ["y"] (matches (re-matcher (re-pattern "y") "xy")))))
 
 (testing "re-seq"
+  (is (= ["" "" "" ""] (re-seq (re-pattern "") "xxx")))
   (is (= ["x" "x" "x"] (re-seq (re-pattern "x") "xxx")))
   (is (= [["x" "x"] ["x" "x"] ["x" "x"]] (re-seq (re-pattern "(x)") "xxx"))))
 
