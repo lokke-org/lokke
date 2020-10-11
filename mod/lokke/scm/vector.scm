@@ -31,6 +31,7 @@
             lokke-vector-equal?
             lokke-vector-length
             lokke-vector-meta
+            lokke-vector-pop
             lokke-vector-ref
             lokke-vector-with-meta
             lokke-vector?

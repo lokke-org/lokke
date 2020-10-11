@@ -63,11 +63,25 @@
 (test-equal (t/lokke-vector 1 2 3)
   (t/lokke-vector-append (t/lokke-vector 1) (t/lokke-vector 2 3)))
 
-;; Give the tree enough depth to exercise the main paths.
-(let ((v (t/lokke-vec (iota 3000))))
-  (do ((i 0 (1+ i)))
-      ((= i (t/lokke-vector-length v)))
-    (test-equal i (t/lokke-vector-ref v i))))
+;; Use 3000 to give the tree enough depth to exercise the main paths.
+
+(test-group
+ "length and ref"
+ (let ((v (t/lokke-vec (iota 3000))))
+   (do ((i 0 (1+ i)))
+       ((= i (t/lokke-vector-length v)))
+     (test-equal i (t/lokke-vector-ref v i)))))
+
+(test-group
+ "pop"
+ ;; FIXME: expensive, ~5s when last checked standalone, but why does
+ ;; "make -j5 check" go much faster than that.
+ (let loop ((n 3000)
+            (expected (iota 3000))
+            (actual (t/lokke-vec (iota 3000))))
+   (test-equal expected (t/lokke-vector->list actual))
+   (unless (= n 1)
+     (loop (1- n) (iota (1- n)) (t/lokke-vector-pop actual)))))
 
 (test-group
  "conj"

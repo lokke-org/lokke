@@ -59,6 +59,7 @@
                           lokke-vector-conj
                           lokke-vector-length
                           lokke-vector-meta
+                          lokke-vector-pop
                           lokke-vector-ref
                           lokke-vector-with-meta
                           lokke-vector?
@@ -434,12 +435,7 @@
         #nil)))
 
 (define-method (pop (v <lokke-vector>))
-  ;; FIXME: add real pop support to lokke-vectors, i.e. shrink tail, etc.
-  (let ((len (lokke-vector-length v)))
-    (when (zero? len)
-      (error "cannot pop empty vector"))
-    (subvec v 0 (1- len))))
-
+  (lokke-vector-pop v))
 
 (define-method (peek (v <subvec>))
   (subvec-nth v (1- (subvec-length v)) #nil))

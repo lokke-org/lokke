@@ -1,4 +1,4 @@
-// Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+// Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 //
 // This project is free software; you can redistribute it and/or modify
 // it under the terms of (at your option) either of the following two
@@ -102,7 +102,6 @@ make_empty_vector ()
 static smaller_vec_t *
 smaller_vec_copy(const smaller_vec_t * const v)
 {
-    // Assumes caller knows this won't overflow 32.
     const size_t size = sizeof_small_vec(v->length);
     smaller_vec_t * const result = scm_gc_malloc (size, "small lokke vector");
     memcpy (result, v, size);
@@ -158,17 +157,21 @@ smaller_vec_conj(const smaller_vec_t * const v, SCM elt)
 
 static larger_vec_t *
 copy_vector_tail(const larger_vec_t * const v, const uint_fast8_t tail_len,
-                 uint_fast8_t expand_n)
+                 int_fast8_t diff_n)
 {
-    // Assumes caller knows expand_n won't overflow tail.
-    SCM * const new_tail = scm_gc_malloc (sizeof (SCM) * (tail_len + expand_n),
+    // Assumes caller knows diff_n won't over/underflow tail or tail_offset;
+    const uint_fast8_t new_len = tail_len + diff_n;
+    SCM * const new_tail = scm_gc_malloc (sizeof (SCM) * new_len,
                                           "lokke vector tail");
-    memcpy (new_tail, v->tail, tail_len * sizeof (SCM));
+    if (new_len < tail_len)
+        memcpy (new_tail, v->tail, new_len * sizeof (SCM));
+    else
+        memcpy (new_tail, v->tail, tail_len * sizeof (SCM));
     larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
                                                  "larger lokke vector");
-    memcpy (result, v, sizeof(larger_vec_t));
-    if (expand_n)
-        result->length += expand_n;
+    memcpy (result, v, sizeof (larger_vec_t));
+    if (diff_n)
+        result->length += diff_n;
     result->tail = new_tail;
     return result;
 }
@@ -290,6 +293,40 @@ tree_incorporating_tail(tree_node_t * const result,
     tree_incorporating_tail(&(result->leaves[radix_i]),
                             &(n->leaves[radix_i]),
                             level - 1, tail_index, tail);
+}
+
+static void
+split_rightmost_elts(tree_node_t * const result_n,
+                     SCM **result_elts,
+                     const tree_node_t * const n,
+                     const uint_fast8_t level, const uint32_t index)
+{
+    // Dig down to the correct level and return both a tree without
+    // the "rightmost" leaf, and the removed leaf elements.
+    const uint_fast8_t radix_i = leaf_index_for_level (level, index);
+    if (level == 1) {  // parent of tail
+        result_n->elt = n->elt;
+        result_n->leaf_count = radix_i;
+        *result_elts = n->leaves[radix_i].elt;
+        if (radix_i == 0) { // Removing only leaf
+            result_n->leaves = NULL;
+            return;
+        }
+        result_n->leaves = scm_gc_malloc (sizeof (tree_node_t) * radix_i,
+                                             "lokke tree node leaves");
+        memcpy (result_n->leaves, n->leaves, sizeof (tree_node_t) * radix_i);
+        return;
+    }
+
+    result_n->elt = n->elt;
+    result_n->leaf_count = n->leaf_count;
+    result_n->leaves = scm_gc_malloc (sizeof (tree_node_t) * n->leaf_count,
+                                      "lokke tree node leaves");
+    memcpy(result_n->leaves, n->leaves, sizeof (tree_node_t) * n->leaf_count);
+    split_rightmost_elts (&(result_n->leaves[radix_i]),
+                          result_elts,
+                          &(n->leaves[radix_i]),
+                          level - 1, index);
 }
 
 static SCM
@@ -451,6 +488,68 @@ SCM_DEFINE (lokke_vector_assoc_1, "lokke-vector-assoc-1", 3, 0, 0,
     tree_with_updated_value(&(result->tree),
                             &(vl->tree),
                             index_depth(n), n, value);
+    return scm_make_foreign_object_1 (vector_type_scm, result);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (lokke_vector_pop, "lokke-vector-pop", 1, 0, 0, (SCM vector),
+	    "...@code{#} @var{index}...\n")
+#define FUNC_NAME s_lokke_vector_pop
+{
+    scm_assert_foreign_object_type (vector_type_scm, vector);
+    vector_t * const v = scm_foreign_object_ref (vector, 0);
+
+    if (v->length <= 33) { // result will be smaller_vec_t
+        if (v->length == 0)
+            scm_error (scm_out_of_range_key, FUNC_NAME,
+                       "Cannot pop empty vector", SCM_EOL, SCM_EOL);
+        else if (v->length == 1)
+            return empty_vector;
+
+        const uint32_t result_len = v->length - 1;
+        smaller_vec_t * const result =
+            scm_gc_malloc (sizeof_small_vec(result_len), "small lokke vector");
+        result->length = result_len;
+        result->meta = v->meta;
+        if (v->length < 33) {
+            const smaller_vec_t * const vs = (smaller_vec_t *) v;
+            for (uint32_t i = 0; i < result_len; i++)
+                result->elt[i] = vs->elt[i];
+        } else
+            for (uint32_t i = 0; i < result_len; i++)
+                result->elt[i] = vector_ref(v, i);
+        return scm_make_foreign_object_1 (vector_type_scm, result);
+    }
+
+    const larger_vec_t * const vl = (larger_vec_t *) v;
+    const uint32_t tail_len = vl->length - vl->tail_offset;
+
+    if (tail_len > 1) {
+        larger_vec_t * const result = copy_vector_tail (vl, tail_len, -1);
+        return scm_make_foreign_object_1 (vector_type_scm, result);
+    }
+
+    larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
+                                                 "larger lokke vector");
+    result->length = vl->length - 1;
+    result->meta = vl->meta;
+
+    if (tail_len == 1) {
+        result->tail_offset = vl->tail_offset;
+        result->tail = NULL;
+        result->tree = vl->tree;
+        return scm_make_foreign_object_1 (vector_type_scm, result);
+    }
+
+    SCM *tail = NULL;
+    split_rightmost_elts (&(result->tree),
+                          &tail,
+                          &(vl->tree),
+                          index_depth(result->length),
+                          result->length);
+    result->tail_offset = vl->tail_offset - 32;
+    result->tail = scm_gc_malloc (sizeof (SCM) * 32, "lokke vector tail");
+    memcpy (result->tail, tail, sizeof (SCM) * 32);
     return scm_make_foreign_object_1 (vector_type_scm, result);
 }
 #undef FUNC_NAME
