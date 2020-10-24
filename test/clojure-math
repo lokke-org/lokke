@@ -1,7 +1,7 @@
-#!./lokke -0
+#!./lokke -0 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -67,5 +67,14 @@
 (is (= true (bit-test -1 0)))
 (is (= true (bit-test -1 42)))
 (is (= false (bit-test -3 1)))
+
+(is (= 0 (rem 0 1)))
+(is (= 0 (rem 0 -1)))
+(is (= 0 (rem 1 1)))
+(is (= 1 (rem 1 2)))
+(is (= 1 (rem 1 -2)))
+(is (= -1 (rem -1 2)))
+(is (= -1 (rem -1 -2)))
+(is (= -1.0 (rem -1 -2.0)))
 
 (end-tests (ns-name *ns*) :exit? true)

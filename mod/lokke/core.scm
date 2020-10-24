@@ -161,6 +161,7 @@
                           quot
                           rand
                           rand-int
+                          rem
                           subs
                           true?))
   #:use-module ((lokke symbol)
@@ -371,6 +372,7 @@
                reduce-kv
                refer
                refer-clojure
+               rem
                remove-watch
                repeat
                repeatedly

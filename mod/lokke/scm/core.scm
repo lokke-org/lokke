@@ -34,6 +34,7 @@
                (quotient . quot)
                (real? . double?)
                (real? . float?)
+               (remainder . rem)
                (string->keyword . keyword) ; FIXME: restrictions?
                (string->symbol . symbol)   ; FIXME: restrictions?
                (substring/read-only . subs))
