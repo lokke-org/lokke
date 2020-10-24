@@ -98,6 +98,7 @@
                           *in*
                           *out*
                           format
+                          newline
                           pr
                           pr-str
                           print
@@ -430,6 +431,7 @@
                         'list
                         'list?
                         'merge
+                        'newline
                         'peek
                         'quote
                         'read)

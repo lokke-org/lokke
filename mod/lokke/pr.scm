@@ -19,6 +19,7 @@
 ;; FIXME: *out* *err*, etc.
 
 (define-module (lokke pr)
+  #:use-module ((guile) #:select ((newline . %scm-newline)))
   #:use-module ((ice-9 format) #:select ((format . %scm-format)))
   #:use-module ((language tree-il) #:prefix tree-il/)
   #:use-module ((lokke base dynamic) #:select (binding defdyn))
@@ -27,7 +28,7 @@
                           module-name->ns-str
                           module-name->ns-sym))
   #:use-module (oop goops)
-  #:replace (format)
+  #:replace (format newline)
   #:export (*err*
             *in*
             *out*
@@ -224,6 +225,8 @@
   (display (var-desc x) port)
   #nil)
 
+(define (newline)
+  (%scm-newline *out*))
 
 (define-method (pr-on (x <syntax>) port)
   (write x port) #nil)
@@ -250,12 +253,11 @@
 (define (printf fmt . args)
   (print (apply format fmt args)))
 
-
 (define (prn . items)
-  (apply pr items) (newline *out*) #nil)
+  (apply pr items) (%scm-newline *out*) #nil)
 
 (define (println . items)
-  (apply print items) (newline *out*) #nil)
+  (apply print items) (%scm-newline *out*) #nil)
 
 
 (define-method (pr-str . args)
