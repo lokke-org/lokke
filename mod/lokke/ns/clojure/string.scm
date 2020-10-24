@@ -24,7 +24,11 @@
                           lokke-vector-ref))
   #:use-module ((lokke pr) #:select (str))
   #:use-module ((lokke regex)
-                #:select (matcher-end matcher-start re-find re-matcher))
+                #:select (matcher-end
+                          matcher-start
+                          re-find
+                          re-matcher
+                          re-pattern))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (every proper-list?))
   #:export (blank?
@@ -34,6 +38,7 @@
             join
             lower-case
             split
+            split-lines
             starts-with?
             trim
             trim-newline
@@ -109,3 +114,8 @@
     (if trim-end?
         (trim-end v)
         v)))
+
+(define split-lines
+  (let ((rx (re-pattern "(?:\n|\r\n)")))
+    (lambda [s]
+      (split s rx))))

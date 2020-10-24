@@ -24,6 +24,7 @@
             join
             lower-case
             split
+            split-lines
             starts-with?
             trim
             trim-newline
@@ -181,5 +182,15 @@
   ;; All trailing empty matches are dropped when limit is 0
   (is (= ["xyz"] (split "xyz///" #"/")))
   (is (= ["xyz"] (split "xyz///" #"/" 0))))
+
+(testing "split-lines"
+  (is (= ["xyz"] (split-lines "xyz")))
+  (is (= ["x" "y" "z"] (split-lines "x\ny\nz")))
+  (is (= ["x" "y" "z"] (split-lines "x\ny\nz\n")))
+  (is (= ["x" "y" "z"] (split-lines "x\ny\nz\n\n\n")))
+  (is (= ["x" "" "y"] (split-lines "x\n\ny")))
+  (is (= ["x" "" "" "y"] (split-lines "x\n\n\ny")))
+  (is (= ["" "x"] (split-lines "\nx")))
+  (is (= ["" "" "x"] (split-lines "\n\nx"))))
 
 (end-tests (ns-name *ns*) :exit? true)
