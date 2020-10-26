@@ -19,7 +19,13 @@
   #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
   #:use-module ((srfi srfi-1) #:select (circular-list? proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-unfold))
-  #:use-module ((lokke base syntax) #:select (->> if-let when when-let when-not))
+  #:use-module ((lokke base syntax)
+                #:select (->
+                          ->>
+                          if-let
+                          when
+                          when-let
+                          when-not))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke base collection)
                 #:select (<coll>
@@ -74,6 +80,7 @@
                           seq?
                           seqable?
                           sequential?
+                          shuffle
                           take
                           take-while
                           update
@@ -84,7 +91,12 @@
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke hash-map) #:select (hash-map))
-  #:use-module ((lokke scm vector) #:select (<lokke-vector> lokke-vector))
+  #:use-module ((lokke scm vector)
+                #:select (<lokke-vector>
+                          lokke-vector
+                          lokke-vector-assoc
+                          lokke-vector-conj
+                          lokke-vector-ref))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-on print-on))
@@ -154,6 +166,7 @@
                seq?
                seqable?
                sequential?
+               shuffle
                take
                take-while
                update
@@ -377,3 +390,23 @@
           (cons c)
           (cons b)
           (cons a)))))
+
+(define-method (shuffle coll)
+  ;; Durstenfeld "inside-out" variant of Fischer-Yates shuffle
+  (let loop ((result (lokke-vector))
+             (s coll)
+             (i 0))
+    (let ((s (seq s)))
+      (if s
+          ;; FIXME: do we randomize the seed at startup properly?
+          (let ((j (random (1+ i))))
+            (if (= i j)
+                (loop (lokke-vector-conj result (first s))
+                      (rest s)
+                      (1+ i))
+                (loop (-> result
+                          (lokke-vector-conj (lokke-vector-ref result j))
+                          (lokke-vector-assoc j (first s)))
+                      (rest s)
+                      (1+ i))))
+          result))))

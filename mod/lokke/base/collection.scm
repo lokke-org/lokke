@@ -85,6 +85,7 @@
             seq?
             seqable?
             sequential?
+            shuffle
             take
             take-while
             update
@@ -117,6 +118,7 @@
 (define-generic select-keys)
 (define-generic seq)
 (define-generic sequential?)
+(define-generic shuffle)
 (define-generic update)
 (define-generic vals)
 

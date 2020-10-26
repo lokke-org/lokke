@@ -248,4 +248,10 @@
   (is (= [1] (reverse [1])))
   (is (= [3 2 1] (reverse [1 2 3]))))
 
+(testing "shuffle"
+  (is (= [] (shuffle [])))
+  (is (= 5 (count (shuffle (range 5)))))
+  (let [x (range 10)]
+    (is (= (set x) (set (shuffle x))))))
+
 (end-tests (ns-name *ns*) :exit? true)

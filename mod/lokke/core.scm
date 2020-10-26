@@ -390,6 +390,7 @@
                sequential?
                set
                set-validator!
+               shuffle
                slurp
                spit
                some
