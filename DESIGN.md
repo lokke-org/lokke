@@ -3,7 +3,7 @@ Compilation
 -----------
 
 The current approach is to let the Scheme macro-expansion process act
-as the primary "compiler" just as it does for Guile itself.  It's
+as the primary compiler just as it does for Guile itself.  It's
 unclear whether or not this is the approach we'll want to keep.
 
 The Scheme compiler compiles from Scheme to the next level down in
@@ -342,6 +342,9 @@ TODO
   reader that may not realize you've clobbered Scheme let.  At a
   minimum fn's syntax may be more ambiguous with lists instead of
   vectors, i.e. (fn ([x] 0)).
+
+- Support TIOCGWINSZ somehow (likely via C helper) so we can use it
+  with fill-string, etc. for documentation output, help, etc.
 
 - Fix up lokke-vector.c docstrings
 

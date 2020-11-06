@@ -8,7 +8,7 @@ Lokke is Clojure for Guile
 
 While the intention is to provide a full dialect of Clojure for Guile,
 [Lokke](#Lokke-Danish) also consists of a set of Guile modules
-providing much of Clojure's functionality in two different guises.
+providing some of Clojure's functionality in two different guises.
 
 For Clojure itself
 ------------------
@@ -32,8 +32,8 @@ to import, (or `#:prefix`ing the namespace) to avoid the problem
 entirely, and to make it much easier to discover the origin of a
 binding.  In some cases, Scheme vectors may be required in place of
 Clojure's immutable vectors, e.g. `(fn #(x 1 y 2) ...)`, though the
-approach to these binding forms on the scheme side is still under
-discussion and may change.
+approach to these binding forms on the Scheme side is still
+experimental.
 
 For a more Scheme oriented experience in Scheme
 -----------------------------------------------
@@ -163,27 +163,32 @@ Differences from Clojure/JVM (an incomplete list)
   which should also be available via `info guile` if installed.
 * The implementation should be properly tail-recursive.
 * Argument evaluation order is unspecified.
-* Regular expressions by default are PCRE2 regular expressions.
+* The default regular expressions are
+  [PCRE2](http://www.pcre.org/current/doc/html/pcre2pattern.html)
+  regular expressions.
+* Lokke's reader conditional identifier is `:cljl`, e.g. `#?(:cljl x)`.
+* At the moment reader conditionals are always supported by the reader
+  functions and are not restricted to `.cljc` files.
 * Reader literal patterns `#"x"` currently just translate to an
   equivalent `(re-pattern ...)` at read time.  That is, they are not
-  compiled at read time.
-* Various functions handle Scheme vectors as they would Clojure
-  vectors, i.e. many collection and sequence operations, etc.
-* Various functions handle Scheme lists as they would Clojure
-  lists, i.e. many collection and sequence operations, etc.
+  compiled at read time, and so are re-evaluated.
+* At the moment, various functions handle Scheme vectors as they would
+  Clojure vectors, i.e. many collection and sequence operations, etc.
+* At the moment, various functions handle Scheme lists as they would
+  Clojure lists, i.e. many collection and sequence operations, etc.
 * Multiple `:as` aliases are allowed in destructuring forms.
-* The numeric tower is Guile's numeric tower, backed by GMP, and there
-  is currently no distinction between functions like `+'` and `+`, or
-  `*'` and `*`, etc.
+* Currently, `future`s are Guile `<future>`s, which means they draw
+  from a fixed-size pool of size `(dec (current-processor-count))`.
+  Recent versions of Clojure/JVM have an unbounded pool.
+* The numeric tower is Guile's numeric tower, backed by
+  [GMP](https://gmplib.org/), and there is currently no distinction
+  between functions like `+'` and `+`, or `*'` and `*`, etc.
 * At the moment, `format` strings are Guile format strings, but we may
   want to alter or agument that, i.e. perhaps we'll want a formatter
   specifying print or pr format output, though for now pr(int)-str works
   `(format "... ~a ..." (pr-str x))`.
 * The reader functions, `read`, `read-string`, etc. return the rnrs
   end-of-file object rather than throwing an exception.
-* Lokke's reader conditional identifier is `:cljl`, e.g. `#?(:cljl x)`.
-* At the moment reader conditionals are always supported by the reader
-  functions and are not restricted to `.cljc` files.
 * `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
   and `mod`.
 * Number is taken to mean <number> (i.e. objects satisfying number?).
@@ -193,12 +198,12 @@ Differences from Clojure/JVM (an incomplete list)
   `(lokke ns clojure string)` module.
 * Qualified Clojure references like the `clojure.string/join` in
   `(clojure.string/join ...)` automatically resolve to the appropriate
-  module reference.
+  Guile module reference.
 * All clojure namspaces starting with `guile` represent direct
   references to the guile module tree,
   e.g. `(guile.guile/current-time)` or `(guile.ice-9/pretty-print
   ...)`.  More specifically, they provide a convenient way to refer to
-  guile module references, avoiding the `(lokke ns)` prefix addition.
+  Guile modules that are not under a `(lokke ns ...)` prefix.
 * `(alias ...)` calls only take full effect at the end of the
   enclosing top level form (because at the moment, the compiler works
   from a snapshot of the alias map, cf. `rewrite-il-calls`).
@@ -212,7 +217,7 @@ Differences from Clojure/JVM (an incomplete list)
 * Whether or not `bindings` are established in parallel is undefined.
 * `.indexOf` is `index-of`
 * `.lastIndexOf` is `last-index-of`
-* Many of the coercions haven't been included: float double
+* Many of the coercions haven't been included: float double ...
 * Persistent lists are currently not `counted`, so `count` must
   traverse the list.
 * No agents or refs yet.
@@ -227,8 +232,8 @@ Differences from Clojure/JVM (an incomplete list)
 * For now, types are implemented via GOOPS which means that you can
   actually modify them via slot-set!.  We may eventually pursue
   immutable GOOPS classes in Guile, but of course you can modify
-  anything on the JVM too if you really set your mind to it.
-* In addition to nil, the `lokke` command's `-e` option doesn't print
+  anything on the JVM too, if you really set your mind to it.
+* In addition to `nil`, the `lokke` command's `-e` option doesn't print
   unspecified values (Guile's `*unspecified*`).
 * `lokke.io` is the parallel of `clojure.java.io`.
 * `lokke.shell` is the parallel of `clojure.java.shell`.
@@ -348,6 +353,12 @@ Known Issues
 
 - atom semantics may not be completely right yet (see code).
 
+- `deref` does not support a timeout for futures yet.
+
+- comparisons via `<`, `>`, `compare`, etc. are not yet correctly
+  implemented.  For example, `<` and `>` are just the Scheme
+  operators, and comparisons don't handle collections correctly yet.
+
 - Hashes have not been considered with any consistency yet, i.e. for
   equality comparisons, etc., and should not be relied on.
 
@@ -357,10 +368,6 @@ Known Issues
 
 - Lazy sequences (i.e. via `<pair-seq>`) don't currently support
   hashes and are not counted?.
-
-- The `foo.bar/baz` syntactic sugar doesn't work for Scheme modules
-  from the ./lokke REPL.  I suspect it's using the Lokke reader to
-  load the module instead of the Scheme reader.
 
 - The syntaxes probably aren't always consistent on the scheme side,
   i.e. do we want to support `(fn #(...) ...)` or `(fn (...) ...)` if
