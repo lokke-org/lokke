@@ -65,6 +65,8 @@
   #:export (->
             ->>
             cond
+            cond->
+            cond->>
             condp
             declare
             def
@@ -79,6 +81,8 @@
             if-not
             letfn
             loop
+            some->
+            some->>
             var
             when-let
             when-not)
@@ -653,3 +657,37 @@
              (condp pred expr clauses ...)))
       ((_ pred expr)
        #'(error "No matching clause for" '(pred _ expr))))))
+
+(define-syntax cond->
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x pred exp exp* ...)
+     (%scm-if (pred x)
+              (cond-> (-> x exp) exp* ...)
+              (cond-> x exp* ...)))))
+
+(define-syntax cond->>
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x pred exp exp* ...)
+     (%scm-if (pred x)
+              (cond->> (->> x exp) exp* ...)
+              (cond->> x exp* ...)))))
+
+(define-syntax some->
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x exp exp* ...)
+     (%scm-let ((y x))
+       (%scm-if (nil? y)
+                #nil
+                (some-> (-> y exp) exp* ...))))))
+
+(define-syntax some->>
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x exp exp* ...)
+     (%scm-let ((y x))
+       (%scm-if (nil? y)
+                #nil
+                (some->> (->> y exp) exp* ...))))))

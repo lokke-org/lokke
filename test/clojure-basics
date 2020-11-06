@@ -1,4 +1,4 @@
-#!./lokke -0
+#!./lokke -0 ;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
@@ -20,12 +20,44 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "cond->"
+  (is (= :yep (cond-> :yep)))
+  (is (= :yep (cond-> :yep string? name)))
+  (is (= "yep" (cond-> :yep keyword? name)))
+  (is (= :yep (cond-> :yep keyword? name string? keyword)))
+  (is (= "yep" (cond-> :yep keyword? name keyword? keyword)))
+  (is (= "yep!" (cond-> "yep" string? (str "!")))))
+
+(testing "cond->>"
+  (is (= :yep (cond->> :yep)))
+  (is (= :yep (cond->> :yep string? name)))
+  (is (= "yep" (cond->> :yep keyword? name)))
+  (is (= :yep (cond->> :yep keyword? name string? keyword)))
+  (is (= "yep" (cond->> :yep keyword? name keyword? keyword)))
+  (is (= "...yep" (cond->> "yep" string? (str "...")))))
+
 (testing "condp"
   (is (= :yep (condp < 0 -1 :yep)))
   (is (= :nope (condp < 0 0 :yep :nope)))
   (is (= :yep (condp < 0 0 :nope -3 :yep)))
   (is (= :yep (condp < 0 0 :nope -3 :yep :nope)))
   (is (= true (condp < 0 0 :nope -3 :>> identity :nope))))
+
+(testing "juxt"
+  (is (= [1] ((juxt identity) 1)))
+  (is (= [2 0] ((juxt inc dec) 1))))
+
+(testing "some->"
+  (is (= :yep (some-> :yep)))
+  (is (= true (some-> :yep keyword?)))
+  (is (= false (some-> :yep string?)))
+  (is (= "yep!" (some-> "yep" (str "!")))))
+
+(testing "some->>"
+  (is (= :yep (some->> :yep)))
+  (is (= true (some->> :yep keyword?)))
+  (is (= false (some->> :yep string?)))
+  (is (= "...yep" (some->> "yep" (str "...")))))
 
 (testing "sort"
   ;; FIXME: test stability

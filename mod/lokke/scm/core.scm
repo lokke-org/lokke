@@ -12,7 +12,8 @@
 ;;;      option) any later version.
 
 (define-module (lokke scm core)
-  #:use-module ((lokke base syntax) #:select (-> ->>))
+  #:use-module ((lokke base syntax)
+                #:select (-> ->> cond-> cond->> some-> some->>))
   #:use-module ((lokke base util) #:select (string->keyword))
   #:use-module ((rnrs arithmetic fixnums) #:version (6) #:select (fixnum?))
   #:use-module ((srfi srfi-1) #:select (fold reduce first second third))
@@ -24,6 +25,8 @@
                (1+ . inc)
                (1- . dec')
                (1- . dec)
+               cond->
+               cond->>
                (exact->inexact . double)
                (exact->inexact . float)
                (eq? . identical?)
@@ -35,13 +38,15 @@
                (real? . double?)
                (real? . float?)
                (remainder . rem)
+               some->
+               some->>
                (string->keyword . keyword) ; FIXME: restrictions?
                (string->symbol . symbol)   ; FIXME: restrictions?
                (substring/read-only . subs))
   #:export (comment
             doto
             true? false?
-            comp complement constantly juxt
+            comp complement constantly
             nat-int?
             neg-int?
             partial

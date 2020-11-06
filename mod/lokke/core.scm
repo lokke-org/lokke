@@ -21,9 +21,13 @@
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base syntax)
-                #:select (and
+                #:select (->
+                          ->>
+                          and
                           binding
                           (cond . clj-cond)
+                          cond->
+                          cond->>
                           condp
                           declare
                           def
@@ -43,6 +47,8 @@
                           letfn
                           loop
                           or
+                          some->
+                          some->>
                           var
                           when
                           when-let
@@ -136,8 +142,6 @@
                 #:select (+'
                           -'
                           -'
-                          ->
-                          ->>
                           comment
                           comp
                           complement
@@ -154,7 +158,6 @@
                           inc
                           inc'
                           int?
-                          juxt
                           mod
                           neg?
                           nat-int?
@@ -182,6 +185,7 @@
             instance?
             int
             integer
+            juxt
             long
             not=
             num
@@ -235,6 +239,8 @@
                char?
                (class-of . class)
                (clj-cond . cond)
+               cond->
+               cond->>
                (clj-defmacro . defmacro)
                close
                coll?
@@ -400,6 +406,8 @@
                slurp
                spit
                some
+               some->
+               some->>
                str
                string?
                subs
@@ -541,3 +549,9 @@
                            (seq s))))
     (stable-sort! v (lambda (x y) (neg? (compare x y))))
     (seq v)))
+
+(define (juxt f . fs)
+  (lambda args
+    (apply vector
+           (apply f args)
+           (map (lambda (f) (apply f args)) fs))))
