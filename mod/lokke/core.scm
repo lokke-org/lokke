@@ -119,6 +119,7 @@
                 #:select (re-find
                           re-groups
                           re-matcher
+                          re-matches
                           re-pattern
                           re-seq))
   #:use-module ((lokke scm bit)
@@ -369,6 +370,7 @@
                re-find
                re-groups
                re-matcher
+               re-matches
                re-pattern
                re-seq
                read-line

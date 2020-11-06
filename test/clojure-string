@@ -158,6 +158,21 @@
   (is (= [] (matches (re-matcher (re-pattern "^y") "xy"))))
   (is (= ["y"] (matches (re-matcher (re-pattern "y") "xy")))))
 
+(testing "re-matches"
+  (is (= "" (re-matches (re-pattern "") "")))
+  (is (not (re-matches (re-pattern "x") "y")))
+  (is (= "x" (re-matches (re-pattern "x") "x")))
+  (is (= ["x" "x"] (re-matches (re-pattern "(x)") "x")))
+  (is (not (re-matches (re-pattern "^y") "xy")))
+  (is (= nil (re-matches (re-pattern "y") "xy")))
+  (is (= nil (re-matches (re-pattern "y") "yx")))
+
+  (is (= [] (matches (re-matcher (re-pattern "x") "y"))))
+  (is (= ["x"] (matches (re-matcher (re-pattern "x") "x"))))
+  (is (= [["x" "x"]] (matches (re-matcher (re-pattern "(x)") "x"))))
+  (is (= [] (matches (re-matcher (re-pattern "^y") "xy"))))
+  (is (= ["y"] (matches (re-matcher (re-pattern "y") "xy")))))
+
 (testing "re-seq"
   (is (= nil (re-seq (re-pattern "x") "y")))  ;; Match the jvm, not the docs
   (is (= ["" "" "" ""] (re-seq (re-pattern "") "xxx")))
