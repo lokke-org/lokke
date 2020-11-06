@@ -95,6 +95,7 @@ TESTS = \
   test/lokke-ns \
   test/lokke-pr \
   test/lokke-scm-atom \
+  test/lokke-scm-promise \
   test/lokke-scm-vector \
   test/lokke-symbol \
   test/ns-lokke-io \

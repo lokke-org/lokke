@@ -18,7 +18,7 @@
 (define-module (lokke concurrent)
   #:use-module ((ice-9 atomic) #:select (make-atomic-box))
   #:use-module ((ice-9 futures) #:select ((future . %scm-future) touch))
-  #:use-module (oop goops)
+  #:use-module ((oop goops) #:hide (<promise>))
   #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke scm atom)
                 #:select (atom?
@@ -32,6 +32,10 @@
                           atom-reset!
                           atom-set-validator!
                           atom-swap!))
+  #:use-module ((lokke scm promise)
+                #:select (promise
+                          promise-deliver
+                          promise-deref))
   #:export (<atom>
             alter-meta!
             atom?
@@ -42,7 +46,8 @@
             reset!
             set-validator!
             swap!)
-  #:re-export (atom)
+  #:re-export (atom promise (promise-deliver . deliver))
+  #:replace (<promise>)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define <atom> (class-of (make-atomic-box #t)))
@@ -81,3 +86,11 @@
     #:scm-future (let ((bindings (current-dynamic-state)))
                    (%scm-future
                     (with-dynamic-state bindings (lambda () exp ...))))))
+
+(define <promise> (class-of (promise)))
+
+(define-method (deref (x <promise>))
+  (promise-deref x))
+
+(define-method (deref (x <promise>) timeout-ms timeout-val)
+  (promise-deref x timeout-ms timeout-val))

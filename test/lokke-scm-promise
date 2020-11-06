@@ -1,0 +1,83 @@
+#!./guile
+!# ;; -*-scheme-*-
+
+;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(use-modules
+ ((ice-9 threads) #:select (call-with-new-thread))
+ ((lokke collection) #:select (clj=))
+ ((lokke hash-map) #:select (assoc hash-map))
+ ((lokke scm core) #:select (doto))
+ ((lokke scm promise) #:prefix t/)
+ ((lokke scm test-anything) #:select (tap-test-runner))
+ ((srfi srfi-64)
+  #:select (test-assert
+            test-begin
+            test-end
+            test-eq
+            test-equal
+            test-eqv
+            test-group
+            test-runner-current
+            test-runner-fail-count)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+(test-assert (t/promise? (t/promise)))
+
+(test-equal 1 (t/promise-deref (doto (t/promise) (t/promise-deliver 1))))
+
+(test-equal 1 (t/promise-deref (doto (t/promise)
+                                     (t/promise-deliver 1)
+                                     (t/promise-deliver 2))))
+
+(test-equal 1 (t/promise-deref (t/promise) 1 1))
+
+;; Run two competing deref threads, and one mutator that's continually
+;; producing a new promise with an incremented value.  Aside from
+;; making sure nothing hangs or crashes, make sure the value never
+;; decreases.  This code assumes that set! is atomic (the pointer
+;; switch itself) and the change is eventually visible to all threads.
+(let* ((stop-1 #f)
+       (stop-2 #f)
+       (ok? #t)
+       (p (t/promise))
+       (stop! (lambda (one?) (if one? (set! stop-1 #t) (set! stop-2 #t))))
+       (derefer (lambda (one?)
+                  (let loop ((i 0)
+                             (prev 0)
+                             (v (t/promise-deref p)))
+                    (if (= i 1000)
+                        (stop! one?)
+                        (begin
+                          (when (< v prev)
+                            (set! ok? #f)
+                            (stop! one?))
+                          (loop (1+ i) v (t/promise-deref p)))))))
+       (deref-1 (call-with-new-thread (lambda () (derefer #t))))
+       (deref-2 (call-with-new-thread (lambda () (derefer #f)))))
+  (do ((i 1 (1+ i)))
+      ((and stop-1 stop-2) (format (current-error-port) "reached ~s\n" i))
+    (t/promise-deliver p i)
+    (set! p (t/promise))
+    (usleep 1))
+  (test-assert ok?))
+
+(test-end)
+
+(unless (zero? (test-runner-fail-count (test-runner-current)))
+  (exit 2))

@@ -58,9 +58,11 @@
                           atom
                           atom?
                           add-watch
-                          remove-watch
+                          deliver
                           deref
                           future
+                          promise
+                          remove-watch
                           reset!
                           set-validator!
                           swap!))
@@ -258,6 +260,7 @@
                deref
                disj
                dissoc
+               deliver
                doall
                doc
                dorun
@@ -358,6 +361,7 @@
                print-str
                println
                prn
+               promise
                quot
                rand
                rand-int
