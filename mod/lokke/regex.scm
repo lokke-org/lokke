@@ -153,14 +153,14 @@
 
 (define re-find
   (match-lambda*
-    ((re string) (re-find (re-matcher re string)))
-    ((matcher)
-     (let ((str (slot-ref matcher 'string))
-           (pos (slot-ref matcher 'pos)))
+    ((re s) (re-find (re-matcher re s)))
+    ((m)
+     (let ((str (slot-ref m 'string))
+           (pos (slot-ref m 'pos)))
        (if (> pos (string-length str))
            #nil
            (let* ((width (string-width str))
-                  (pattern (slot-ref matcher 'pattern))
+                  (pattern (slot-ref m 'pattern))
                   (code-8 (and (= width 8) (slot-ref pattern 'code-8)))
                   (code-32 (and (= width 32) (slot-ref pattern 'code-32)))
                   ;; matcher constructor ensures code will be there
@@ -169,31 +169,31 @@
                                        str
                                        pos
                                        0 ;; opts
-                                       (slot-ref matcher 'data))))
+                                       (slot-ref m 'data))))
              (cond
-              ((= rc PCRE2_ERROR_NOMATCH) (slot-set! matcher 'match? #f) #nil)
-              ((= rc PCRE2_ERROR_PARTIAL) (slot-set! matcher 'match? #f) #nil) ;; for now?
+              ((= rc PCRE2_ERROR_NOMATCH) (slot-set! m 'match? #f) #nil)
+              ((= rc PCRE2_ERROR_PARTIAL) (slot-set! m 'match? #f) #nil) ;; for now?
               ((positive? rc)
-               (let* ((ov (pcre2-match-ovector (slot-ref matcher 'data)))
+               (let* ((ov (pcre2-match-ovector (slot-ref m 'data)))
                       (start (array-ref ov 0))
                       (end (array-ref ov 1)))
-                 (slot-set! matcher 'start start)
-                 (slot-set! matcher 'end end)
+                 (slot-set! m 'start start)
+                 (slot-set! m 'end end)
                  (if (= start end)
-                     (slot-set! matcher 'pos (1+ end))
-                     (slot-set! matcher 'pos end))
-                 (slot-set! matcher 'match? #t)
+                     (slot-set! m 'pos (1+ end))
+                     (slot-set! m 'pos end))
+                 (slot-set! m 'match? #t)
                  (groups-for-ovector str ov)))
               ((zero? rc)
                ;; This should be impossible
                (throw (ex-info "Not enough space to store match substrings"
                                (hash-map #:kind #:lokke.regex/match-error
-                                         #:matcher matcher
+                                         #:matcher m
                                          #:code rc))))
               (else
                (throw (ex-info (pcre2-get-error-message rc)
                                (hash-map #:kind #:lokke.regex/match-error
-                                         #:matcher matcher
+                                         #:matcher m
                                          #:code rc)))))))))))
 
 (define (re-seq re string)
