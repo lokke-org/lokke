@@ -157,7 +157,6 @@
                print-on
                reduce
                reduce-kv
-               reverse
                rest
                second
                select-keys
@@ -175,7 +174,7 @@
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'cons 'list? 'merge 'peek)
+(re-export-and-replace! 'apply 'assoc 'cons 'list? 'merge 'peek 'reverse)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)
