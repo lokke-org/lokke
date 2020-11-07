@@ -206,7 +206,7 @@
             short
             time
             trampoline)
-  #:replace (= do instance? sort)
+  #:replace (= do instance?)
   #:re-export (*
                *err*
                *in*
@@ -470,7 +470,8 @@
                         'nil?
                         'peek
                         'quote
-                        'read)
+                        'read
+                        'sort)
 
 (defdyn *assert* #t)
 
@@ -559,14 +560,6 @@
   (if (zero? (string-length s))
       #nil
       (make <string-seq> #:items s)))
-
-(define-method (sort s)
-  ;; FIXME: double check that the seq elements are only realized once.
-  (let* ((v (vector-unfold (lambda (i s) (values (first s) (rest s)))
-                           (count s)
-                           (seq s))))
-    (stable-sort! v (lambda (x y) (neg? (compare x y))))
-    (seq v)))
 
 (define (juxt f . fs)
   (lambda args

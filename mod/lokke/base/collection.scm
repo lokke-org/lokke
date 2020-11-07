@@ -24,13 +24,13 @@
 (define-module (lokke base collection)
   #:version (0 0 0)
   #:use-module ((guile)
-                #:hide (peek reverse)
+                #:hide (peek reverse sort)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil))
-  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compare) #:select (clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
@@ -92,7 +92,7 @@
             update-in
             vals)
   #:re-export (clj= invoke)
-  #:replace (apply assoc first list? merge peek reverse)
+  #:replace (apply assoc first list? merge peek reverse sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'cons)
@@ -688,3 +688,13 @@
                 (loop (next s) (%scm-cons (first s) result))
                 (seq result))))
         '())))
+
+(define-generic sort)
+
+(define-method (sort s)
+  ;; FIXME: double check that the seq elements are only realized once.
+  (let* ((v (vector-unfold (lambda (i s) (values (first s) (rest s)))
+                           (count s)
+                           (seq s))))
+    (stable-sort! v (lambda (x y) (negative? (compare x y))))
+    (seq v)))
