@@ -75,7 +75,7 @@ export LOKKE_TEST_PROTOCOL = tap
 
 TESTS = \
   test/equality \
-  test/clojure-comparisons \
+  test/clojure-comparison \
   test/clojure-defmacro \
   test/clojure-dynamic \
   test/clojure-evaluation \
@@ -85,7 +85,7 @@ TESTS = \
   test/clojure-string \
   test/clojure-vector \
   test/clojure-pr \
-  test/lokke-compare \
+  test/lokke-comparison \
   test/lokke-core \
   test/lokke-destructure \
   test/lokke-exception \

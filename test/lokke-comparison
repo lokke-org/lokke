@@ -34,15 +34,6 @@
 (test-begin (basename (car (program-arguments))))
 
 (test-group
- "clj="
- (test-assert (t/clj= 'x))
- (test-assert (t/clj= 'x 'x))
- (test-assert (t/clj= 'x 'x 'x))
- (test-assert (not (t/clj= 'x 'x 'y)))
- (test-assert (t/clj= "x" "x"))
- (test-assert (not (t/clj= "x" "y"))))
-
-(test-group
  "compare"
  (test-equal -1 (t/compare #nil #t))
  (test-equal -1 (t/compare #nil #f))

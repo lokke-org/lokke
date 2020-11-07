@@ -1,0 +1,87 @@
+#!./lokke -0 ;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;;
+;;; This project is free software; you can redistribute it and/or
+;;; modify it under the terms of (at your option) either of the
+;;; following two licences:
+;;;
+;;;   1) The GNU Lesser General Public License as published by the
+;;;      Free Software Foundation; either version 2.1, or (at your
+;;;      option) any later version
+;;;
+;;;   2) The Eclipse Public License; either version 1.0 or (at your
+;;;      option) any later version.
+
+(ns test.clojure-comparison
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(testing "="
+  (is (= nil))
+
+  (is (= nil nil))
+  (is (not= nil true))
+  (is (not= :x nil))
+
+  (is (= true true))
+  (is (not= true false))
+  (is (not= :x true))
+
+  (is (= \x \x))
+  (is (not= \x \y))
+  (is (not= :y \x))
+
+  (is (= "x" "x"))
+  (is (not= "x" "y"))
+  (is (not= :y "x"))
+
+  (is (= 'x 'x))
+  (is (not= 'x 'y))
+  (is (not= :y 'x))
+
+  (is (= :x :x))
+  (is (not= :x :y))
+  (is (not= "y" :x))
+
+  (is (= 0 0))
+  (is (not= 0 1))
+  (is (not= 0 0.0))
+  (is (not= 1.0 0))
+  (is (= 1.1 1.1))
+
+  (is (= [] '()))
+  (is (= #{} #{}))
+  (is (= {} {}))
+  (is (= [1 2 3] '(1 2 3)))
+  (is (= #{1 2 3} #{1 2 3}))
+  (is (= {1 2 3 4} {3 4 1 2}))
+  (is (not= [] {}))
+  (is (not= [] #{}))
+  (is (not= [1] #{}))
+  (is (not= [1 2] '(1 2 3)))
+  (is (not= [1 2] #{1 2}))
+  (is (not= #{1 2} #{1 3}))
+  (is (not= {1 2} {1 3}))
+  (is (not= [[1 2]] {1 2}))
+
+  (let [x (atom nil)] (is (= x x)))
+  (let [x (promise)] (is (= x x)))
+  (is (not= (atom nil) (atom nil)))
+  (is (not= (promise) (promise))))
+
+(testing "=="
+  ;; FIXME: test exceptions for non-numbers
+  (is (== 0 0))
+  (is (== 0 0.0))
+  (is (== 0.0 -0.0))
+  (is (== 1.1 1.1))
+  (is (not (== 0 1)))
+  (is (not (== 1.0 0)))
+  (is (not (== 0 ##NaN)))
+  (is (not (== ##NaN ##NaN))))
+
+(end-tests (ns-name *ns*) :exit? true)

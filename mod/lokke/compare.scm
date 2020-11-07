@@ -41,6 +41,10 @@
              (and (clj= x (car rest))
                   (loop (car rest) (cdr rest)))))))
 
+(define-method (clj= (x <real>) (y <real>))
+  (and (not (or (nan? x) (nan? y)))
+       (equal? x y)))
+
 ;; compare results are compatible with SRFI-67 #{-1 0 1}, stricter
 ;; than Clojure's.
 
