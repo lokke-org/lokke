@@ -200,7 +200,8 @@
             num
             short
             some?
-            time)
+            time
+            trampoline)
   #:replace (= do instance? nil? sort)
   #:re-export (*
                *err*
@@ -575,3 +576,9 @@
                  (+ (* 1000 (time-second elapsed))
                     (/ (time-nanosecond elapsed) 1000.0)))
     result))
+
+(define (trampoline f . args)
+  (%scm-let loop ((result (apply f args)))
+    (if (procedure? result)
+        (loop (result))
+        result)))

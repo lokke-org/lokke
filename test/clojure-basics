@@ -77,4 +77,13 @@
                     out)))
   (is (= :yep (time :yep))))
 
+(testing "trampoline"
+  (let [bouncer (fn bouncer [n]
+                  (if (pos? n)
+                    (fn [] (bouncer (dec n)))
+                    (fn [] :tired)))]
+    (is (= :tired (trampoline (bouncer 0))))
+    (is (= :tired (trampoline (bouncer 1))))
+    (is (= :tired (trampoline (bouncer 2))))))
+
 (end-tests (ns-name *ns*) :exit? true)
