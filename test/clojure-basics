@@ -20,6 +20,10 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "fn?"
+  (is (not (fn? true)))
+  (is (fn? (fn [] true))))
+
 (testing "cond->"
   (is (= :yep (cond-> :yep)))
   (is (= :yep (cond-> :yep string? name)))

@@ -296,6 +296,7 @@
                float?
                flush
                fn
+               (procedure? . fn?)
                fnext
                for
                future
