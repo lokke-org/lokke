@@ -79,20 +79,27 @@
             fn
             if-let
             if-not
+            if-some
             letfn
             loop
             some->
             some->>
+            some?
             var
+            when-first
             when-let
-            when-not)
+            when-not
+            when-some)
   ;; We leave let as let within this module.
-  #:replace (and or cond if (let** . let) when))
+  #:replace (and or cond if (let** . let) nil? when))
 
 (eval-when (expand load eval)
   (define debug-fn? #f)
   (define debug-let? #f)
   (define debug-loop? #f))
+
+(define (nil? x) (eq? #nil x))
+(define (some? x) (not (nil? x)))
 
 (define-syntax-rule (var name)
   (module-variable (current-module) 'name))
@@ -278,6 +285,19 @@
                (let** (var outcome) then)
                else))))))
 
+(define-syntax if-some
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag meta var test) body ...) (vec-tag? #'vec-tag)
+       #'(if-some (var test) body ...))
+      ((_ (var test) then)
+       #'(if-some (var test) then #nil))
+      ((_ (var test) then else)
+       #'(%scm-let ((outcome test))
+           (if (some? outcome)
+               (let** (var outcome) then)
+               else))))))
+
 (define-syntax when-let
   (lambda (x)
     (syntax-case x ()
@@ -285,6 +305,14 @@
        #'(when-let (var test) body ...))
       ((_ (var test)) #'(begin test #nil))
       ((_ (var test) body ...) #'(if-let (var test) (begin #nil body ...))))))
+
+(define-syntax when-some
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag meta var test) body ...) (vec-tag? #'vec-tag)
+       #'(when-some (var test) body ...))
+      ((_ (var test)) #'(begin test #nil))
+      ((_ (var test) body ...) #'(if-some (var test) (begin #nil body ...))))))
 
 (define-syntax cond
   (syntax-rules ()
@@ -691,3 +719,14 @@
        (%scm-if (nil? y)
                 #nil
                 (some->> (->> y exp) exp* ...))))))
+
+(define-syntax when-first
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag meta binding exp) body ...)  (vec-tag? #'vec-tag)
+       #'(when-first (binding exp) body ...))
+      ((_ (binding exp) body ...)
+       #'(let ((s (seq exp)))
+           (when s
+             (let** (binding (first s))
+               body ...)))))))

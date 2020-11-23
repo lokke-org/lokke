@@ -46,16 +46,21 @@
                           if
                           if-let
                           if-not
+                          if-some
                           let
                           letfn
                           loop
+                          nil?
                           or
                           some->
                           some->>
+                          some?
                           var
                           when
+                          when-first
                           when-let
-                          when-not))
+                          when-not
+                          when-some))
   #:use-module ((lokke boot) #:select (quote))
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module (lokke collection)
@@ -199,10 +204,9 @@
             not=
             num
             short
-            some?
             time
             trampoline)
-  #:replace (= do instance? nil? sort)
+  #:replace (= do instance? sort)
   #:re-export (*
                *err*
                *in*
@@ -322,6 +326,7 @@
                if
                if-let
                if-not
+               if-some
                in-ns
                inc
                inc'
@@ -420,6 +425,7 @@
                some
                some->
                some->>
+               some?
                str
                string?
                subs
@@ -443,8 +449,10 @@
                vector
                vector?
                when
+               when-first
                when-let
                when-not
+               when-some
                with-open
                with-out-str
                with-meta
@@ -459,6 +467,7 @@
                         'list?
                         'merge
                         'newline
+                        'nil?
                         'peek
                         'quote
                         'read)
@@ -478,9 +487,6 @@
 (define (not= . args) (not (%scm-apply = args)))
 
 (defdyn *command-line-args* (cdr (program-arguments)))
-
-(define (nil? x) (eq? #nil x))
-(define some? (complement nil?))
 
 (define (instance? c x) (is-a? x c))
 
