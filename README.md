@@ -373,6 +373,9 @@ Known Issues
   i.e. do we want to support `(fn #(...) ...)` or `(fn (...) ...)` if
   either?  Presumably all destructuring bindings should work the same.
 
+- `time` relies on guile's SRFI-19 `time-monotonic`, which is not yet
+  truly monotonic.  It's actually International Atomic Time.
+
 - See DESIGN for additional issues.
 
 

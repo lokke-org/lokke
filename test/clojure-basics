@@ -71,4 +71,10 @@
   (is (= [1 2 3 4 5] (sort [5 2 1 4 3])))
   (is (= [2 2 3 4 5] (sort [5 2 2 4 3]))))
 
+(testing "time"
+  (let [out (with-out-str (time true))]
+    (is (re-matches (re-pattern "\"Elapsed time: \\d+\\.\\d+ msecs\"\\n")
+                    out)))
+  (is (= :yep (time :yep))))
+
 (end-tests (ns-name *ns*) :exit? true)

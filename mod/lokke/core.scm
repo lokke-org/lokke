@@ -13,7 +13,10 @@
 
 (define-module (lokke core)
   #:use-module ((guile)
-                #:select ((apply . %scm-apply) (begin . %scm-begin) (let . %scm-let)))
+                #:select ((apply . %scm-apply)
+                          (begin . %scm-begin)
+                          (let . %scm-let)
+                          (format . %scm-format)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
@@ -173,6 +176,12 @@
                           true?))
   #:use-module ((lokke symbol)
                 #:select (gensym ident? keyword name namespace symbol))
+  #:use-module ((srfi srfi-19)
+                #:select (current-time
+                          time-difference
+                          time-monotonic
+                          time-nanosecond
+                          time-second))
   #:use-module ((system base compile)
                 #:select (compile-file compiled-file-name))
   #:export (*assert*
@@ -190,7 +199,8 @@
             not=
             num
             short
-            some?)
+            some?
+            time)
   #:replace (= do instance? nil? sort)
   #:re-export (*
                *err*
@@ -556,3 +566,12 @@
     (apply vector
            (apply f args)
            (map (lambda (f) (apply f args)) fs))))
+
+(define-syntax-rule (time exp)
+  (let* ((start (current-time time-monotonic))
+         (result exp)
+         (elapsed (time-difference (current-time time-monotonic) start)))
+    (%scm-format *out* "\"Elapsed time: ~s msecs\"\n"
+                 (+ (* 1000 (time-second elapsed))
+                    (/ (time-nanosecond elapsed) 1000.0)))
+    result))
