@@ -96,7 +96,7 @@
   ;; a transducer when no collections are provided"
   ;; {:added "1.0"
   ;;  :static true}
-  ([f] (comp (map f) cat))
+  ;; ([f] (comp (map f) cat))
   ([f & colls]
      (apply concat (apply map f colls))))
 
