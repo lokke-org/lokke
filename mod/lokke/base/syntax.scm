@@ -412,6 +412,7 @@
       (let* ((body (strip-condition-map body))
              (dot? (dotted-list? args))
              (proper-args (undotted args))
+             (proper-args (strip-top-level-metadata proper-args))
              (shim-args (generate-temporaries proper-args))
              (let-args (append-map! (lambda (shim orig) (list orig shim))
                                     shim-args

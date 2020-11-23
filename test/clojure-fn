@@ -1,7 +1,7 @@
-#!./lokke -0
+#!./lokke -0 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -63,6 +63,7 @@
   (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (foo) (foo (dec x))))) 3)))
   (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (recur) (recur (dec x))))) 3))))
 
+(is (= 1 ((fn [^String x] 1) "ignored")))
 
 ;; recur was initially broken when introduced via defn...
 
