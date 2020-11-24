@@ -635,7 +635,8 @@ lokke_read_regex_literal (SCM port, scm_t_read_opts *opts)
   long line = scm_to_long (scm_port_line (port));
   int column = scm_to_int (scm_port_column (port)) - 1;
 
-  while ('"' != (c = scm_getc (port)))
+  scm_t_wchar prev_c = 0;
+  while ((c = scm_getc (port)) != '"' || prev_c == '\\')
     {
       if (c == EOF)
           scm_i_input_error (FUNC_NAME, port, "end of file in #"" literal",
@@ -646,6 +647,7 @@ lokke_read_regex_literal (SCM port, scm_t_read_opts *opts)
 	  c_str_len = 0;
 	}
       c_str[c_str_len++] = c;
+      prev_c = c;
     }
 
   if (scm_is_null (str))

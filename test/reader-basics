@@ -274,6 +274,12 @@
  (test-equal 1 (t/read-string "#?@(:default [1])"))
  (test-equal '(1 2 3) (t/read-string "(#?@(:default [1 2 3]))")))
 
+(test-group
+ "regex patterns"
+ (test-equal '(re-pattern "x") (t/read-string "#\"x\""))
+ (test-equal '(re-pattern " \\d ") (t/read-string "#\" \\d \""))
+ (test-equal '(re-pattern "\\\"x\\\"") (t/read-string "#\"\\\"x\\\"\"")))
+
 (test-end)
 
 (unless (zero? (test-runner-fail-count (test-runner-current)))
