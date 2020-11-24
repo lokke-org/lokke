@@ -28,9 +28,18 @@
                           second
                           seq))
   #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke pr) #:select (pr-on print-on))
+  #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
   #:export (<map-entry> key map-entry map-entry? val)
-  #:re-export (assoc clj= first get nth pr-on print-on rest second seq)
+  #:re-export (assoc
+               clj=
+               first
+               get
+               nth
+               pr-approachable
+               pr-readable
+               rest
+               second
+               seq)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-class <map-entry> (<sequential>)
@@ -52,11 +61,11 @@
   (emit (val m) port)
   (display "]" port))
 
-(define-method (pr-on (v <map-entry>) port)
-  (show v pr-on port))
+(define-method (pr-readable (v <map-entry>) port)
+  (show v pr-readable port))
 
-(define-method (print-on (v <map-entry>) port)
-  (show v print-on port))
+(define-method (pr-approachable (v <map-entry>) port)
+  (show v pr-approachable port))
 
 (define (map-entry? x) (is-a? x <map-entry>))
 

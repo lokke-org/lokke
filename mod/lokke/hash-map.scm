@@ -55,7 +55,7 @@
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
-  #:use-module ((lokke pr) #:select (pr-on print-on))
+  #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (fold))
   #:use-module ((srfi srfi-69) #:prefix hash/)
@@ -74,8 +74,8 @@
                get
                keys
                meta
-               pr-on
-               print-on
+               pr-approachable
+               pr-readable
                reduce-kv
                select-keys
                seq
@@ -133,11 +133,11 @@
                #t))
   (display "}" port))
 
-(define-method (pr-on (m <hash-map>) port)
-  (show m pr-on port))
+(define-method (pr-readable (m <hash-map>) port)
+  (show m pr-readable port))
 
-(define-method (print-on (m <hash-map>) port)
-  (show m print-on port))
+(define-method (pr-approachable (m <hash-map>) port)
+  (show m pr-approachable port))
 
 (define-method (write (m <hash-map>) port)
   (format port "#<~s ~x " (class-name (class-of m)) (object-address m))

@@ -99,7 +99,7 @@
                           lokke-vector-ref))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
-  #:use-module ((lokke pr) #:select (pr-on print-on))
+  #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
   #:export (butlast
             doall
             dorun
@@ -153,8 +153,8 @@
                nnext
                nth
                pop
-               pr-on
-               print-on
+               pr-approachable
+               pr-readable
                reduce
                reduce-kv
                rest
@@ -240,19 +240,19 @@
       (emit (first coll) port)))
   (display close port))
 
-(define-method (pr-on (s <seq>) port)
-  (show s pr-on port "(" ")"))
+(define-method (pr-readable (s <seq>) port)
+  (show s pr-readable port "(" ")"))
 
-(define-method (print-on (s <seq>) port)
-  (show s print-on port "(" ")"))
+(define-method (pr-approachable (s <seq>) port)
+  (show s pr-approachable port "(" ")"))
 
 ;; FIXME: improper lists?
 
-(define-method (pr-on (s <pair>) port)
-  (show s pr-on port "(" ")"))
+(define-method (pr-readable (s <pair>) port)
+  (show s pr-readable port "(" ")"))
 
-(define-method (print-on (s <pair>) port)
-  (show s print-on port "(" ")"))
+(define-method (pr-approachable (s <pair>) port)
+  (show s pr-approachable port "(" ")"))
 
 ;; For now, just emulate the same output as Guile, assuming that
 ;; <class> is always correct.

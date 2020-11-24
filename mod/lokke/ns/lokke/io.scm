@@ -95,10 +95,9 @@ port as a string.  Closes the port."
     (get-string-all in)))
 
 (define (spit f content . opts)
-  "Calls writer on f, prints the content on the resulting port, and
+  "Calls writer on f, writes (str content) on the resulting port, and
 then closes it."
   (with-open (out (apply writer f opts))
-    ;; FIXME: replace with print-on once it's ready
     (display (str content) out)))
 
 (define (slurp-bytes f . opts)
@@ -110,7 +109,6 @@ exactly like slurp."
 (define (spit-bytes f bytevector . opts)
   "Writes the bytevector to f, otherwise exactly like spit."
   (with-open (out (apply writer f opts))
-    ;; FIXME: replace with print-on once it's ready
     (put-bytevector out bytevector)))
 
 (define* (mkstemp template #:optional mode)

@@ -39,7 +39,7 @@
                           seqable?))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke hash-map) #:select (<hash-map>))
-  #:use-module ((lokke pr) #:select (pr-on print-on))
+  #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-41) #:select (stream-lambda))
@@ -59,8 +59,8 @@
                get
                into
                meta
-               pr-on
-               print-on
+               pr-approachable
+               pr-readable
                seq
                seqable?
                with-meta)
@@ -116,11 +116,11 @@
                #t))
   (display "}" port))
 
-(define-method (pr-on (s <hash-set>) port)
-  (show s pr-on port))
+(define-method (pr-readable (s <hash-set>) port)
+  (show s pr-readable port))
 
-(define-method (print-on (s <hash-set>) port)
-  (show s print-on port))
+(define-method (pr-approachable (s <hash-set>) port)
+  (show s pr-approachable port))
 
 (define-method (write (m <hash-set>) port)
   (format port "#<~s ~x " (class-name (class-of m)) (object-address m))

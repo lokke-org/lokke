@@ -48,7 +48,7 @@
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (<hash-map>))
   #:use-module ((lokke metadata) #:select (meta with-meta))
-  #:use-module ((lokke pr) #:select (pr-on print-on))
+  #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module ((lokke scm vector)
                 #:select (<lokke-vector>
                           list->lokke-vector
@@ -88,8 +88,8 @@
                nth
                peek
                pop
-               pr-on
-               print-on
+               pr-readable
+               pr-approachable
                rest
                seq
                seqable?
@@ -150,11 +150,11 @@
           (emit (nth v i) port))
         (display "]" port))))
 
-(define-method (pr-on (v <lokke-vector>) port)
-  (show-vector v (lokke-vector-length v) lokke-vector-ref pr-on port))
+(define-method (pr-readable (v <lokke-vector>) port)
+  (show-vector v (lokke-vector-length v) lokke-vector-ref pr-readable port))
 
-(define-method (print-on (v <lokke-vector>) port)
-  (show-vector v (lokke-vector-length v) lokke-vector-ref print-on port))
+(define-method (pr-approachable (v <lokke-vector>) port)
+  (show-vector v (lokke-vector-length v) lokke-vector-ref pr-approachable port))
 
 (define-method (counted? (v <lokke-vector>)) #t)
 (define-method (count (v <lokke-vector>)) (lokke-vector-length v))
@@ -355,11 +355,11 @@
 ;; (define-method (compare (v1 <subvec>) (v2 <subvec>))
 ;;   (vector-compare compare v1 v2 subvec-length subvec-nth))
 
-(define-method (pr-on (v <subvec>) port)
-  (show-vector v (subvec-length v) subvec-nth pr-on port))
+(define-method (pr-readable (v <subvec>) port)
+  (show-vector v (subvec-length v) subvec-nth pr-readable port))
 
-(define-method (print-on (v <subvec>) port)
-  (show-vector v (subvec-length v) subvec-nth pr-on port))
+(define-method (pr-approachable (v <subvec>) port)
+  (show-vector v (subvec-length v) subvec-nth pr-approachable port))
 
 (define (fold-indexed f init . lists)
   (let ((i -1))

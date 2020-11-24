@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -10,13 +10,6 @@
 ;;;
 ;;;   2) The Eclipse Public License; either version 1.0 or (at your
 ;;;      option) any later version.
-
-;; FIXME: consider falling back to write/display (customized via
-;; GOOPS) when the reps are the same.
-
-;; FIXME: check scheme write vs clojure more carefully
-
-;; FIXME: *out* *err*, etc.
 
 (define-module (lokke pr)
   #:use-module ((guile) #:select ((newline . %scm-newline)))
@@ -32,12 +25,13 @@
   #:export (*err*
             *in*
             *out*
+            *print-readably*
             pr
-            pr-on
+            pr-approachable
+            pr-readable
             pr-str
             print
             printf
-            print-on
             print-str
             println
             prn
@@ -48,6 +42,7 @@
 (defdyn *in* (current-input-port))
 (defdyn *out* (current-output-port))
 (defdyn *err* (current-error-port))
+(defdyn *print-readably* #t)
 
 ;; For now, guile doesn't have one...
 (define (tree-il? x)
@@ -101,14 +96,14 @@
                      '("" ""))))
       "]")))))
 
-(define-method (pr-on x port)
+(define-method (pr-readable x port)
   (display (str-somehow x #f) port) #nil)
 
-(define-method (print-on x port)
-  (pr-on x port) #nil)
+(define-method (pr-approachable x port)
+  (pr-readable x port) #nil)
 
 
-(define-method (pr-on (x <class>) port)
+(define-method (pr-readable (x <class>) port)
   (display (class-name x) port)
   #nil)
 
@@ -124,30 +119,30 @@
   (display (boolean->string x) port)
   #nil)
 
-(define-method (pr-on (x <boolean>) port)
+(define-method (pr-readable (x <boolean>) port)
   (show-boolean x port))
 
-(define-method (print-on (x <boolean>) port)
+(define-method (pr-approachable (x <boolean>) port)
   (show-boolean x port))
 
 
 (define-inlinable (show-null x port)
   (display "()" port) #nil)
 
-(define-method (pr-on (x <null>) port)
+(define-method (pr-readable (x <null>) port)
   (show-null x port))
 
-(define-method (print-on (x <null>) port)
+(define-method (pr-approachable (x <null>) port)
   (show-null x port))
 
 
 (define-inlinable (show-num x port)
   (display x port) #nil)
 
-(define-method (pr-on (x <number>) port)
+(define-method (pr-readable (x <number>) port)
   (show-num x port))
 
-(define-method (print-on (x <number>) port)
+(define-method (pr-approachable (x <number>) port)
   (show-num x port))
 
 
@@ -155,10 +150,10 @@
 (define-inlinable (show-sym x port)
   (display (symbol->string x) port) #nil)
 
-(define-method (pr-on (x <symbol>) port)
+(define-method (pr-readable (x <symbol>) port)
   (show-sym x port))
 
-(define-method (print-on (x <symbol>) port)
+(define-method (pr-approachable (x <symbol>) port)
   (show-sym x port))
 
 
@@ -168,15 +163,15 @@
   (display (keyword->string x) port)
   #nil)
 
-(define-method (pr-on (x <keyword>) port)
+(define-method (pr-readable (x <keyword>) port)
   (show-keyword x port))
 
-(define-method (print-on (x <keyword>) port)
+(define-method (pr-approachable (x <keyword>) port)
   (show-keyword x port))
 
 
 ;; FIXME: ensure correct clj format
-(define-method (pr-on (c <char>) port)
+(define-method (pr-readable (c <char>) port)
   (case c
     ((#\newline) (display "\\newline" port))
     ((#\space) (display "\\space" port))
@@ -187,22 +182,22 @@
     ;; FIXME: adjust to match the jvm (or edn) more precisely
     (else (display (string #\\ c) port))))
 
-(define-method (print-on (x <char>) port)
+(define-method (pr-approachable (x <char>) port)
   (display x port) #nil)
 
 
 ;; FIXME: ensure correct clj format
-(define-method (pr-on (x <string>) port)
+(define-method (pr-readable (x <string>) port)
   (write x port) #nil)
 
-(define-method (print-on (x <string>) port)
+(define-method (pr-approachable (x <string>) port)
   (display x port) #nil)
 
-(define-method (pr-on (x <module>) port)
+(define-method (pr-readable (x <module>) port)
   (display (str-somehow x (pr-str (module-name->ns-str (module-name x)))) port)
   #nil)
 
-(define-method (print-on (x <module>) port)
+(define-method (pr-approachable (x <module>) port)
   (display (module-name->ns-str (module-name x)) port)
   #nil)
 
@@ -217,18 +212,18 @@
 (define-method (pr-str (x var-class))
   (var-desc x))
 
-(define-method (pr-on (x var-class) port)
+(define-method (pr-readable (x var-class) port)
   (display (var-desc x) port)
   #nil)
 
-(define-method (print-on (x var-class) port)
+(define-method (pr-approachable (x var-class) port)
   (display (var-desc x) port)
   #nil)
 
 (define (newline)
   (%scm-newline *out*))
 
-(define-method (pr-on (x <syntax>) port)
+(define-method (pr-readable (x <syntax>) port)
   (write x port) #nil)
 
 
@@ -245,10 +240,12 @@
         #nil))))
 
 (define (pr . items)
-  (show-all items pr-on *out*))
+  (if *print-readably*
+      (show-all items pr-readable *out*)
+      (show-all items pr-approachable *out*)))
 
 (define (print . items)
-  (show-all items print-on *out*))
+  (show-all items pr-approachable *out*))
 
 (define (printf fmt . args)
   (print (apply format fmt args)))
