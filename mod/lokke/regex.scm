@@ -106,10 +106,10 @@
   (make <re-pattern> #:source s))
 
 (define-method (pr-readable (re <re-pattern>) port)
-  (display (string-append "#" (pr-str (slot-ref re 'source))) port))
+  (display (string-append "#\"" (slot-ref re 'source) "\"") port))
 
 (define-method (pr-approachable (re <re-pattern>) port)
-  (display (string-append "#" (pr-str (slot-ref re 'source))) port))
+  (display (string-append "#\"" (slot-ref re 'source) "\"") port))
 
 (define (re-matcher re s)
   (let* ((width (string-width s))
