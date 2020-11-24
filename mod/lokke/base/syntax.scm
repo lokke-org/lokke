@@ -64,6 +64,7 @@
   #:re-export (binding defdyn defdynloc)
   #:export (->
             ->>
+            as->
             cond
             cond->
             cond->>
@@ -736,3 +737,12 @@
            (when s
              (let** (binding (first s))
                body ...)))))))
+
+(define-syntax as->
+  (lambda (x)
+    (syntax-case x ()
+      ((_ exp name) #'exp)
+      ((_ exp name form form* ...)
+       (with-syntax ((x (datum->syntax #'form (syntax->datum #'name))))
+         #'(let ((x exp))
+             (as-> form name form* ...)))))))

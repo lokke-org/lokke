@@ -24,6 +24,11 @@
   (is (not (fn? true)))
   (is (fn? (fn [] true))))
 
+(testing "as->"
+  (is (= :yep (as-> :yep x)))
+  (is (= 1 (as-> 0 x (inc x))))
+  (is (= "1" (as-> 0 x (inc x) (str x)))))
+
 (testing "cond->"
   (is (= :yep (cond-> :yep)))
   (is (= :yep (cond-> :yep string? name)))

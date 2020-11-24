@@ -26,6 +26,7 @@
   #:use-module ((lokke base syntax)
                 #:select (->
                           ->>
+                          as->
                           and
                           binding
                           (cond . clj-cond)
@@ -230,6 +231,7 @@
                Exception
                ExceptionInfo
                Throwable
+               as->
                add-watch
                alias
                alter-meta!
