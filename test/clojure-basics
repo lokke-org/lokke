@@ -68,6 +68,29 @@
   (is (= false (some->> :yep string?)))
   (is (= "...yep" (some->> "yep" (str "...")))))
 
+(testing "if-some"
+  (is (= nil (if-some [x nil] :yep)))
+  (is (= :nope (if-some [x nil] :yep :nope)))
+  (is (= :yep (if-some [x false] :yep :nope)))
+  (is (= :yep (if-some [x :yep] x)))
+  (is (= :yep (if-some [x :yep] x :nope))))
+
+(testing "when-some"
+  (is (= nil (when-some [x nil] :yep)))
+  (is (= false (when-some [x false] x)))
+  (is (= false (when-some [x false] 1 2 3 x))))
+
+(testing "when-first"
+  (is (= nil (when-first [x nil] :yep)))
+  (is (= nil (when-first [x []] x)))
+  (is (= 1 (when-first [x [1]] x)))
+  (is (= 1 (when-first [x [1 2 3]] x)))
+  (is (= 1 (when-first [x [1]] 1 2 3 x)))
+  (let [evals (atom 0)
+        coll #(do (swap! evals inc) [1 2 3])]
+    (is (= 1 (when-first [x (coll)] x)))
+    (is (= 1 @evals))))
+
 (testing "sort"
   ;; FIXME: test stability
   (is (= [1 2 3 4 5] (sort '(1 2 3 4 5))))
