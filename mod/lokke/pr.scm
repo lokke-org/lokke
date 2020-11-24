@@ -13,6 +13,7 @@
 
 (define-module (lokke pr)
   #:use-module ((guile) #:select ((newline . %scm-newline)))
+  #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((ice-9 format) #:select ((format . %scm-format)))
   #:use-module ((language tree-il) #:prefix tree-il/)
   #:use-module ((lokke base dynamic) #:select (binding defdyn))
@@ -36,6 +37,7 @@
             println
             prn
             str
+            to-string
             with-out-str)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -263,5 +265,11 @@
 (define (print-str . args)
   (with-out-str (apply print args)))
 
-(define (str . args)
-  (string-concatenate (map print-str args)))
+(define-method (to-string x)
+  (with-out-str (print x)))
+
+(define str
+  (match-lambda*
+    (() "")
+    ((x) (to-string x))
+    (xs (string-concatenate (map to-string xs)))))

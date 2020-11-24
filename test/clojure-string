@@ -130,9 +130,9 @@
 
 ;; FIXME: test utf32 patterns/strings
 
-(testing "(print pattern)"
-  (is (= "#\"x\"" (with-out-str (print #"x"))))
-  (is (= "#\"\\\"x\"" (with-out-str (print #"\"x")))))
+(testing "(str pattern)"
+  (is (= "x" (str #"x")))
+  (is (= "\\\"x" (str #"\"x"))))
 
 (testing "re-matcher"
   (is (re-matcher (re-pattern "x") "x")))

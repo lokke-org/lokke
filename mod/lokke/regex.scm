@@ -30,7 +30,7 @@
                           pcre2-match-data-for-code-8
                           pcre2-match-utf
                           pcre2-match-ovector))
-  #:use-module ((lokke pr) #:select (pr-approachable pr-readable pr-str))
+  #:use-module ((lokke pr) #:select (pr-approachable pr-readable to-string))
   #:use-module ((lokke vector) #:select (conj vector))
   #:export (matcher-end
             matcher-start
@@ -40,7 +40,7 @@
             re-matches
             re-pattern
             re-seq)
-  #:re-export (pr-approachable pr-readable)
+  #:re-export (pr-approachable pr-readable to-string)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; This does not try to be thread safe, and relies on unguarded
@@ -104,6 +104,9 @@
 
 (define (re-pattern s)
   (make <re-pattern> #:source s))
+
+(define-method (to-string (re <re-pattern>))
+  (slot-ref re 'source))
 
 (define-method (pr-readable (re <re-pattern>) port)
   (display (string-append "#\"" (slot-ref re 'source) "\"") port))
