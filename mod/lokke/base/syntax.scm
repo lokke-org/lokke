@@ -594,10 +594,15 @@
       ((_ name expr ...)
        #'(def- name (fn expr ...))))))
 
-(define-syntax-rule (letfn ((fn-name fn-body ...) ...) body ...)
-  (letrec ((fn-name (fn fn-name fn-body ...)) ...)
-    #nil
-    body ...))
+(define-syntax letfn
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (vec-tag meta exp ...) body ...)  (vec-tag? #'vec-tag)
+       #'(letfn (exp ...) body ...))
+      ((_ ((fn-name fn-body ...) ...) body ...)
+       #'(letrec ((fn-name (fn fn-name fn-body ...)) ...)
+           #nil
+           body ...)))))
 
 (define-syntax %doseq
   (lambda (x)

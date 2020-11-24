@@ -63,6 +63,17 @@
   (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (foo) (foo (dec x))))) 3)))
   (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (recur) (recur (dec x))))) 3))))
 
+(testing "letfn"
+  (is (= 1 (letfn [(x [] 1)] (x))))
+  (is (= [0 1 2 3 4] (letfn [(foo [x]
+                               (if (= 5 (count x))
+                                 x
+                                 (foo (conj x (count x)))))]
+                       (foo []))))
+  (is (= 1 (letfn [(foo [x] (if (zero? x) (bar x) x))
+                   (bar [x] (foo (inc x)))]
+             (foo 0)))))
+
 (is (= 1 ((fn [^String x] 1) "ignored")))
 
 ;; recur was initially broken when introduced via defn...
