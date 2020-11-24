@@ -80,7 +80,7 @@
   (let [out (with-out-str (time true))]
     (is (re-matches (re-pattern "\"Elapsed time: \\d+\\.\\d+ msecs\"\\n")
                     out)))
-  (is (= :yep (time :yep))))
+  (with-out-str (is (= :yep (time :yep)))))
 
 (testing "trampoline"
   (let [bouncer (fn bouncer [n]
