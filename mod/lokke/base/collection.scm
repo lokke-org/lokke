@@ -524,7 +524,7 @@
    (if (not (positive? n))
        #nil
        (let ((s (seq coll)))
-         (if (nil? s)
+         (if (eq? #nil s)
              #nil
              (cons (first s)
                    (take (1- n) (next s))))))))
@@ -532,7 +532,7 @@
 (define (take-while pred coll)
   (lazy-seq
    (let ((s (seq coll)))
-     (if (nil? s)
+     (if (eq? #nil s)
          #nil
          (let ((x (first s)))
            (if (pred x)
@@ -544,7 +544,7 @@
    (let ((s (seq coll)))
      (if (not (positive? n))
          s
-         (if (nil? s)
+         (if (eq? #nil s)
              s
              (drop (1- n) (next s)))))))
 
