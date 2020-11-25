@@ -254,4 +254,19 @@
   (let [x (range 10)]
     (is (= (set x) (set (shuffle x))))))
 
+(testing "interleave"
+  (is (= []  (interleave)))
+  (is (= []  (interleave [])))
+  (is (= []  (interleave [] [1])))
+  (is (= []  (interleave [1] [])))
+  (is (= [1 :a]  (interleave [1] [:a])))
+  (is (= [1 :a :x 2 :b :y 3 :c :z]  (interleave [1 2 3] [:a :b :c] [:x :y :z])))
+  (is (= [1 :a :x 2 :b :y]  (interleave [1 2 3] [:a :b] [:x :y :z]))))
+
+(testing "interpose"
+  (is (= []  (interpose :or [])))
+  (is (= [1]  (interpose :or [1])))
+  (is (= [1 :or 2]  (interpose :or [1 2])))
+  (is (= [1 :or 2 :or 3]  (interpose :or [1 2 3]))))
+
 (end-tests (ns-name *ns*) :exit? true)

@@ -334,6 +334,8 @@
                inc'
                int?
                integer?
+               interleave
+               interpose
                into
                into-array
                invoke

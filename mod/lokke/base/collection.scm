@@ -33,7 +33,7 @@
   #:use-module ((lokke compare) #:select (clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) #:select (drop-right fold last proper-list?))
+  #:use-module ((srfi srfi-1) #:select (any drop-right fold last proper-list?))
   #:use-module ((srfi srfi-43) #:select (vector-append vector-unfold))
   #:export (<coll>
             <lazy-seq>
@@ -62,6 +62,8 @@
             fnext
             get
             get-in
+            interleave
+            interpose
             into
             into-array
             into-list
@@ -698,3 +700,25 @@
                            (seq s))))
     (stable-sort! v (lambda (x y) (negative? (compare x y))))
     (seq v)))
+
+(define (interleave . colls)
+  (lazy-seq
+   (if (eq? #nil (seq colls))
+       #nil
+       (let ((xs (map seq colls)))
+         (if (any (lambda (x) (eq? #nil x)) xs)
+             #nil
+             (concat (map first colls)
+                     (apply interleave (map rest colls))))))))
+
+(define (interpose sep coll)
+  (lazy-seq
+   (let ((s (seq coll)))
+     (if s
+         (cons (first s)
+               (let loop ((s (rest s)))
+                 (let ((s (seq s)))
+                   (if s
+                       (cons sep (cons (first s) (loop (rest s))))
+                       #nil))))
+         #nil))))

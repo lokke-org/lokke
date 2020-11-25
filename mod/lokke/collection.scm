@@ -57,6 +57,8 @@
                           fnext
                           get
                           get-in
+                          interleave
+                          interpose
                           into
                           into-array
                           keys
@@ -140,6 +142,8 @@
                fnext
                get
                get-in
+               interleave
+               interpose
                into
                invoke
                key
