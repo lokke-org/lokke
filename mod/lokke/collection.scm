@@ -48,6 +48,7 @@
                           counted?
                           dissoc
                           drop
+                          drop-while
                           empty
                           empty?
                           every?
@@ -84,6 +85,7 @@
                           sequential?
                           shuffle
                           take
+                          take-nth
                           take-while
                           update
                           update-in
@@ -115,7 +117,8 @@
             range
             repeat
             repeatedly
-            some)
+            some
+            split-with)
   #:re-export (<coll>
                <map>
                <map-entry>
@@ -133,6 +136,7 @@
                counted?
                dissoc
                drop
+               drop-while
                empty
                empty?
                every?
@@ -171,6 +175,7 @@
                sequential?
                shuffle
                take
+               take-nth
                take-while
                update
                update-in
@@ -413,3 +418,6 @@
                       (rest s)
                       (1+ i))))
           result))))
+
+(define (split-with pred coll)
+  (lokke-vector (take-while pred coll) (drop-while pred coll)))

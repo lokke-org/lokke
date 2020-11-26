@@ -53,6 +53,7 @@
             define-nth-seq
             dissoc
             drop
+            drop-while
             empty
             empty?
             every?
@@ -89,6 +90,7 @@
             sequential?
             shuffle
             take
+            take-nth
             take-while
             update
             update-in
@@ -548,7 +550,27 @@
          s
          (if (eq? #nil s)
              s
-             (drop (1- n) (next s)))))))
+             (drop (1- n) (rest s)))))))
+
+(define (drop-while pred coll)
+  (lazy-seq
+   (let ((s (seq coll)))
+     (if (eq? #nil s)
+         #nil
+         (let ((x (first s)))
+           (if (pred x)
+               (drop-while pred (rest s))
+               s))))))
+
+(define (take-nth n coll)
+  (unless (positive? n)
+    (error "nth is not positive:" n))
+  (lazy-seq
+   (let loop ((s coll))
+     (let ((s (seq s)))
+       (if (eq? #nil s)
+           #nil
+           (cons (first s) (loop (drop n s))))))))
 
 (define* (get-in associative keys #:optional (not-found #nil))
   (let loop ((src associative) (keys keys))

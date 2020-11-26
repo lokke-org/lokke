@@ -294,6 +294,7 @@
                double
                double?
                drop
+               drop-while
                empty
                empty?
                eval-when
@@ -426,6 +427,7 @@
                shuffle
                slurp
                spit
+               split-with
                some
                some->
                some->>
@@ -438,6 +440,7 @@
                symbol
                symbol?
                take
+               take-nth
                take-while
                throw
                true?
