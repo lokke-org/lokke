@@ -546,11 +546,9 @@
 (define (drop n coll)
   (lazy-seq
    (let ((s (seq coll)))
-     (if (not (positive? n))
+     (if (or (eq? #nil s) (not (positive? n)))
          s
-         (if (eq? #nil s)
-             s
-             (drop (1- n) (rest s)))))))
+         (drop (1- n) (rest s))))))
 
 (define (drop-while pred coll)
   (lazy-seq
