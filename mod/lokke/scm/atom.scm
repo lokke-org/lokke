@@ -18,10 +18,12 @@
                           atomic-box-ref
                           make-atomic-box))
   #:use-module ((ice-9 threads) #:select (yield))
+  #:use-module ((srfi srfi-9) #:select (define-record-type))
   #:use-module ((srfi srfi-11) #:select (let-values))
   #:use-module ((lokke hash-map)
                 #:select (assoc contains? dissoc hash-map reduce-kv))
-  #:export (atom?
+  #:export (<atom>
+            atom?
             atom
             atom-add-watch
             atom-alter-meta!
@@ -30,187 +32,155 @@
             atom-meta
             atom-remove-watch
             atom-reset!
+            atom-reset-vals!
             atom-set-validator!
-            atom-swap!))
+            atom-swap!
+            atom-swap-vals!))
 
-;; Tried to keep this lightweight, i.e. just an atomic-box, but if we
-;; decide we want to have metadata here too (intead of handling it in
-;; a wrapper), might be time to switch to a record or object, in which
-;; case the watchers may not need to be coordinated with the
-;; value/validator.
-
-;; Current approach does end up allocating an extra pair for every
-;; update, and for some failed attempts.
-
-;; FIXME: do we want any/all the yields?
 ;; FIXME: is it acceptable for watchers to run in the current thread for now?
 ;; FIXME: what should happen on watcher exception etc.?
 
-(define (atom? x) (atomic-box? x))
-
-;; Must never modify the state, always make a new one.
-(define-inlinable (atom-state atom)
-  (atomic-box-ref atom))
-
-(define-inlinable (state-val state)
-  (vector-ref state 0))
-
-(define-inlinable (state-validator state)
-  (and (> (vector-length state) 1) (vector-ref state 1)))
-
-(define-inlinable (state-watchers state)
-  (and (> (vector-length state) 2) (vector-ref state 2)))
-
-(define-inlinable (state-meta state)
-  (if (> (vector-length state) 3)
-      (vector-ref state 3)
-      #nil))
-
-(define (make-state val validator watchers meta)
-  (cond
-   (meta (vector val validator watchers meta))
-   (watchers (vector val validator watchers))
-   (validator (vector val validator))
-   (else (vector val))))
-
-(define* (assoc-state state
-                      #:key
-                      (val (state-val state))
-                      (validator (state-validator state))
-                      (watchers (state-watchers state))
-                      (meta (state-meta state)))
-  (make-state val validator watchers meta))
-
-(define* (atom value #:key (validator #f) (meta #nil))
-  (make-atomic-box (make-state value validator #f meta)))
+(define-record-type <atom>
+  (%atom value infra)
+  atom?
+  (value %value)
+  ;; A box containing a variable length vector of validator, watchers, meta.
+  (infra %infra))
 
 (define (atom-deref atom)
-  (state-val (atomic-box-ref atom)))
+  (atomic-box-ref (%value atom)))
 
-(define (atom-meta atom)
-  (state-meta (atomic-box-ref atom)))
+(define-inlinable (atom-infra atom)
+  (atomic-box-ref (%infra atom)))
 
-(define (atom-alter-meta! atom f . args)
-  ;; Don't worry about garbage generation; assume this rarely races.
-  (let loop ((cur-state (atom-state atom)))
-    (let* ((meta (state-meta cur-state))
-           (new-meta (apply f meta args))
-           (new (assoc-state cur-state #:meta new-meta)))
-      (if (eq? cur-state (atomic-box-compare-and-swap! atom cur-state new))
-          new-meta
-          (begin
-            (yield)
-            (loop (atom-state atom)))))))
+(define-inlinable (infra-validator infra)
+  (and infra (> (vector-length infra) 0) (vector-ref infra 0)))
 
-(define (atom-add-watch atom key f)
-  ;; Don't worry about garbage generation; assume this rarely races.
-  (let loop ((cur-state (atom-state atom)))
-    (let* ((watchers (state-watchers cur-state))
-           (new (assoc-state cur-state
-                             #:watchers (if watchers
-                                            (assoc watchers key f)
-                                            (hash-map key f)))))
-      (unless (eq? cur-state (atomic-box-compare-and-swap! atom cur-state new))
-        (yield)
-        (loop (atom-state atom))))))
+(define-inlinable (infra-watchers infra)
+  (and infra (> (vector-length infra) 1) (vector-ref infra 1)))
 
-(define (atom-remove-watch atom key)
-  ;; Don't worry about garbage generation; assume this rarely races.
-  (let loop ((cur-state (atom-state atom)))
-    (let ((watchers (state-watchers cur-state)))
-      (when (and watchers (contains? watchers key))
-        (let ((new (assoc-state cur-state #:watchers (dissoc watchers key))))
-          (unless (eq? cur-state (atomic-box-compare-and-swap! atom cur-state new))
-            (yield)
-            (loop (atom-state atom))))))))
+(define-inlinable (infra-meta infra)
+  (if (and infra (> (vector-length infra) 2))
+      (vector-ref infra 2)
+      #nil))
+
+(define (make-infra validator watchers meta)
+  (cond
+   (meta (vector validator watchers meta))
+   (watchers (vector validator watchers))
+   (validator (vector validator))
+   (else #nil)))
+
+(define* (assoc-infra infra
+                      #:key
+                      (validator (infra-validator infra))
+                      (watchers (infra-watchers infra))
+                      (meta (infra-meta infra)))
+  (make-infra validator watchers meta))
 
 ;; FIXME: is this the exception and error handling we want?
-(define (validate-val atom validate value)
+(define (validate-val validate value)
   (when validate
-    (unless (catch #t
-              (lambda () (validate value))
-              (lambda args (throw 'invalid-ref-state atom value args)))
+    (unless (validate value)
       (throw 'invalid-ref-state atom value))))
+
+(define* (atom value #:key (validator #f) (meta #nil))
+  (validate-val validator value)
+  (%atom (make-atomic-box value)
+         (make-atomic-box (make-infra validator #f meta))))
+
+(define (atom-meta atom)
+  (infra-meta (atom-infra atom)))
+
+(define (atom-alter-meta! atom f . args)
+  (let ((box (%infra atom)))
+    (let loop ()
+      (let* ((cur-infra (atomic-box-ref box))
+             (meta (infra-meta cur-infra))
+             (new-meta (apply f meta args))
+             (new-infra (assoc-infra cur-infra #:meta new-meta)))
+        (if (eq? cur-infra (atomic-box-compare-and-swap! box cur-infra new-infra))
+            new-meta
+            (loop))))))
+
+(define (atom-add-watch atom key f)
+  (let ((box (%infra atom)))
+    (let loop ()
+      (let* ((cur-infra (atom-infra atom))
+             (watchers (infra-watchers cur-infra))
+             (new-infra (assoc-infra cur-infra
+                                     #:watchers (if watchers
+                                                    (assoc watchers key f)
+                                                    (hash-map key f)))))
+        (unless (eq? cur-infra (atomic-box-compare-and-swap! box cur-infra new-infra))
+          (loop))))))
+
+(define (atom-remove-watch atom key)
+  (let ((box (%infra atom)))
+    (let loop ()
+      (let* ((cur-infra (atom-infra atom))
+             (watchers (infra-watchers cur-infra)))
+        (when (and watchers (contains? watchers key))
+          (let ((new-infra (assoc-infra cur-infra #:watchers (dissoc watchers key))))
+            (unless (eq? cur-infra (atomic-box-compare-and-swap! box cur-infra new-infra))
+              (loop))))))))
 
 ;; Double check behavior against docs...
 (define (atom-set-validator! atom validator)
-  ;; Don't worry about garbage generation; assume this rarely races.
-  (let loop ((cur-state (atom-state atom)))
-    (let ((old-validate (state-validator cur-state)))
-      (or (eq? old-validate validator)
-          (let ((val (state-val cur-state)))
-            (validate-val atom validator val)
-            (let ((new (assoc-state cur-state #:validator validator)))
-              (unless (eq? cur-state
-                           (atomic-box-compare-and-swap! atom cur-state new))
-                ;; (yield)?
-                (loop (atom-state atom)))))))))
+  (let ((box (%infra atom)))
+    (let loop ()
+      (let* ((cur-infra (atom-infra atom))
+             (cur-validate (infra-validator cur-infra)))
+        (or (eq? cur-validate validator)
+            (begin
+              (validate-val validator (atom-deref atom))
+              (let ((new-infra (assoc-infra cur-infra #:validator validator)))
+                (unless (eq? cur-infra
+                             (atomic-box-compare-and-swap! box cur-infra new-infra))
+                  (loop)))))))))
 
 (define (notify-watchers atom oldval newval)
-  (let ((watchers (state-watchers (atom-state atom))))
+  (let ((watchers (infra-watchers (atom-infra atom))))
     (when watchers
       (reduce-kv (lambda (result key notice) (notice key atom oldval newval))
                  #f
                  watchers))))
 
-(define (state-stale? existing newval validate watchers meta)
-  (not (and existing
-            (eq? newval (state-val existing))
-            (eq? validate (state-validator existing))
-            (eq? watchers (state-watchers existing))
-            (eq? meta (state-meta existing)))))
+(define (atom-compare-and-set! atom expected desired)
+  (let* ((infra (atom-infra atom))
+         (validate (infra-validator infra)))
+    (validate-val validate desired)
+    (let* ((watchers (infra-watchers infra))
+           (result (atomic-box-compare-and-swap! (%value atom) expected desired)))
+      (and (eq? result expected)
+           (begin
+             (notify-watchers atom expected desired)
+             #t)))))
 
-(define (adjust-value! atom ignore-oldval? oldval get-newval)
-  (let loop ((cur-state (atom-state atom))
-             (new-state #f))
-    (let ((val (state-val cur-state)))
-      (if (not (or ignore-oldval? (eq? val oldval)))
-          (values #f #f)
-          (let ((newval (get-newval val)))
-            (if (eq? val newval)
+(define (atom-swap-vals! atom f . args)
+  (let ((box (%value atom)))
+    (let loop ()
+      (let* ((infra (atom-infra atom))
+             (prev (atomic-box-ref box))
+             (new (apply f prev args)))
+        (let ((validate (infra-validator infra)))
+          (validate-val validate new)
+          (let* ((watchers (infra-watchers infra))
+                 (result (atomic-box-compare-and-swap! (%value atom) prev new)))
+            (if (eq? prev result)
                 (begin
-                  (notify-watchers atom val newval)
-                  (values #t newval))
-                (let ((validate (state-validator cur-state)))
-                  (validate-val atom validate newval)
-                  (let* ((watchers (state-watchers cur-state))
-                         (meta (state-meta cur-state))
-                         ;; Generate less garbage during races.
-                         (new (if (state-stale? new-state newval validate
-                                                watchers meta)
-                                  (make-state newval validate watchers meta)
-                                  new-state))
-                         (result (atomic-box-compare-and-swap! atom cur-state new)))
-                    (if (eq? cur-state result)
-                        (begin
-                          (notify-watchers atom val newval)
-                          (values #t newval))
-                        ;; FIXME: is this acceptable?  Grey area?  Some
-                        ;; component of state was changed.  For now,
-                        ;; try again if anything but the value changed.
-                        (if (or (not (eq? val (state-val result)))
-                                (and (eq? validate (state-validator result))
-                                     (eq? watchers (state-watchers result))
-                                     (eq? meta (state-meta result))))
-                            (values #f #f)
-                            (begin
-                              ;; (yield)?
-                              (loop (atom-state atom) new-state))))))))))))
-
-(define (atom-compare-and-set! atom oldval newval)
-  (let-values (((set? newval)
-                (adjust-value! atom #f oldval (lambda (oldval) newval))))
-    set?))
-
-(define (atom-reset! atom newval)
-  (let-values (((set? val)
-                (adjust-value! atom #t #f (lambda (oldval) newval))))
-    ;; For now, a sanity check
-    (unless (eq? newval val)
-      (error "Bug new value did not match expectation" val newval)))
-  newval)
+                  (notify-watchers atom prev new)
+                  (values prev new))
+                (loop))))))))
 
 (define (atom-swap! atom f . args)
-  (let-values (((set? val)
-                (adjust-value! atom #t #f (lambda (oldval) (apply f oldval args)))))
-    val))
+  (let-values (((prev new) (apply atom-swap-vals! atom f args)))
+    new))
+
+(define (atom-reset-vals! atom newval)
+  (atom-swap-vals! atom (lambda (prev) newval)))
+
+(define (atom-reset! atom newval)
+  (let-values (((prev new) (atom-swap-vals! atom (lambda (prev) newval))))
+    new))
+

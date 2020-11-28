@@ -1,7 +1,7 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -19,6 +19,7 @@
  ((lokke collection) #:select (clj=))
  ((lokke hash-map) #:select (assoc hash-map))
  ((lokke scm atom) #:prefix t/)
+ ((srfi srfi-11) #:select (let-values))
  ((srfi srfi-64)
   #:select (test-assert
             test-begin
@@ -26,6 +27,7 @@
             test-eq
             test-equal
             test-eqv
+            test-error
             test-group
             test-runner-current
             test-runner-fail-count)))
@@ -35,15 +37,17 @@
 
 (test-begin (basename (car (program-arguments))))
 
-;; FIXME: watcher tests
 ;; FIXME: concurrency tests
-;; FIXME: validate tests
 ;; FIXME: more tests...
 
 (test-assert (t/atom? (t/atom 1)))
 (test-equal 1 (t/atom-deref (t/atom 1)))
 
 (test-equal 2 (t/atom-reset! (t/atom 1) 2))
+
+(let-values (((prev new) (t/atom-reset-vals! (t/atom 1) 2)))
+  (test-equal 1 prev)
+  (test-equal 2 new))
 
 (test-equal #t (t/atom-compare-and-set! (t/atom 1) 1 2))
 (test-equal 2 (let ((a (t/atom 1)))
@@ -56,6 +60,10 @@
 
 (test-equal 2 (t/atom-swap! (t/atom 1) (lambda (v) (1+ v))))
 
+(let-values (((prev new) (t/atom-swap-vals! (t/atom 1) (lambda (v) (1+ v)))))
+  (test-equal 1 prev)
+  (test-equal 2 new))
+
 (test-equal #nil (t/atom-meta (t/atom 1)))
 (test-assert (clj= (hash-map) (t/atom-meta (t/atom 1 #:meta (hash-map)))))
 (test-assert (clj= (hash-map 1 2)
@@ -66,6 +74,31 @@
                      (t/atom-alter-meta! a assoc 3 4)))
   (test-assert (clj= (hash-map 1 2 3 4)
                      (t/atom-meta a))))
+
+(test-error #t (t/atom 1 #:validator even?))
+(test-error #t (t/atom 1 #:validator (lambda (x) (throw 'nope))))
+
+(let ((a (t/atom 2 #:validator even?)))
+  (test-equal 2 (t/atom-deref a))
+  (test-error #t (t/atom-reset! a 1))
+  (test-equal 2 (t/atom-deref a))
+  (test-error #t (t/atom-set-validator! a odd?))
+  (test-equal 2 (t/atom-deref a))
+  (t/atom-set-validator! a #nil)
+  (test-equal 1 (t/atom-reset! a 1))
+  (test-equal 1 (t/atom-deref a)))
+
+(let ((a (t/atom 1))
+      (tmp #f))
+  (t/atom-add-watch a 'watch
+                    (lambda (k ref old new) (set! tmp (list k ref old new))))
+  (test-equal #f tmp)
+  (t/atom-reset! a 2)
+  (test-equal (list 'watch a 1 2) tmp)
+  (set! tmp #f)
+  (t/atom-remove-watch a 'watch)
+  (t/atom-reset! a 3)
+  (test-equal #f tmp))
 
 (test-end)
 

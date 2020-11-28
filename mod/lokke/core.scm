@@ -79,8 +79,10 @@
                           promise
                           remove-watch
                           reset!
+                          reset-vals!
                           set-validator!
-                          swap!))
+                          swap!
+                          swap-vals!))
   #:use-module ((lokke exception)
                 #:select (Exception
                           ExceptionInfo
@@ -413,6 +415,7 @@
                repeatedly
                require
                reset!
+               reset-vals!
                rest
                reverse
                second
@@ -437,6 +440,7 @@
                subs
                subvec
                swap!
+               swap-vals!
                symbol
                symbol?
                take

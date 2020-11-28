@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -30,13 +30,18 @@
                           atom-meta
                           atom-remove-watch
                           atom-reset!
+                          atom-reset-vals!
                           atom-set-validator!
-                          atom-swap!))
+                          atom-swap!
+                          atom-swap-vals!))
   #:use-module ((lokke scm promise)
                 #:select (promise
                           promise-deliver
                           promise-deref))
+  #:use-module ((lokke scm vector) #:select (lokke-vector))
+  #:use-module ((srfi srfi-11) #:select (let-values))
   #:export (<atom>
+            <promise>
             alter-meta!
             atom?
             add-watch
@@ -44,17 +49,28 @@
             deref
             future
             reset!
+            reset-vals!
             set-validator!
-            swap!)
+            swap!
+            swap-vals!)
   #:re-export (atom promise (promise-deliver . deliver))
-  #:replace (<promise>)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(define <atom> (class-of (make-atomic-box #t)))
-(define (atom? x) (is-a? x <atom>))
+;; For now, this <atom> is a class, while (lokke scm atom) <atom> is a record.
+(define <atom> (class-of (atom #t)))
+
 (define-method (deref (a <atom>)) (atom-deref a))
 (define-method (reset! (a <atom>) newval) (atom-reset! a newval))
 (define-method (swap! (a <atom>) . args) (apply atom-swap! a args))
+
+(define-method (reset-vals! (a <atom>) newval)
+  (let-values (((prev new) (atom-reset-vals! a newval)))
+    (lokke-vector prev new)))
+
+(define-method (swap-vals! (a <atom>) . args)
+  (let-values (((prev new) (apply atom-swap-vals! a args)))
+    (lokke-vector prev new)))
+
 (define-method (compare-and-set! (a <atom>) oldval newval)
   (apply atom-compare-and-set! a oldval newval))
 
