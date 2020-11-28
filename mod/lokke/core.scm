@@ -440,6 +440,7 @@
                symbol
                symbol?
                take
+               take-last
                take-nth
                take-while
                throw
@@ -463,7 +464,8 @@
                with-open
                with-out-str
                with-meta
-               zero?)
+               zero?
+               zipmap)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'apply

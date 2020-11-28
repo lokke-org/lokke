@@ -144,6 +144,22 @@
   (is (= [2] (take-while even? [2 3 4])))
   (is (= [2 4] (take-while even? [2 4 7]))))
 
+(testing "take-last []"
+  (is (= nil (take-last 0 [])))
+  (is (= nil (take-last 1 [])))
+  (is (= nil (take-last 0 [1])))
+  (is (= [3] (take-last 1 [1 2 3])))
+  (is (= [2 3] (take-last 2 [1 2 3])))
+  (is (= [1 2 3] (take-last 3 [1 2 3]))))
+
+(testing "take-last ()"
+  (is (= nil (take-last 0 '())))
+  (is (= nil (take-last 1 '())))
+  (is (= nil (take-last 0 '(1))))
+  (is (= [3] (take-last 1 '(1 2 3))))
+  (is (= [2 3] (take-last 2 '(1 2 3))))
+  (is (= [1 2 3] (take-last 3 '(1 2 3)))))
+
 (testing "drop"
   (is (= [] (drop 0 [])))
   (is (= [1] (drop 0 [1])))
@@ -294,5 +310,13 @@
   (is (= [1]  (interpose :or [1])))
   (is (= [1 :or 2]  (interpose :or [1 2])))
   (is (= [1 :or 2 :or 3]  (interpose :or [1 2 3]))))
+
+(testing "zipmap"
+  (is (= {} (zipmap [] [])))
+  (is (= {} (zipmap [:x] [])))
+  (is (= {} (zipmap [] [1])))
+  (is (= {:x 1} (zipmap [:x] [1])))
+  (is (= {:x 1} (zipmap [:x :y] [1])))
+  (is (= {:x 1 :y 2} (zipmap [:x :y] [1 2]))))
 
 (end-tests (ns-name *ns*) :exit? true)

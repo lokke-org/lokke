@@ -90,6 +90,7 @@
             sequential?
             shuffle
             take
+            take-last
             take-nth
             take-while
             update
@@ -539,6 +540,24 @@
            (if (pred x)
                (cons x (take-while pred (rest s)))
                #nil))))))
+
+(define-method (take-last n coll)
+  ;; Matches the jvm which returns nil for 0 or ().
+  (when (negative? n)
+    (scm-error 'out-of-range "take-last" "n is negative: ~s" (list n) (list n)))
+  (let loop ((coll coll)
+             (result coll)
+             (result-n 0))
+    (let ((s (seq coll)))
+      (if (eq? #nil s)
+          (seq result)
+          (if (= result-n n)
+              (loop (rest coll)
+                    (rest result)
+                    result-n)
+              (loop (rest coll)
+                    result
+                    (1+ result-n)))))))
 
 (define (drop n coll)
   (lazy-seq

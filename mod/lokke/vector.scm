@@ -43,6 +43,7 @@
                           rest
                           seq
                           seqable?
+                          take-last
                           update))
   #:use-module ((lokke compare) #:select (clj= compare))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -93,6 +94,7 @@
                rest
                seq
                seqable?
+               take-last
                with-meta
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -459,3 +461,10 @@
   (vector-unfold (lambda (i _) (values (lokke-vector-ref v i) #nil))
                  (lokke-vector-length v)
                  #nil))
+
+(define-method (take-last n (v <lokke-vector>))
+  ;; Matches the jvm which returns nil for 0 or [].
+  (let ((len (count v)))
+    (if (> n len)
+        #nil
+        (seq (subvec v (- len n))))))

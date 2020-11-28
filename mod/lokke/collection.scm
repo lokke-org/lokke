@@ -85,6 +85,7 @@
                           sequential?
                           shuffle
                           take
+                          take-last
                           take-nth
                           take-while
                           update
@@ -118,7 +119,8 @@
             repeat
             repeatedly
             some
-            split-with)
+            split-with
+            zipmap)
   #:re-export (<coll>
                <map>
                <map-entry>
@@ -175,6 +177,7 @@
                sequential?
                shuffle
                take
+               take-last
                take-nth
                take-while
                update
@@ -398,6 +401,16 @@
           (cons c)
           (cons b)
           (cons a)))))
+
+(define (zipmap keys vals)
+  (let loop ((result (hash-map))
+             (keys (seq keys))
+             (vals (seq vals)))
+    (if (or (eq? #nil keys) (eq? #nil vals))
+        result
+        (loop (assoc result (first keys) (first vals))
+              (next keys)
+              (next vals)))))
 
 (define-method (shuffle coll)
   ;; Durstenfeld "inside-out" variant of Fischer-Yates shuffle
