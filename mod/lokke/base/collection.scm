@@ -267,9 +267,6 @@
                     (clj= x y)
                     (loop (next-x) (next-y))))))))
 
-(define-method (clj= (s <sequential>) (b <boolean>))
-  (eq? (seq s) b))
-
 (define-method (clj= (s <sequential>) (p <null>))
   (eq? #nil (seq s)))
 

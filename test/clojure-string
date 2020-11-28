@@ -41,7 +41,7 @@
   (is (= 1 (count "x"))))
 
 (testing "seq"
-  (is (= [] (seq "")))
+  (is (= nil (seq "")))
   (is (= [\x] (seq "x"))))
 
 (testing "blank?"
