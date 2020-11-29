@@ -54,7 +54,7 @@
 (define (preserve-meta-if-new! orig maybe-new)
   (cond
    ((eq? orig maybe-new) orig)
-   ((nil? (meta orig)) maybe-new)  ;; FIXME: do we want to include '()?
+   ((null? (meta orig)) maybe-new)  ;; FIXME: do we want to include '()?
    (else ((@@ (lokke metadata) with-meta) maybe-new (meta orig)))))
 
 (define (literals->clj-instances expr)
@@ -145,7 +145,7 @@
       ;; FIXME: need syntax-quote recursion?  See DESIGN TODO.
       ((list? expr)
        (cond
-        ((nil? expr) expr)
+        ((null? expr) expr)
         ((memq (car expr) '(quote syntax-quote)) expr)
         (else (map convert expr))))
       (else expr))))

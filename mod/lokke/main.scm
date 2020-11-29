@@ -99,7 +99,7 @@
     (lambda (actions)
       (cons (lambda ()
               (let ((result (eval-string code #:lang 'lokke #:compile? #t)))
-                (unless (or (nil? result) (eq? *unspecified* result))
+                (unless (or (eq? #nil result) (eq? *unspecified* result))
                   (prn result))))
             actions)))
   (define (add-apply what)

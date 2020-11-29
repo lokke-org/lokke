@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or modify
 ;;; it under the terms of (at your option) either of the following two
@@ -23,6 +23,7 @@
                 #:select (->
                           ->>
                           if-let
+                          nil?
                           when
                           when-let
                           when-not))
@@ -248,7 +249,7 @@
   (when-let (coll (seq coll))
     (emit (first coll) port)
     (do ((coll (next coll) (next coll)))
-        ((nil? coll))
+        ((eq? #nil coll))
       (display " " port)
       (emit (first coll) port)))
   (display close port))
@@ -369,7 +370,7 @@
                "mapv"
                "Wrong number of arguments" '() #f))
   (let loop ((result (lokke-vector))
-             (nexts colls))
+             (nexts (map seq colls)))
     (if (some nil? nexts)
         result
         (loop (conj result (apply f (map first nexts)))

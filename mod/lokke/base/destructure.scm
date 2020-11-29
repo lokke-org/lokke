@@ -78,7 +78,7 @@
                    (list syn) (list syn)))))
 
 (define (syn-map-refq syn key not-found)
-  (if (nil? (syntax->datum syn))
+  (if (null? (syntax->datum syn))
       not-found
       (let loop ((more (syn-map->list syn)))
         (cond
