@@ -204,6 +204,8 @@
             integer
             juxt
             long
+            max-key
+            min-key
             not=
             num
             short
@@ -597,3 +599,18 @@
     (if (procedure? result)
         (loop (result))
         result)))
+
+(define-inlinable (extreme-key k order x xs)
+  (%scm-let loop ((best-x x)
+                  (best-k (k x))
+                  (xs xs))
+    (if (null? xs)
+        best-x
+        (let* ((x (first xs))
+               (kx (k x)))
+          (if (or (order kx best-k) (clj= kx best-k))
+              (loop x kx (rest xs))
+              (loop best-x best-k (rest xs)))))))
+
+(define (min-key k x . xs) (extreme-key k < x xs))
+(define (max-key k x . xs) (extreme-key k > x xs))

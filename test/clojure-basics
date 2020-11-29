@@ -56,6 +56,26 @@
   (is (= [1] ((juxt identity) 1)))
   (is (= [2 0] ((juxt inc dec) 1))))
 
+(testing "min-key"
+  (let [k (fn [x] (if (odd? x) 1 0))]
+    (is (= 1 (min-key k 1)))
+    (is (= 1 (min-key identity 1 2)))
+    (is (= 1 (min-key identity 2 1)))
+    (is (= 2 (min-key k 1 2)))
+    (is (= 2 (min-key k 2 1)))
+    (is (= 4 (min-key k 1 2 3 4)))
+    (is (= 2 (min-key k 4 3 2 1)))))
+
+(testing "max-key"
+  (let [k (fn [x] (if (odd? x) 1 0))]
+    (is (= 1 (max-key k 1)))
+    (is (= 2 (max-key identity 1 2)))
+    (is (= 2 (max-key identity 2 1)))
+    (is (= 1 (max-key k 1 2)))
+    (is (= 1 (max-key k 2 1)))
+    (is (= 3 (max-key k 1 2 3 4)))
+    (is (= 1 (max-key k 4 3 2 1)))))
+
 (testing "some->"
   (is (= :yep (some-> :yep)))
   (is (= true (some-> :yep keyword?)))
