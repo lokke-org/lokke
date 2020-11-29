@@ -438,7 +438,6 @@
              (i 0))
     (let ((s (seq s)))
       (if s
-          ;; FIXME: do we randomize the seed at startup properly?
           (let ((j (random (1+ i))))
             (if (= i j)
                 (loop (lokke-vector-conj result (first s))

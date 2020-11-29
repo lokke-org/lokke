@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -28,7 +28,9 @@
   #:use-module ((lokke ns) #:select (default-environment resolve-ns))
   #:use-module ((lokke reader) #:select ((read . read-edn)))  ; FIXME: real edn reader
   #:use-module ((lokke symbol) #:prefix sym/)
-  #:use-module ((srfi srfi-1) #:select (append-map))
+  #:use-module ((srfi srfi-1)
+                #:select (append-map append-reverse last span take-while))
+  #:use-module ((srfi srfi-11) #:select (let-values))
   #:use-module ((srfi srfi-69)
                 #:select (make-hash-table
                           hash-table->alist
@@ -51,6 +53,10 @@
    "  -e, --eval CODE    evaluate CODE, printing any values that are\n"
    "                     not nil or unspecified\n"
    "  -a, --apply REF    apply REF to the *command-line-args*\n"
+   "  --seed sys         set the random state to (random-state-from-platform)\n"
+   "  --seed INTEGER     seed the random state with INTEGER\n"
+   "  --no-seed          suppress the default, implicit --seed sys.  The rightmost\n"
+   "                     seed related argument determines the behavior.\n"
    "  FILE               execute code in FILE (name must not start with -)\n"
    "  -                  execute any code provided on standard input\n"
    "  --                 Make all subsequent arguments *command-line-args*\n"))
@@ -81,6 +87,52 @@
 
 (define (misuse usage)
   (quit-early (usage)))
+
+(define arabic-digit-set
+  (char-set #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+
+(define (parse-integer s)
+  (and (string-every arabic-digit-set s)
+       (string->number s)))
+
+(define (maybe-randomize-state args)
+  ;; Find any the rightmost seed-related argument and do what it requests.
+  (let-values (((last-opt prefix)
+                (span (lambda (x)
+                        (not (or (string=? "--no-seed" x)
+                                 (string=? "--seed" x))))
+                      (reverse (take-while (lambda (x) (not (string=? x "--")))
+                                           args)))))
+    (cond
+     ;; no seed-related option
+     ((null? prefix)
+      (set! *random-state* (random-state-from-platform)))
+     ((string=? "--no-seed" (car prefix)) #f)
+     ((string=? "--seed" (car prefix))
+      (when (null? last-opt)
+        (quit-early "lokke: no --seed argument\n"))
+      (let ((mode (last last-opt)))
+        (if (string=? "sys" mode)
+            (begin
+              (set! *random-state* (random-state-from-platform))
+              #:sys)
+            (let ((n (parse-integer mode)))
+              (unless n
+                (quit-early "lokke: --seed argument is not \"sys\" or an integer\n"))
+              (set! *random-state* (seed->random-state n))
+              n)))))))
+
+(define (remove-seed-args args)
+  ;; Assumes the seed-related arguments have already been vetted.
+  (let loop ((result '())
+             (args args))
+    (if (null? args)
+        (reverse result)
+        (cond
+         ((string=? "--" (car args)) (append-reverse result args))
+         ((string=? "--seed" (car args)) (loop result (cddr args)))
+         ((string=? "--no-seed" (car args)) (loop result (cdr args)))
+         (else (loop (cons (car args) result) (cdr args)))))))
 
 (define (make-options-hash)
   (let ((result (make-hash-table)))
@@ -142,7 +194,8 @@
             (quit-early (usage))))))))
 
 (define (lokke-run args usage)
-  (let ((opts (parse-run-args args usage)))
+  (maybe-randomize-state args)
+  (let ((opts (parse-run-args (remove-seed-args args) usage)))
     (let ((actions (hash-table-ref opts 'actions)))
       (if (null? actions)
           (present-repl '()) ;; Might get here with args via --strip
@@ -242,6 +295,7 @@ terminator."
 (define (present-repl args)
   (unless (null? args)
     (quit-early "lokke: repl invocation currently accepts no arguments\n"))
+  (set! *random-state* (random-state-from-platform))
   (configure-history)
   (load-user-init)
   ((@ (lokke repl) repl)))

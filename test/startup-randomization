@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -xueo pipefail
+
+# Of course for the tests checking to see that we get differing values
+# when the state is randomized, we might fail if we do randomly end up
+# with the same values.
+
+ok=true
+
+# TAP protocol - expect 5 tests
+echo "1..5"
+
+
+rint_1=$(./lokke run -e '(rand-int 1000000)')
+rint_2=$(./lokke run -e '(rand-int 1000000)')
+msg="*random-state* is initialized by default"
+if test "$rint_1" -ne "$rint_2"; then
+    echo "ok $msg"
+else
+    echo "not ok $msg"
+    ok=
+fi
+
+
+rint_1=$(./lokke run --seed sys -e '(rand-int 1000000)')
+rint_2=$(./lokke run --seed sys -e '(rand-int 1000000)')
+msg="--seed sys alters the *random-state*"
+if test "$rint_1" -ne "$rint_2"; then
+    echo "ok $msg"
+else
+    echo "not ok $msg"
+    ok=
+fi
+
+
+rint_1=$(./lokke run --seed 0 -e '(rand-int 1000000)')
+rint_2=$(./lokke run --seed 42 -e '(rand-int 1000000)')
+msg="--seed INTEGER alters the *random-state*"
+if test "$rint_1" -ne "$rint_2"; then
+    echo "ok $msg"
+else
+    echo "not ok $msg"
+    ok=
+fi
+
+
+rint_1=$(./lokke run --seed 42 -e '(rand-int 1000000)')
+rint_2=$(./lokke run --seed 42 -e '(rand-int 1000000)')
+msg="identical --seed INTEGERs produce the same results"
+if test "$rint_1" -eq "$rint_2"; then
+    echo "ok $msg"
+else
+    echo "not ok $msg"
+    ok=
+fi
+
+
+rint_1=$(./lokke run --no-seed -e '(rand-int 42)')
+rint_2=$(./lokke run --no-seed -e '(rand-int 42)')
+msg="--no-seed prevents seeding of the *random-state*"
+if test "$rint_1" -eq "$rint_2"; then
+    echo "ok $msg"
+else
+    echo "not ok $msg"
+    ok=
+fi
+
+
+if test "$ok"; then
+    exit 0
+else
+    exit 2
+fi
