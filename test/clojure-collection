@@ -290,6 +290,16 @@
   (is (= [1] (reverse [1])))
   (is (= [3 2 1] (reverse [1 2 3]))))
 
+(testing "random-sample"
+  (is (= [] (random-sample 0 [])))
+  (is (= (range 5) (random-sample 1 (range 5))))
+  (let [result (random-sample 0.5 (range 10))
+        n (count result)]
+    (is (>= n 0))
+    (is (<= n 10))
+    (is (every? (complement neg?) result))
+    (is (every? #(< % 10) result))))
+
 (testing "shuffle"
   (is (= [] (shuffle [])))
   (is (= 5 (count (shuffle (range 5)))))

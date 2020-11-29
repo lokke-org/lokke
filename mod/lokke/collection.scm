@@ -115,6 +115,7 @@
             mapv
             not-any?
             not-every?
+            random-sample
             range
             repeat
             repeatedly
@@ -411,6 +412,23 @@
         (loop (assoc result (first keys) (first vals))
               (next keys)
               (next vals)))))
+
+(define (random-sample probability coll)
+  (when (negative? probability)
+    (scm-error 'out-of-range 'random-sample "Negative probability: ~a"
+               (list probability) (list probability)))
+  (when (> probability 1)
+    (scm-error 'out-of-range 'random-sample "Probability greater than 1: ~a"
+               (list probability) (list probability)))
+  (let loop ((s coll))
+    (lazy-seq
+     (let ((s (seq s)))
+       (if (not s)
+           #nil
+           (let ((x (random 1.0)))
+             (if (< x probability)
+                 (cons (first s) (loop (rest s)))
+                 (loop (rest s)))))))))
 
 (define-method (shuffle coll)
   ;; Durstenfeld "inside-out" variant of Fischer-Yates shuffle

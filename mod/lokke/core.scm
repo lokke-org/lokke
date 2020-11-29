@@ -398,6 +398,7 @@
                quot
                rand
                rand-int
+               random-sample
                range
                re-find
                re-groups
