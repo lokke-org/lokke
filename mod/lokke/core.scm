@@ -222,6 +222,7 @@
                ->>
                /
                <
+               <=
                <atom>
                <coll>
                <map>
@@ -230,6 +231,7 @@
                <set>
                ==
                >
+               >=
                Exception
                ExceptionInfo
                Throwable
