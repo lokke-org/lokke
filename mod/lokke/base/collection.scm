@@ -81,6 +81,7 @@
             pop
             reduce
             reduce-kv
+            reductions
             rest
             rseq
             second
@@ -118,7 +119,9 @@
 (define-generic into)
 (define-generic next)
 (define-generic not-empty)
+(define-generic reduce)
 (define-generic reduce-kv)
+(define-generic reductions)
 (define-generic rest)
 (define-generic rseq)
 (define-generic second)
@@ -653,6 +656,21 @@
     (if s
         (reduce f (first s) (rest s))
         (f))))
+
+(define-method (reductions f val coll)
+  (lazy-seq
+   (cons val
+         (let ((s (seq coll)))
+           (if s
+               (reductions f (f val (first s)) (rest s))
+               #nil)))))
+
+(define-method (reductions f coll)
+  (lazy-seq
+   (let ((s (seq coll)))
+     (if s
+         (reductions f (first s) (rest s))
+         (list (f))))))
 
 (define (merge . xs)
   (if (null? xs)

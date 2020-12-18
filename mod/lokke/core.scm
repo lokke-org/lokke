@@ -417,6 +417,7 @@
                read-string
                reduce
                reduce-kv
+               reductions
                refer
                refer-clojure
                rem

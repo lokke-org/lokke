@@ -100,6 +100,14 @@
   (is (= :default (reduce + :default [])))
   (is (= 6 (reduce + 1 [2 3]))))
 
+(testing "reductions"
+  (is (= [0] (reductions + [])))
+  (is (= [:fine] (reductions (fn [] :crash) [:fine])))
+  (is (= [1 3] (reductions + [1 2])))
+  (is (= [1 3 6] (reductions + [1 2 3])))
+  (is (= [:default] (reductions + :default [])))
+  (is (= [1 3 6] (reductions + 1 [2 3]))))
+
 (testing "filterv"
   (is (= [] (filterv identity ())))
   (is (= [1] (filterv identity '(1))))

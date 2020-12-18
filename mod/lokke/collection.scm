@@ -76,6 +76,7 @@
                           pop
                           reduce
                           reduce-kv
+                          reductions
                           rest
                           reverse
                           second
@@ -172,6 +173,7 @@
                pr-readable
                reduce
                reduce-kv
+               reductions
                rest
                second
                select-keys
