@@ -17,7 +17,7 @@
 
 (define-module (lokke concurrent)
   #:use-module ((ice-9 atomic) #:select (make-atomic-box))
-  #:use-module ((ice-9 futures) #:select ((future . %scm-future) touch))
+  #:use-module ((ice-9 futures) #:select (make-future touch))
   #:use-module ((oop goops) #:hide (<promise>))
   #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke scm atom)
@@ -48,6 +48,7 @@
             remove-watch
             deref
             future
+            future-call
             reset!
             reset-vals!
             set-validator!
@@ -96,12 +97,14 @@
 (define-method (deref (x <future>))
   (touch (slot-ref x 'scm-future)))
 
-(define-syntax-rule (future exp ...)
+(define (future-call f)
   (make <future>
     ;; Provide our version of binding conveyance by transferring the state
     #:scm-future (let ((bindings (current-dynamic-state)))
-                   (%scm-future
-                    (with-dynamic-state bindings (lambda () exp ...))))))
+                   (make-future (lambda () (with-dynamic-state bindings f))))))
+
+(define-syntax-rule (future exp ...)
+  (future-call (lambda () exp ...)))
 
 (define <promise> (class-of (promise)))
 

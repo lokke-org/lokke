@@ -130,6 +130,10 @@
     (is (= (cons :yep (range 30))
            (apply (fnil parrot :yep) nil (range 30))))))
 
+(testing "future"
+  (is (= :yep (deref (future :yep))))
+  (is (= :yep (deref (future-call (constantly :yep))))))
+
 (testing "time"
   (let [out (with-out-str (time true))]
     (is (re-matches (re-pattern "\"Elapsed time: \\d+\\.\\d+ msecs\"\\n")

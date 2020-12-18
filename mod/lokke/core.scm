@@ -76,6 +76,7 @@
                           deliver
                           deref
                           future
+                          future-call
                           promise
                           remove-watch
                           reset!
@@ -327,6 +328,7 @@
                fnext
                for
                future
+               future-call
                gensym
                get
                get-in
