@@ -32,7 +32,8 @@
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) :select (drop-while find first second))
   #:replace (close throw)
-  #:export (Exception
+  #:export (Error
+            Exception
             ExceptionInfo
             Throwable
             ex-cause
@@ -67,11 +68,57 @@
 ;; caught by Lokke's catch are also those Scheme argument lists,
 ;; i.e. (tag . args).
 
+;; Provide *very* basic compatibility.  For the moment, there's no
+;; extensibility, and if we add any, we might only do it for guile 3+
+;; where we're likely to reimplement the handling in terms of
+;; exception objects.
+
+(define Throwable (make-symbol "lokke-throwable-catch-tag"))
+(define Error (make-symbol "lokke-error-catch-tag"))
+(define Exception (make-symbol "lokke-exception-catch-tag"))
 (define ExceptionInfo (make-symbol "lokke-exception-info-catch-tag"))
 
-;; Compatibility hack
-(define Exception (make-symbol "lokke-exception-catch-tag"))
-(define Throwable (make-symbol "lokke-throwable-catch-tag"))
+;; This will of course be different when we support (or just switch
+;; to) guile 3+ exception objects.  This is also very experiemntal,
+;; i.e. not sure we'll want to preserve exactly this kind of interop.
+;; The tentative plan is to switch to raise-exception,
+;; with-exception-handler, and exception objects, and then Error might
+;; map to &error, etc.
+
+(define-method (ex-instance? kind ex)
+  (validate-arg 'ex-instance? symbol? "kind" kind)
+  (validate-arg 'ex-instance? maybe-exception? "ex" ex)
+  (let* ((ex-kind (car ex)))
+    (or
+     (eq? kind ex-kind)
+     (eq? kind Throwable)
+     (cond
+      ((eq? kind Exception) (or (eq? Exception ex-kind)
+                                (eq? ExceptionInfo ex-kind)))
+      ((eq? kind ExceptionInfo) (eq? ExceptionInfo ex-kind))
+      ;; Based on information in (ice-9 exceptions)
+      ((eq? kind Error) (memq ex-kind '(Error
+                                        getaddrinfo-error
+                                        goops-error
+                                        host-not-found
+                                        keyword-argument-error
+                                        memory-allocation-error
+                                        no-data
+                                        no-recovery
+                                        null-pointer-error
+                                        numerical-overflow
+                                        out-of-range
+                                        program-error
+                                        read-error
+                                        regular-expression-syntax
+                                        stack-overflow
+                                        syntax-error
+                                        system-error
+                                        try-again
+                                        unbound-variable
+                                        wrong-number-of-args
+                                        wrong-type-arg)))
+      (else #f)))))
 
 ;; Exactly the args passed to throw
 (define (ex-info? x)
@@ -185,7 +232,7 @@
          (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
                     (list (syntax->datum x)) #f))
         (((catch what ex catch-exp* ...) exp* ...)
-         #`(((eq? what (car #,caught))
+         #`(((ex-instance? what #,caught)
              (let* ((ex #,caught))
                #nil
                catch-exp* ...))

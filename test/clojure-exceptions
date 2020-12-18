@@ -40,6 +40,24 @@
                   (catch ExceptionInfo ex :nope)
                   (finally true))))
 (is (= :yep (try (inc "x") (catch 'wrong-type-arg ex :yep))))
+(is (= :yep (try (inc "x") (catch Error ex :yep))))
+(is (= :yep (try (throw (ex-info "yep" {:kind 1})) (catch Exception ex :yep))))
+(is (= :yep (try (throw (ex-info "yep" {:kind 1})) (catch Throwable ex :yep))))
+
+(testing "fall through"
+  (is (= :yep
+         (try
+           (try (inc "x") (catch ExceptionInfo ex :nope))
+           (catch Error ex :yep)))))
+
+(testing "only one handler at a given level applies"
+  (is (= :yep
+         (try
+           (try
+             (throw (ex-info "yep" {:kind 1}))
+             (catch ExceptionInfo ex (throw ex))
+             (catch Throwable ex :nope))
+           (catch ExceptionInfo ex :yep)))))
 
 (defn same-ex-excepting-suppressed? [ex1 ex2]
   ;; Are they the same excepting the suppressed vector?

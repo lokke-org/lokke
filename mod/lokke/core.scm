@@ -85,7 +85,8 @@
                           swap!
                           swap-vals!))
   #:use-module ((lokke exception)
-                #:select (Exception
+                #:select (Error
+                          Exception
                           ExceptionInfo
                           Throwable
                           close
@@ -236,6 +237,7 @@
                ==
                >
                >=
+               Error
                Exception
                ExceptionInfo
                Throwable
