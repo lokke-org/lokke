@@ -97,6 +97,7 @@
                           ex-data
                           ex-info
                           ex-message
+                          new
                           throw
                           try
                           with-open))
@@ -383,9 +384,10 @@
                mod
                name
                namespace
-               neg?
                nat-int?
+               neg?
                neg-int?
+               new
                next
                nfirst
                nnext

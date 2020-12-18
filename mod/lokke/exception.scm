@@ -20,6 +20,7 @@
   #:version (0 0 0)
   #:use-module ((guile) #:hide (catch)) ;; to work as literal, can't be defined
   #:use-module ((guile) #:select ((catch . %scm-catch) (throw . %scm-throw)))
+  #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base map) #:select (map?))
   #:use-module ((lokke base util) #:select (vec-tag?))
   #:use-module ((lokke base syntax) #:select (let))
@@ -46,6 +47,7 @@
             ex-message
             ex-suppressed
             ex-tag
+            new
             try
             with-final
             with-open)
@@ -133,7 +135,9 @@
                                         wrong-type-arg)))
       (else #f)))))
 
-(define (make-ex fn-name kind msg data cause suppressed)
+
+(define* (make-ex fn-name kind
+                  #:key (msg #nil) (data #nil) (cause #nil) (suppressed #nil))
   (validate-arg fn-name symbol? "a symbol" kind)
   (validate-arg fn-name (lambda (x) (or (eq? #nil x) (string? x))) "a string" msg)
   (validate-arg fn-name (lambda (x) (or (eq? #nil x) (map? x))) "a map" data)
@@ -151,20 +155,34 @@
                        (list x) (x)))))))
   (list kind msg data cause suppressed))
 
-(define* (Throwable. #:optional (msg #nil) (cause #nil)
-                     #:key (suppressed #nil))
-  (make-ex 'Throwable. Throwable msg #nil cause suppressed))
+(define (make-ex-constructor fn-name kind)
+  (match-lambda*
+    (() (make-ex fn-name kind))
+    (((? string? x)) (make-ex fn-name kind #:msg x))
+    (((? maybe-exception? x)) (make-ex fn-name kind #:cause x))
+    ((msg cause) (make-ex fn-name kind #:msg msg #:cause cause))))
 
-(define* (Error. #:optional (msg #nil) (cause #nil)
-                     #:key (suppressed #nil))
-  (make-ex 'Error. Error msg #nil cause suppressed))
-
-(define* (Exception. #:optional (msg #nil) (cause #nil)
-                     #:key (suppressed #nil))
-  (make-ex 'Exception. Exception msg #nil cause suppressed))
+(define Throwable. (make-ex-constructor 'Throwable. Throwable))
+(define Error. (make-ex-constructor 'Error. Error))
+(define Exception. (make-ex-constructor 'Exception. Exception))
 
 (define* (ex-info msg map #:key (cause #nil) (suppressed #nil))
-  (make-ex 'ex-info ExceptionInfo msg map cause suppressed))
+  (make-ex 'ex-info ExceptionInfo
+           #:msg msg
+           #:data map
+           #:cause cause
+           #:suppressed suppressed))
+
+;; *If* we keep support for new, we almost certainly don't want to
+;; handle it this way, or here, but for now, this (questionable hack)
+;; will allow some existing code to work.
+
+(define* (new what #:optional (msg #nil) (cause #nil) #:key (suppressed #nil))
+  (make-ex 'new what
+           #:msg msg
+           #:data #nil
+           #:cause cause
+           #:suppressed suppressed))
 
 ;; Exactly the args passed to throw
 (define (ex-info? x)
