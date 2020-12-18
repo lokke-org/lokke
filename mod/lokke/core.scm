@@ -279,6 +279,7 @@
                contains?
                count
                counted?
+               cycle
                dec
                dec'
                declare

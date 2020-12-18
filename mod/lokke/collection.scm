@@ -108,6 +108,7 @@
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
   #:export (butlast
+            cycle
             doall
             dorun
             filterv
@@ -454,3 +455,14 @@
 
 (define (split-with pred coll)
   (lokke-vector (take-while pred coll) (drop-while pred coll)))
+
+(define (cycle coll)
+  (let ((s (seq coll)))
+    (if (not s)
+        '()
+        (cons (first s)
+              (let loop ((s (rest s)))
+                (lazy-seq
+                 (if-let (s (seq s))
+                   (cons (first s) (loop (rest s)))
+                   (loop coll))))))))
