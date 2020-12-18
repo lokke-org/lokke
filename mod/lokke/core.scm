@@ -199,6 +199,7 @@
             byte
             (do . %scm-do)
             distinct?
+            fnil
             instance?
             int
             integer
@@ -614,3 +615,30 @@
 
 (define (min-key k x . xs) (extreme-key k < x xs))
 (define (max-key k x . xs) (extreme-key k > x xs))
+
+(define fnil
+  (match-lambda*
+    ((f x)
+     (lambda (a . args)
+       (apply f (if (nil? a) x a) args)))
+    ((f x y)
+     (lambda (a b . args)
+       (apply f (if (nil? a) x a) (if (nil? b) y b) args)))
+    ((f x y z)
+     (lambda (a b c . args)
+       (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) args)))
+    ((f x ...)
+     (lambda args
+       (apply f (%scm-let loop ((args args)
+                                (patches x))
+                  (if (null? args)
+                      (if (null? patches)
+                          '()
+                          ;; FIXME: fix function name handling
+                          (scm-error 'wrong-number-of-args #f
+                                     "Wrong number of arguments" '() #f))
+                      (if (null? patches)
+                          (scm-error 'wrong-number-of-args #f
+                                     "Wrong number of arguments" '() #f)
+                          (cons (if (nil? (car args)) (car patches) (car args))
+                                (loop (cdr args) (cdr patches)))))))))))

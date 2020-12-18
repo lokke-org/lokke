@@ -119,6 +119,17 @@
   (is (= [1 2 3 4 5] (sort [5 2 1 4 3])))
   (is (= [2 2 3 4 5] (sort [5 2 2 4 3]))))
 
+(testing "fnil"
+  (let [parrot #(do %&)]
+    (is (= [1] ((fnil parrot :yep) 1)))
+    (is (= [:yep] ((fnil parrot :yep) nil)))
+    (is (= [1 2] ((fnil parrot :yep) 1 2)))
+    (is (= [:yep 1] ((fnil parrot :yep) nil 1)))
+    (is (= [:yep nil] ((fnil parrot :yep) nil nil)))
+    (is (= (range 30) (apply (fnil parrot :yep) (range 30))))
+    (is (= (cons :yep (range 30))
+           (apply (fnil parrot :yep) nil (range 30))))))
+
 (testing "time"
   (let [out (with-out-str (time true))]
     (is (re-matches (re-pattern "\"Elapsed time: \\d+\\.\\d+ msecs\"\\n")
