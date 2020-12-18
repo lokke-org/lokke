@@ -248,25 +248,31 @@ Differences from Clojure/JVM (an incomplete list)
   `ex-info` exceptions, it will currently be a list starting with the
   (uninterned) tag that is bound to `ExceptionInfo`, which is why
   `(catch ExceptionInfo ex ...)` (no quote) works.  Access the
-  elements of `ex-info` exceptions via the normal accessors:
-  `ex-message`, `ex-data`, etc.  The `lokke.exception` namespace
-  also provides an `ex-info?` predicate.
+  elements of Lokke-specific exceptions via the normal accessors:
+  `ex-message`, `ex-data`, etc.  The `lokke.exception` namespace also
+  provides an `ex-info?` predicate.
 
   Note however, that Guile 3.0's exception handling changes may
-  prompt a rework, perhaps away from Guile's try/catch.
-* Lokke's `ex-info` exceptions have experimental support for
-  suppressing exceptions, a concept also found on the JVM and in
-  Python, though the details vary.  If an exception is thrown from
-  within a `finally` block, and there was a pending `ex-info`
-  exception, the exception that was thrown from the `finally` block
-  will be added to the `ex-info` as a suppressed exception, and the
-  `ex-info` exception will be rethrown.  The collection of suppressed
-  exceptions can be retrieved with the `ex-suppressed` function
-  provided by `lokke.exception`.  A suppressed exception can be added
-  to an `ex-info` exception using the `add-suppressed` function in
-  that same namespace.  Note that `add-suppressed` is persistent,
-  returning a new `ex-info` exception that may or may not share
-  structure with the original, rather than mutating the original.
+  prompt a rework, perhaps to be based on `raise-exception`,
+  `with-exception-handler`, and exception objects.  Consider the
+  current support very unstable.
+* Guile exception keys that map to `&error` in Guile 3.0 and above are
+  currently caught as `Error`s, even though we don't use the newer
+  style exception objects yet.
+* Lokke's exceptions (`ExceptionInfo`, `Throwable`, etc.) have
+  experimental support for suppressing exceptions, a concept also
+  found on the JVM and in Python, though the details vary.  If an
+  exception is thrown from within a `finally` block, and there was a
+  pending Lokke exception, the exception that was thrown from the
+  `finally` block will be added to the exception as a suppressed
+  exception, and the Lokke exception will be rethrown.  The collection
+  of suppressed exceptions can be retrieved with the `ex-suppressed`
+  function provided by `lokke.exception`.  A suppressed exception can
+  be added to an `ex-info` exception using the `add-suppressed`
+  function in that same namespace.  Note that `add-suppressed` is
+  persistent, returning a new `ex-info` exception that may or may not
+  share structure with the original, rather than mutating the
+  original.
 
   As an example:
   ```clojure
@@ -285,7 +291,7 @@ Differences from Clojure/JVM (an incomplete list)
         (turn-off-light)))  ; Throws lp0-on-fire, with switch-broken
                             ; available via (ex-suppressed lp0-on-fire).
   ```
-  At least for now, if the pending exception is not an `ex-info`
+  At least for now, if the pending exception is not a Lokke
   exception, then there will be no suppression, and the original
   exception will be lost (as is the case for Java and Clojure/JVM).
 

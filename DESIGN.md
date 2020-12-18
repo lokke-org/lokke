@@ -266,20 +266,17 @@ TODO
   mechanism, and is based on throwing and catching simple tags
   (symbols) along with arbitrary additional arguments.
 
-  Our `ExceptionInfo` is actually just bound to an uninterned symbol
-  (i.e. guaranteed unique) in `(lokke exception)`, and that symbol is
-  what our `catch` clause is looking for via Guile's catch.
+  Our `Throwable`, `ExceptionInfo`, etc. are actually just bound to
+  uninterned symbols (i.e. guaranteed unique) in `(lokke exception)`,
+  and those symbols are what our exception handler (installed via
+  guile's `catch`) is looking for.
 
   In fact, `ex-info` just creates and returns a list containing
   exactly the arguments we need to pass to Guile's `throw`.  So at the
   moment Lokke exceptions aren't objects/records/classes, they're
   `throw` argument lists, and correspondingly, the first element is
-  the `catch` tag.
-
-  This may or may not be what we'll eventually want, but it's better
-  than what we had, allows some interaction with Guile exceptions (you
-  can catch Guile exceptions if you know the tag), and is very
-  lightweight.
+  the `catch` tag.  There's a good chance we'll rework everything in
+  terms of exception options for Guile 3.0 and newer.
 
   With respect to Clojure more generally, upstream debate over
   exceptions in the context of cljs suggested that they may really
@@ -290,7 +287,8 @@ TODO
   https://github.com/clojure/clojurescript/wiki/Exception-Handling
 
   What we have at the moment is more along those lines, in spirit at
-  least.
+  least, though we do support a small subset of the more common
+  Clojure/JVM behaviors.
 
   See the README for some additional information.
 
