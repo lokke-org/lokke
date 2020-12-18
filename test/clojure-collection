@@ -171,6 +171,14 @@
   (is (= [3 4] (drop-while even? [2 3 4])))
   (is (= [7] (drop-while even? [2 4 7]))))
 
+(testing "drop-last"
+  (is (= [] (drop-last 0 [])))
+  (is (= [] (drop-last 1 [])))
+  (is (= [] (drop-last 1 [1])))
+  (is (= [1 2] (drop-last 1 [1 2 3])))
+  (is (= [] (drop-last 3 [1 2 3])))
+  (is (= [] (drop-last 4 [1 2 3]))))
+
 (testing "split-with"
   (is (= [[] []] (split-with even? [])))
   (is (= [[] [1]] (split-with even? [1])))

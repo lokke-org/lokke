@@ -301,6 +301,7 @@
                double
                double?
                drop
+               drop-last
                drop-while
                empty
                empty?

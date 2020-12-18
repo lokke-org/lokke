@@ -49,6 +49,7 @@
                           counted?
                           dissoc
                           drop
+                          drop-last
                           drop-while
                           empty
                           empty?
@@ -140,6 +141,7 @@
                counted?
                dissoc
                drop
+               drop-last
                drop-while
                empty
                empty?

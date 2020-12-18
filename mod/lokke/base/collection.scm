@@ -27,6 +27,7 @@
                 #:hide (peek reverse sort)
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
+  #:use-module ((ice-9 q) #:select (enq! deq! make-q q-length))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil))
@@ -53,6 +54,7 @@
             define-nth-seq
             dissoc
             drop
+            drop-last
             drop-while
             empty
             empty?
@@ -575,6 +577,22 @@
            (if (pred x)
                (drop-while pred (rest s))
                s))))))
+
+(define (drop-last n coll)
+  (when (negative? n)
+    (error "n is negative:" n))
+  (let ((pending (make-q)))
+    (let loop ((s coll)
+               (q-len 0))
+      (lazy-seq
+       (let ((s (seq s)))
+         (if (eq? #nil s)
+             #nil
+             (begin
+               (enq! pending (first s))
+               (if (= q-len n)
+                   (cons (deq! pending) (loop (rest s) q-len))
+                   (loop (rest s) (1+ q-len))))))))))
 
 (define (take-nth n coll)
   (unless (positive? n)
