@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or modify
 ;;; it under the terms of (at your option) either of the following two
@@ -30,7 +30,7 @@
                           lokke-vector-length
                           lokke-vector-ref))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) :select (find first second))
+  #:use-module ((srfi srfi-1) :select (drop-while find first second))
   #:replace (close throw)
   #:export (Exception
             ExceptionInfo
@@ -158,41 +158,86 @@
   ;; suppressed exceptions, so suppressed exceptions will be lost if
   ;; the pending exception isn't an ex-info exception.
   (lambda (x)
-    (define (has-finally-clauses? expr)
+
+    (define (has-finally-clauses? exp)
       (find (lambda (x) (and (pair? x) (eq? 'finally (car x))))
-            expr))
+            exp))
+
+    (define (body-clauses syn)
+      (syntax-case syn (catch)
+        ((exp* ...) (has-finally-clauses? (syntax->datum #'(exp* ...)))
+         (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
+                    (list (syntax->datum x)) #f))
+        (((catch catch-exp* ...) exp* ...) '())
+        ((exp exp* ...) #`(exp #,@(body-clauses #'(exp* ...))))
+        (() '())))
+
+    (define (drop-body syn)
+      (drop-while (lambda (x)
+                    (let* ((x (syntax->datum x)))
+                      (or (not (list? x))
+                          (not (eq? 'catch (car x))))))
+                  syn))
+
+    (define (catch-clauses caught syn)
+      (syntax-case (drop-body syn) (catch)
+        ((exp* ...) (has-finally-clauses? (syntax->datum #'(exp* ...)))
+         (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
+                    (list (syntax->datum x)) #f))
+        (((catch what ex catch-exp* ...) exp* ...)
+         #`(((eq? what (car #,caught))
+             (let* ((ex #,caught))
+               #nil
+               catch-exp* ...))
+            #,@(catch-clauses caught #'(exp* ...))))
+        ((exp exp* ...)
+         (scm-error 'syntax-error 'try
+                    "expression ~s after first catch expression is not a catch or finally in ~s"
+                    (list (syntax->datum #'exp) (syntax->datum x)) #f))
+        ((exp exp* ...) #`(exp #,@(body-clauses #'(exp* ...))))
+        (() '())))
+
     (syntax-case x (catch finally)
-      ((_ expr ..
-          (finally finally-expr-1 ...)
-          (finally finally-expr-2 ...))
-       (error "finally clause must be last and unique"))
-      ((_ expr ...
-          (finally finally-expr ...))
-       #'(%scm-catch
-          #t
-          (lambda ()
-            (let (result (try expr ...))
-              finally-expr ...
-              result))
-          (lambda ex
-            (call-with-exception-suppression
-             ex
-             (lambda ()
-               finally-expr ...
-               (apply %scm-throw ex))))))
+      ((_ exp* ... (finally finally-exp-1 ...) (finally finally-exp-2 ...))
+       (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
+                  (list (syntax->datum x)) #f))
 
-      ;; Reverse the nesting so that tags are caught in code order
-      ((_ expr ... (catch tag ex catch-expr ...))
-       #'(%scm-catch
-          tag
-          (lambda () (try expr ...))
-          (lambda ex #nil catch-expr ...)))
+      ((_ exp* ... (finally finally-exp* ...))
+       (let* ((caught (car (generate-temporaries '(#t))))
+              (body (body-clauses #'(exp* ...)))
+              (catches (catch-clauses caught #'(exp* ...))))
+         #`(%scm-catch
+            #t
+            (lambda ()
+              (let* ((result (%scm-catch
+                              #t
+                              (lambda () #nil #,@body)
+                              ;; FIXME: compiler smart enough to elide?
+                              (lambda #,caught
+                                (cond
+                                 #,@catches
+                                 (else (apply %scm-throw #,caught)))))))
+                finally-exp* ...
+                result))
+            (lambda ex
+              (call-with-exception-suppression
+               ex
+               (lambda ()
+                 finally-exp* ...
+                 (apply %scm-throw ex)))))))
 
-      ((_ expr ...) (has-finally-clauses? (syntax->datum #'(expr ...)))
-       (error "finally clause must be last and unique"))
-
-      ((_ expr ...)
-       #'(begin #nil expr ...)))))
+      ;; Assume no finally clause
+      ((_ exp* ...)
+       (let* ((caught (car (generate-temporaries '(#t))))
+              (body (body-clauses #'(exp* ...)))
+              (catches (catch-clauses caught #'(exp* ...))))
+         #`(%scm-catch
+            #t
+            (lambda () #nil #,@body)
+            (lambda #,caught
+              (cond
+               #,@catches
+               (else (apply %scm-throw #,caught))))))))))
 
 ;; Because otherwise the replace: prevents it from being visible and
 ;; folded into the generic as the base case.
