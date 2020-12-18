@@ -87,10 +87,10 @@
                 "ex-info" cause)
   (when suppressed
     (validate-arg 'ex-info (lambda (x) (lokke-vector? x)) "vector" suppressed)
-    (let (n (lokke-vector-length suppressed))
+    (let* ((n (lokke-vector-length suppressed)))
       (do ((i 0 (1+ i)))
           ((= i n))
-        (let (x (lokke-vector-ref suppressed i))
+        (let* ((x (lokke-vector-ref suppressed i)))
           (unless (maybe-exception? x)
             (scm-error 'wrong-type-arg 'ex-info
                        "suppressed item is not an exception: ~A"
