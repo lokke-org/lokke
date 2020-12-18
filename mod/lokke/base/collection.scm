@@ -600,8 +600,8 @@
 (define (take-nth n coll)
   (unless (positive? n)
     (error "nth is not positive:" n))
-  (lazy-seq
-   (let loop ((s coll))
+  (let loop ((s coll))
+    (lazy-seq
      (let ((s (seq s)))
        (if (eq? #nil s)
            #nil
@@ -789,8 +789,9 @@
      (if s
          (cons (first s)
                (let loop ((s (rest s)))
-                 (let ((s (seq s)))
-                   (if s
-                       (cons sep (cons (first s) (loop (rest s))))
-                       #nil))))
+                 (lazy-seq
+                  (let ((s (seq s)))
+                    (if s
+                        (cons sep (cons (first s) (loop (rest s))))
+                        #nil)))))
          #nil))))
