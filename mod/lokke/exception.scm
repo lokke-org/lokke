@@ -33,9 +33,12 @@
   #:use-module ((srfi srfi-1) :select (drop-while find first second))
   #:replace (close throw)
   #:export (Error
+            Error.
             Exception
+            Exception.
             ExceptionInfo
             Throwable
+            Throwable.
             ex-cause
             ex-data
             ex-info
@@ -58,7 +61,7 @@
 (define-syntax-rule (validate-arg fn-name pred expected val)
   (unless (pred val)
     (scm-error 'wrong-type-arg fn-name
-               "~A argument is not a ~A: ~A"
+               "~A argument is not ~A: ~A"
                (list 'val expected val) (list val))))
 
 ;; The content of Guile catch/throw exceptions is just the argument
@@ -78,6 +81,8 @@
 (define Exception (make-symbol "lokke-exception-catch-tag"))
 (define ExceptionInfo (make-symbol "lokke-exception-info-catch-tag"))
 
+(define lokke-exception-tags (list Throwable Error Exception ExceptionInfo))
+
 ;; This will of course be different when we support (or just switch
 ;; to) guile 3+ exception objects.  This is also very experiemntal,
 ;; i.e. not sure we'll want to preserve exactly this kind of interop.
@@ -85,9 +90,17 @@
 ;; with-exception-handler, and exception objects, and then Error might
 ;; map to &error, etc.
 
+(define (maybe-exception? x)
+  (and (pair? x) (symbol? (first x))))
+
+(define (lokke-exception? x)
+  (and (pair? x)
+       (let* ((s (first x)))
+         (and (symbol? s) (memq s lokke-exception-tags)))))
+
 (define-method (ex-instance? kind ex)
-  (validate-arg 'ex-instance? symbol? "kind" kind)
-  (validate-arg 'ex-instance? maybe-exception? "ex" ex)
+  (validate-arg 'ex-instance? symbol? "a symbol" kind)
+  (validate-arg 'ex-instance? maybe-exception? "an exception" ex)
   (let* ((ex-kind (car ex)))
     (or
      (eq? kind ex-kind)
@@ -120,54 +133,67 @@
                                         wrong-type-arg)))
       (else #f)))))
 
-;; Exactly the args passed to throw
-(define (ex-info? x)
-  (and (pair? x) (= 5 (length x)) (eq? ExceptionInfo (car x))))
-
-(define (maybe-exception? x)
-  (and (pair? x) (symbol? (first x))))
-
-(define* (ex-info msg map #:key (cause #nil) (suppressed #nil))
-  (validate-arg 'ex-info string? "string" msg)
-  (validate-arg 'ex-info map? "map" map)
-  (validate-arg 'ex-info (lambda (x) (or (not x) (maybe-exception? x)))
-                "ex-info" cause)
+(define (make-ex fn-name kind msg data cause suppressed)
+  (validate-arg fn-name symbol? "a symbol" kind)
+  (validate-arg fn-name (lambda (x) (or (eq? #nil x) (string? x))) "a string" msg)
+  (validate-arg fn-name (lambda (x) (or (eq? #nil x) (map? x))) "a map" data)
+  (validate-arg fn-name (lambda (x) (or (eq? #nil x) (maybe-exception? x)))
+                "an exception" cause)
   (when suppressed
-    (validate-arg 'ex-info (lambda (x) (lokke-vector? x)) "vector" suppressed)
+    (validate-arg fn-name (lambda (x) (lokke-vector? x)) "a vector" suppressed)
     (let* ((n (lokke-vector-length suppressed)))
       (do ((i 0 (1+ i)))
           ((= i n))
         (let* ((x (lokke-vector-ref suppressed i)))
           (unless (maybe-exception? x)
-            (scm-error 'wrong-type-arg 'ex-info
+            (scm-error 'wrong-type-arg fn-name
                        "suppressed item is not an exception: ~A"
                        (list x) (x)))))))
-  (list ExceptionInfo msg map cause suppressed))
+  (list kind msg data cause suppressed))
+
+(define* (Throwable. #:optional (msg #nil) (cause #nil)
+                     #:key (suppressed #nil))
+  (make-ex 'Throwable. Throwable msg #nil cause suppressed))
+
+(define* (Error. #:optional (msg #nil) (cause #nil)
+                     #:key (suppressed #nil))
+  (make-ex 'Error. Error msg #nil cause suppressed))
+
+(define* (Exception. #:optional (msg #nil) (cause #nil)
+                     #:key (suppressed #nil))
+  (make-ex 'Exception. Exception msg #nil cause suppressed))
+
+(define* (ex-info msg map #:key (cause #nil) (suppressed #nil))
+  (make-ex 'ex-info ExceptionInfo msg map cause suppressed))
+
+;; Exactly the args passed to throw
+(define (ex-info? x)
+  (and (pair? x) (= 5 (length x)) (eq? ExceptionInfo (car x))))
 
 (define (ex-tag ex)
-  (validate-arg 'ex-tag maybe-exception? "exception" ex)
+  (validate-arg 'ex-tag maybe-exception? "an exception" ex)
   (list-ref ex 0))
 
 (define (ex-message ex)
-  (validate-arg 'ex-message ex-info? "ex-info" ex)
+  (validate-arg 'ex-message lokke-exception? "an exception" ex)
   (list-ref ex 1))
 
 (define (ex-data ex)
-  (validate-arg 'ex-data ex-info? "ex-info" ex)
+  (validate-arg 'ex-data ex-info? "an exception" ex)
   (list-ref ex 2))
 
 (define (ex-cause ex)
-  (validate-arg 'ex-cause ex-info? "ex-info" ex)
+  (validate-arg 'ex-cause lokke-exception? "an exception" ex)
   (list-ref ex 3))
 
 (define (ex-suppressed ex)
-  (validate-arg 'ex-suppressed ex-info? "ex-info" ex)
+  (validate-arg 'ex-suppressed lokke-exception? "an exception" ex)
   (list-ref ex 4))
 
 (define (add-suppressed ex suppressed-ex)
-  (validate-arg 'add-suppressed ex-info? "ex-info" ex)
+  (validate-arg 'add-suppressed lokke-exception? "an exception" ex)
   (validate-arg 'add-suppressed (lambda (x) (maybe-exception? x))
-                "exception" suppressed-ex)
+                "an exception" suppressed-ex)
   (ex-info (ex-message ex)
            (ex-data ex)
            #:cause (ex-cause ex)
@@ -175,7 +201,7 @@
                                            suppressed-ex)))
 
 (define (throw ex)
-  (validate-arg 'throw (lambda (x) (maybe-exception? ex)) "exception" ex)
+  (validate-arg 'throw (lambda (x) (maybe-exception? ex)) "an exception" ex)
   (apply %scm-throw ex))
 
 (define (call-with-exception-suppression ex thunk)
@@ -183,8 +209,7 @@
    #t
    thunk
    (lambda suppressed
-     ;; FIXME: can only add suppressed to ex-info exceptions...
-     (if (ex-info? ex)
+     (if (lokke-exception? ex)
          (apply %scm-throw (add-suppressed ex suppressed))
          ;; Match the JVM for now -- until/unless we figure out
          ;; a way to handle suppressed exceptions universally.

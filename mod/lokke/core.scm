@@ -86,9 +86,12 @@
                           swap-vals!))
   #:use-module ((lokke exception)
                 #:select (Error
+                          Error.
                           Exception
+                          Exception.
                           ExceptionInfo
                           Throwable
+                          Throwable.
                           close
                           ex-cause
                           ex-data
@@ -238,9 +241,12 @@
                >
                >=
                Error
+               Error.
                Exception
+               Exception.
                ExceptionInfo
                Throwable
+               Throwable.
                as->
                add-watch
                alias
