@@ -20,6 +20,26 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "boolean"
+  (is (= false (boolean false)))
+  (is (= false (boolean nil)))
+  (is (= true (boolean true)))
+  (is (= true (boolean 1)))
+  (is (= true (boolean "")))
+  (is (= true (boolean :nope)))
+  (is (= true (boolean [])))
+  (is (= true (boolean ()))))
+
+(testing "boolean?"
+  (is (= true (boolean? true)))
+  (is (= true (boolean? false)))
+  (is (= false (boolean? nil)))
+  (is (= false (boolean? 1)))
+  (is (= false (boolean? "nope")))
+  (is (= false (boolean? :nope)))
+  (is (= false (boolean? ())))
+  (is (= false (boolean? []))))
+
 (testing "fn?"
   (is (not (fn? true)))
   (is (fn? (fn [] true))))

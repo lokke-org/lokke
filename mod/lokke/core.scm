@@ -202,6 +202,7 @@
             *command-line-args* ;; this is wrong...
             *file*
             assert
+            boolean
             byte
             (do . %scm-do)
             distinct?
@@ -218,7 +219,7 @@
             short
             time
             trampoline)
-  #:replace (= do instance?)
+  #:replace (= boolean? do instance?)
   #:re-export (*
                *err*
                *in*
@@ -267,7 +268,6 @@
                bit-set
                bit-test
                bit-xor
-               boolean?
                bounded-count
                butlast
                char?
@@ -506,6 +506,12 @@
                         'quote
                         'read
                         'sort)
+
+(define (boolean? x)
+  (or (eq? x #t) (eq? x #f)))
+
+(define (boolean x)
+  (not (or (eq? x #f) (eq? x #nil))))
 
 (defdyn *assert* #t)
 
