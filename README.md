@@ -192,6 +192,15 @@ Differences from Clojure/JVM (an incomplete list)
 * `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
   and `mod`.
 * Number is taken to mean <number> (i.e. objects satisfying number?).
+* Currently, `hash` does not produce values *consistent* with `=`
+  across Clojure and non-clojure collections, e.g. `(hash [1 2 3])` is
+  not likely to be equal to `(hash (guile.guile/vector 1 2 3))`.
+  Although as an exception, proper Scheme lists should be handled
+  consistently right now, given the way seqs are implemented via
+  `<pair>`s.
+* Currently, `hash` values are not cached.  At the moment, they're
+  recomputed in full whenever requested, though that's likely to
+  change for some types like `hash-map`, `hash-set`, and `vector`.
 * Clojure namespaces *are* Guile modules (which have very comparable
   semantcs), and the Clojure namespace is situatied under `(lokke ns)`
   in the Guile module tree, i.e. `clojure.string` is implemented by the
@@ -365,15 +374,11 @@ Known Issues
   implemented.  For example, `<` and `>` are just the Scheme
   operators, and comparisons don't handle collections correctly yet.
 
-- Hashes have not been considered with any consistency yet, i.e. for
-  equality comparisons, etc., and should not be relied on.
-
 - To the extent that pairs are used right now (and they're currently
-  used for lists like `'(1 2 3)`), they don't support hashes or
-  metadata, and are not `counted?`.
+  used for lists like `'(1 2 3)`), they don't support metadata, and
+  are not `counted?`.
 
-- Lazy sequences (i.e. via `<pair-seq>`) don't currently support
-  hashes and are not counted?.
+- Lazy sequences (i.e. via `<pair-seq>`) are not counted?.
 
 - The syntaxes probably aren't always consistent on the scheme side,
   i.e. do we want to support `(fn #(...) ...)` or `(fn (...) ...)` if

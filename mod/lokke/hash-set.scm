@@ -37,14 +37,11 @@
                           rest
                           seq
                           seqable?))
-  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compare) #:select (clj= hash))
   #:use-module ((lokke hash-map) #:select (<hash-map>))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-41) #:select (stream-lambda))
-  #:use-module ((srfi srfi-69) #:prefix hash/)
-  #:use-module ((rnrs) :prefix rnrs/)
   #:export (<hash-set>
             disj
             foo
@@ -129,7 +126,7 @@
 
 (define (hash-set? x) (is-a? x <hash-set>))
 
-(define empty-fash (make-fash #:hash hash/hash #:equal clj=))
+(define empty-fash (make-fash #:hash hash #:equal clj=))
 (define empty-hash-set (make-set empty-fash #nil))
 (define (empty-hash-set-w-meta data)
   (if (eq? #nil data)

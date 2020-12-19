@@ -87,6 +87,7 @@
                           seqable?
                           sequential?
                           shuffle
+                          sort
                           take
                           take-last
                           take-nth
@@ -98,15 +99,16 @@
   #:use-module ((lokke base map) #:select (<map> map?))
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
+  #:use-module ((lokke compare) #:select (clj= hash))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (hash-map))
+  #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
   #:use-module ((lokke scm vector)
                 #:select (lokke-vector
                           lokke-vector-assoc
                           lokke-vector-conj
                           lokke-vector-ref))
-  #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
-  #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
+  #:use-module ((lokke set) #:select (<set>))
   ;; Make sure we load (lokke vector) so anyone using collection will
   ;; also have all the relevant method specializations.
   #:use-module ((lokke vector) #:select (<lokke-vector>))
@@ -195,7 +197,15 @@
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'cons 'list? 'merge 'peek 'reverse)
+(re-export-and-replace! 'apply
+                        'assoc
+                        'cons
+                        'hash
+                        'list?
+                        'merge
+                        'peek
+                        'reverse
+                        'sort)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)
@@ -470,3 +480,19 @@
                  (if-let (s (seq s))
                    (cons (first s) (loop (rest s)))
                    (loop coll))))))))
+
+;; FIXME: depth diminishing tree-structured sampling like guile's hash.c?
+;; FIXME: sorted-map and sorted-set don't need the sort
+
+(define-method (hash (x <set>))
+  (let ((hashes (mapv hash x)))
+    (reduce (lambda (result x) (logxor result (hash x)))
+            (hash (count hashes))
+            (sort hashes))))
+
+(define-method (hash (x <map>))
+  ;; Currently aliases [[w x] [y z] ...]
+  (let ((hashes (mapv hash x)))
+    (reduce (lambda (result x) (logxor result (hash x)))
+            (hash (count hashes))
+            (sort hashes))))

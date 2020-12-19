@@ -20,7 +20,6 @@
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
-  #:use-module ((srfi srfi-43) #:select (vector-unfold))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base syntax)
@@ -65,7 +64,7 @@
   #:use-module ((lokke boot) #:select (quote))
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module (lokke collection)
-  #:use-module ((lokke compare) #:select (== clj= compare))
+  #:use-module ((lokke compare) #:select (== clj= compare hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke compile) #:select (clj-defmacro load-file))
   #:use-module ((lokke concurrent)
@@ -341,6 +340,7 @@
                gensym
                get
                get-in
+               hash
                hash-map
                hash-set
                ident?

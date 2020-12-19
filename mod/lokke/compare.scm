@@ -21,7 +21,9 @@
                                          (string-compare . string-compare-67)
                                          symbol-compare
                                          vector-compare))
+  #:use-module ((srfi srfi-69) #:select ((hash . srfi-hash)))
   #:export (== clj= compare)
+  #:replace (hash)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: what do we want with respect to improper lists?
@@ -70,3 +72,6 @@
 (define-method (compare (x <char>) (y <char>)) (char-compare x y))
 (define-method (compare (x <string>) (y <string>)) (string-compare-67 x y))
 (define-method (compare (x <vector>) (y <vector>)) (vector-compare compare x y))
+
+(define-generic hash)
+(define-method (hash x) (srfi-hash x))

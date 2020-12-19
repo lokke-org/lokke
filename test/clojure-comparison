@@ -108,4 +108,55 @@
   (is (>= 1 1))
   (is (not (>= 0 1))))
 
+(testing "hash"
+  (is (= (hash nil) (hash nil)))
+  (is (not= (hash :nope) (hash nil)))
+
+  (is (= (hash true) (hash true)))
+  (is (= (hash false) (hash false)))
+  (is (not= (hash true) (hash false)))
+
+  (is (= (hash :x) (hash :x)))
+  (is (not= (hash :x) (hash :y)))
+  (is (not= (hash :x) (hash :y/x)))
+  (is (not= (hash :x/z) (hash :y/z)))
+  (is (not= (hash :x) (hash true)))
+
+  (is (= (hash 1) (hash 1)))
+  (is (= (hash 1.0) (hash 1.0)))
+  (is (= (hash 1/2) (hash 1/2)))
+  (is (not= (hash 1) (hash 2)))
+  (is (not= (hash 1) (hash 1.0)))
+  (is (not= (hash 1) (hash 1/2)))
+
+  (is (= (hash \x) (hash \x)))
+  (is (not= (hash \x) (hash \y)))
+  (is (not= (hash \x) (hash true)))
+
+  (is (= (hash "") (hash "")))
+  (is (= (hash "x") (hash "x")))
+  (is (= (hash "xy") (hash (str "x" "y"))))
+  (is (not= (hash "x") (hash "")))
+  (is (not= (hash "x") (hash true)))
+
+  (is (= (hash ()) (hash [])))
+  (is (= (hash '(1 2 3)) (hash [1 2 3])))
+  (is (= (hash '(1 2 3)) (hash (seq [1 2 3]))))
+  (is (= (hash [1 2 3]) (hash (seq [1 2 3]))))
+
+  (is (= (hash #{}) (hash (set []))))
+  (is (= (hash #{1 2 3}) (hash (set [1 2 3]))))
+  (is (= (hash {}) (hash (hash-map))))
+  (is (= (hash {1 2 3 4}) (hash (hash-map 3 4 1 2))))
+  (is (= (hash {1 2 3 [4 5 6]})
+         (hash (hash-map 3 '(4 5 6) 1 2))))
+
+  (is (= (hash [0 1 '(2 [3] #{4 5 {6 7 8 9}})])
+         (hash '(0 1 [2 (3) #{4 5 {8 9 6 7}}]))))
+
+  (let [x (atom nil)] (is (= (hash x) (hash x))))
+  (let [x (promise)] (is (= (hash x) (hash x))))
+  (is (not= (hash (atom nil)) (hash (atom nil))))
+  (is (not= (hash (promise)) (hash (promise)))))
+
 (end-tests (ns-name *ns*) :exit? true)

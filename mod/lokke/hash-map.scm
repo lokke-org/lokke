@@ -53,12 +53,11 @@
                           fash-update))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
-  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compare) #:select (clj= hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (fold))
-  #:use-module ((srfi srfi-69) #:prefix hash/)
   #:export (<hash-map>
             hash-map
             hash-map?
@@ -85,7 +84,7 @@
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'merge)
+(re-export-and-replace! 'apply 'assoc 'hash 'merge)
 
 ;; FIXME: move rest of common map generics to (lokke map)
 
@@ -150,7 +149,7 @@
   (make-map (fash-set (map-fm m) k v)
             (map-meta m)))
 
-(define empty-fash (make-fash #:hash hash/hash #:equal clj=))
+(define empty-fash (make-fash #:hash hash #:equal clj=))
 (define empty-hash-map (make-map empty-fash #nil))
 (define (empty-hash-map-w-meta data)
   (if (eq? #nil data)

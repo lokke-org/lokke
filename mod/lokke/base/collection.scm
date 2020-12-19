@@ -31,7 +31,7 @@
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil))
-  #:use-module ((lokke compare) #:select (clj= compare))
+  #:use-module ((lokke compare) #:select (clj= compare hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (any drop-right fold last proper-list?))
@@ -103,7 +103,7 @@
   #:replace (apply assoc first list? merge peek reverse sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'cons)
+(re-export-and-replace! 'cons 'hash)
 
 ;; FIXME: should these implmentations of rest actually be next?
 
@@ -288,6 +288,18 @@
 (define-method (equal? (x <sequential>) (y <sequential>))
   (sequential= x y))
 
+(define-method (hash (x <sequential>))
+  ;; Current implementation hashes everything, followed by the length.
+  ;; FIXME: depth diminishing tree-structured sampling like guile's hash.c?
+  (let* ((sentinel (make-symbol "sentinel"))
+         (next-x (sequential-iterator x sentinel)))
+    (let loop ((i 0)
+               (h 0)
+               (x (next-x)))
+      (if (eq? x sentinel)
+          (logxor h (hash i))
+          (loop (1+ i) (logxor h (hash x)) (next-x))))))
+
 (define-method (nth (coll <sequential>) (n <integer>))
   (when (negative? n)
     (scm-error 'out-of-range 'nth "Negative index: ~a"
@@ -375,6 +387,7 @@
 (define-method (counted? (s <null>)) #t)
 (define-method (empty (s <null>)) #nil)
 (define-method (first (s <null>)) #nil)
+(define-method (hash (x <null>)) (hash 0))
 (define-method (next (s <null>)) #nil)
 (define-method (nth (s <null>) (i <integer>)) #nil)
 (define-method (nth (s <null>) (i <integer>) not-found) not-found)
@@ -387,6 +400,7 @@
 (define-method (coll? (x <pair>)) #t)
 (define-method (counted? (s <pair>)) #f)
 (define-method (first (x <pair>)) (car x))
+(define-method (hash (x <pair>)) (hash (seq x)))
 (define-method (nth (p <pair>) (i <integer>)) (nth p i #nil))
 (define-method (nth (p <pair>) (i <integer>) not-found)
   (when (negative? i)
