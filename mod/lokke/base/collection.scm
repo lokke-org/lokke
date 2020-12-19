@@ -385,7 +385,6 @@
 (define-method (sequential? (s <null>)) #t)
 
 (define-method (coll? (x <pair>)) #t)
-(define-method (count (x <pair>)) (length x))
 (define-method (counted? (s <pair>)) #f)
 (define-method (first (x <pair>)) (car x))
 (define-method (nth (p <pair>) (i <integer>)) (nth p i #nil))

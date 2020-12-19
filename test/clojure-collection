@@ -77,6 +77,19 @@
   (is (not (counted? '(1 2))))
   (is (not (counted? '(cons 1 (cons 2 nil))))))
 
+(testing "count"
+  (is (= 0 (count nil)))
+  (is (= 0 (count ())))
+  (is (= 0 (count [])))
+  (is (= 0 (count {})))
+  (is (= 0 (count #{})))
+  (is (= 2 (count '(1 2))))
+  (is (= 2 (count [1 2])))
+  (is (= 1 (count {1 2})))
+  (is (= 2 (count #{1 2})))
+  (is (= 2 (count (seq [1 2]))))
+  (is (= 2 (count (cons 1 [2])))))
+
 (testing "bounded-count"
   (is (= 0 (bounded-count 0 ())))
   (is (= 0 (bounded-count 1 ())))
