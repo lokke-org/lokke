@@ -71,7 +71,8 @@
   #:use-module ((srfi srfi-71) #:select (let let*))
   #:replace (vector vector?)
   #:export (subvec vec)
-  #:re-export (clj=
+  #:re-export (<lokke-vector>
+               clj=
                compare
                conj
                const-nth?

@@ -100,14 +100,16 @@
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module ((lokke scm vector)
-                #:select (<lokke-vector>
-                          lokke-vector
+                #:select (lokke-vector
                           lokke-vector-assoc
                           lokke-vector-conj
                           lokke-vector-ref))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
+  ;; Make sure we load (lokke vector) so anyone using collection will
+  ;; also have all the relevant method specializations.
+  #:use-module ((lokke vector) #:select (<lokke-vector>))
   #:export (butlast
             cycle
             doall
