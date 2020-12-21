@@ -39,9 +39,18 @@ GUILE_PKG([3.0 2.2])
 GUILE_PROGS
 GUILE_FLAGS
 
+lokke_major_version="${VERSION%%.*}"
+lokke_nomajor_version="${VERSION#*.}"
+lokke_minor_version="${lokke_nomajor_version%%.*}"
+lokke_nominor_version="${lokke_nomajor_version#*.}"
+lokke_increment_version="${lokke_nominor_version%%.*}"
+
+AC_SUBST(LOKKE_MAJOR_VERSION, [${lokke_major_version}])
+AC_SUBST(LOKKE_MINOR_VERSION, [${lokke_minor_version}])
+AC_SUBST(LOKKE_INCREMENT_VERSION, [${lokke_increment_version}])
 AC_SUBST(LOKKE_EFFECTIVE_VERSION, [${VERSION%.*}])
 
-AC_CONFIG_FILES([Makefile gnulib/Makefile])
+AC_CONFIG_FILES([Makefile gnulib/Makefile mod/lokke/base/version.scm])
 AC_CONFIG_FILES([guile], [chmod +x guile])
 
 AC_OUTPUT

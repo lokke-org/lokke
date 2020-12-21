@@ -20,6 +20,7 @@
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
+  #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base syntax)
@@ -61,8 +62,8 @@
                           when-let
                           when-not
                           when-some))
+  #:use-module ((lokke base version) #:prefix ver/)
   #:use-module ((lokke boot) #:select (quote))
-  #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -197,13 +198,14 @@
                           time-second))
   #:use-module ((system base compile)
                 #:select (compile-file compiled-file-name))
-  #:export (*assert*
+  #:export ((do . %scm-do)
+            *assert*
+            *clojure-version*
             *command-line-args* ;; this is wrong...
             *file*
             assert
             boolean
             byte
-            (do . %scm-do)
             distinct?
             fnil
             instance?
@@ -271,6 +273,7 @@
                butlast
                char?
                (class-of . class)
+               (ver/version . clojure-version)
                (clj-cond . cond)
                cond->
                cond->>
@@ -506,6 +509,12 @@
                         'quote
                         'read
                         'sort)
+
+(defdyn *clojure-version*
+  (hash-map #:major ver/major
+            #:minor ver/minor
+            #:increment ver/increment
+            #:qualifier ver/qualifier))
 
 (define (boolean? x)
   (or (eq? x #t) (eq? x #f)))

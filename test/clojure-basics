@@ -20,6 +20,15 @@
 
 (begin-tests (ns-name *ns*))
 
+(testing "version"
+  (is (string? (clojure-version)))
+  (is (re-matches #"\d+\.\d+\.\d+" (clojure-version)))
+  (is (int? (:major *clojure-version*)))
+  (is (int? (:minor *clojure-version*)))
+  (is (int? (:increment *clojure-version*)))
+  (is (or (int? (:increment *clojure-version*))
+          (nil? (:increment *clojure-version*)))))
+
 (testing "boolean"
   (is (= false (boolean false)))
   (is (= false (boolean nil)))

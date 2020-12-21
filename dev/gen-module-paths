@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-git ls-files 'mod/*.clj' 'mod/*.scm'
+(git ls-files 'mod/*.clj' 'mod/*.scm'
+ git ls-files 'mod/*.clj.in' | sed -e 's/\.in$//'
+ git ls-files 'mod/*.scm.in' | sed -e 's/\.in$//') | sort
