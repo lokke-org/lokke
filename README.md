@@ -50,22 +50,23 @@ Getting started
 ---------------
 
 Ensure that a version of [Guile](https://www.gnu.org/software/guile/)
-2.2 or 3.0 is available:
+2.2 or 3.0 is available, preferring 3.0, which should perform notably
+better:
 
     $ guile --version
-    guile (GNU Guile) 2.2.4
-    Packaged by Debian (2.2.4-deb+1-3)
-    Copyright (C) 2018 Free Software Foundation, Inc.
+    guile (GNU Guile) 3.0.4
+    Packaged by Debian (3.0.4-deb+3.0.4-3)
+    Copyright (C) 2020 Free Software Foundation, Inc.
     ...
 
 For Debian:
 
-    # apt-get install guile-2.2 guile-2.2-dev
+    # apt-get install guile-3.0 guile-3.0-dev
     # apt-get install gnulib libunistring-dev libpcre2-dev
 
 or
 
-    # apt-get install guile-3.0 guile-3.0-dev
+    # apt-get install guile-2.2 guile-2.2-dev
     # apt-get install gnulib libunistring-dev libpcre2-dev
 
 Then
@@ -83,7 +84,7 @@ Hopefully the tests will pass.  If not, please report them to
 If you have more than one version of Guile installed, you may be able
 to select a particular version at configuration time like this:
 
-    $ ./configure GUILE_EFFECTIVE_VERSION=2.2
+    $ ./configure GUILE_EFFECTIVE_VERSION=3.0
 
 Now you should be able to run a Clojure program like this:
 
@@ -362,6 +363,12 @@ Known Issues
 
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
+
+- Some versions of Guile prior to 3.0 had a problem with the hash
+  function that would cause it to produce a very poor distribution of
+  values in some cases (e.g. for symbols and keywords), which is
+  likely to decrease performance.  We may attempt to addresss that,
+  but for now, recommend preferring Guile 3.0 or newer if possible.
 
 - The code has not been evaluated with respect to the need for
   continuation barriers yet.
