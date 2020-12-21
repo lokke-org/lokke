@@ -1,0 +1,25 @@
+
+name: main
+on: [push, pull_request]
+
+jobs:
+  guile-2:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - run: sudo -i "$(pwd)/dev/prep-for-debianish-build" guile-2.2
+      - run: test 2 = $(guile -c '(display (major-version))')
+      - run: ./setup && autoreconf -fi && ./configure
+      - run: make -j4 LOKKE_TEST_EXT_BEHAVIOR=true check
+  guile-3:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - run: sudo -i "$(pwd)/dev/prep-for-debianish-build" guile-3.0
+      - run: test 3 = $(guile -c '(display (major-version))')
+      - run: ./setup && autoreconf -fi && ./configure
+      - run: make -j4 LOKKE_TEST_EXT_BEHAVIOR=true check
