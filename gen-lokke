@@ -3,8 +3,10 @@
 
 (setlocale LC_CTYPE "C")
 
-(use-modules ((ice-9 match) #:select (match match-let))
-             ((ice-9 pretty-print) #:select (pretty-print)))
+(use-modules
+ ((ice-9 match) #:select (match match-let))
+ ((ice-9 pretty-print) #:select (pretty-print))
+ ((ice-9 regex) #:select (string-match)))
 
 ;; We want the generated code to be auto-compilable in a "plain" guile
 ;; environment, i.e. without any load-pwth adjustments, so we (for
@@ -28,7 +30,7 @@
     (format #t "!#\n")
     (format #t
             "
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -72,11 +74,14 @@
                 ";; geiser-scheme-implementation: guile\n"
                 ";; end:\n"))))
 
+(define (lok? x) (string-match "^lok(-[0-9]+)?$" x))
+(define (lokke? x) (string-match "^lokke(-[0-9]+)?$" x))
+
 (match (program-arguments)
-  ((gen "lok" arg ...)
+  ((gen (? lok? _) arg ...)
    (gen-lokke (cddr (program-arguments))
               '((@ (lokke main) lok-main) (program-arguments))))
-  ((gen "lokke" arg ...)
+  ((gen (? lokke? _) arg ...)
    (gen-lokke (cddr (program-arguments))
               '((@ (lokke main) lokke-main) (program-arguments)))))
 
