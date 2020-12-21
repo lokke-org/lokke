@@ -1,6 +1,6 @@
 .\" The macros used below are those described in groff_man(7)
 .
-.TH lokke 1 2020-04-11 "0.0.1"
+.TH lokke 1 2020-08-27 "@VERSION@"
 .
 .SH NAME
 lokke \- a Clojure dialect for Guile
@@ -127,7 +127,7 @@ you may begin your scripts like this:
 .P
 .RS
 .EX
-#!/path/to/lokke-0.0 -0 ;; -*-clojure-*-
+#!/path/to/lokke-@LOKKE_MAJOR_VERSION@ -0 ;; -*-clojure-*-
 !#
 (prn :hello-world)
 \&.\|.\|.\&
@@ -152,7 +152,7 @@ like this:
 .P
 .RS
 .EX
-#!/path/to/lokke-0.0 -0 ;; -*-clojure-*-
+#!/path/to/lokke-@LOKKE_MAJOR_VERSION@ -0 ;; -*-clojure-*-
 ;; We're in a Guile preamble module defining a procedure for each
 ;; lokke subcommand.
 (apply run "-l" %0 "--" %&)
@@ -202,7 +202,7 @@ this:
 .P
 .RS
 .EX
-#!/usr/bin/env lokke-0.0 -0
+#!/usr/bin/env lokke-@LOKKE_MAJOR_VERSION@ -0
 \&.\|.\|.\&
 .EE
 .RE
