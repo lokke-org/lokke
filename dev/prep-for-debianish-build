@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+usage()
+{
+    echo "Usage: prep-for-debianish-build [guile-2.2 | guile-3.0]"
+}
+
+guile="${1:-guile-3.0}"
+debs='autoconf automake libpcre2-dev libunistring-dev make gcc git gnulib'
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+
+case "$guile" in
+    guile-2.2|guile-3.0)
+        apt-get install -y "$guile-dev" $debs
+        ;;
+    *)
+        usage 1>&2
+        exit 2
+        ;;
+esac
