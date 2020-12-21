@@ -25,8 +25,6 @@ EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
 
 lokke_scripts = lok lok-@LOKKE_MAJOR_VERSION@ lokke lokke-@LOKKE_MAJOR_VERSION@
 
-noinst_SCRIPTS = $(lokke_scripts)
-
 # FIXME: preserve symlinks in install tree?
 man1_MANS = lok.1 lokke.1
 
@@ -53,7 +51,7 @@ lib_lokke_pcre2_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS) @PCRE2_CFLAGS@
 lib_lokke_pcre2_la_LDFLAGS = -module $(lokke_lib_ldflags) @PCRE2_LIBS@
 
 # Avoids the otherwise circular dependency
-BUILT_SOURCES = \
+BUILT_SOURCES = $(lokke_scripts) \
   lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x lokke.1 \
   mod/lokke/base/version.scm
 
