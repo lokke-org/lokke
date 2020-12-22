@@ -193,6 +193,11 @@ Differences from Clojure/JVM (an incomplete list)
 * `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
   and `mod`.
 * Number is taken to mean <number> (i.e. objects satisfying number?).
+* `compare` sorts all symbols lexically, without any special
+  treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
+  might eventually change for at least Clojure side.
+* The `compare` ordering of refs is unspecified; it is not the order
+  of their creation.
 * Currently, `hash` does not produce values *consistent* with `=`
   across Clojure and non-clojure collections, e.g. `(hash [1 2 3])` is
   not likely to be equal to `(hash (guile.guile/vector 1 2 3))`.
@@ -376,10 +381,6 @@ Known Issues
 - atom semantics may not be completely right yet (see code).
 
 - `deref` does not support a timeout for futures yet.
-
-- comparisons via `<`, `>`, `compare`, etc. are not yet correctly
-  implemented.  For example, `<` and `>` are just the Scheme
-  operators, and comparisons don't handle collections correctly yet.
 
 - To the extent that pairs are used right now (and they're currently
   used for lists like `'(1 2 3)`), they don't support metadata, and
