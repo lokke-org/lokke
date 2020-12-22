@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or modify
 ;;; it under the terms of (at your option) either of the following two
@@ -15,8 +15,7 @@
   #:version (0 0 0)
   #:use-module ((lokke base util) #:select (keyword->string))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-67) #:select (boolean-compare
-                                         char-compare
+  #:use-module ((srfi srfi-67) #:select (char-compare
                                          number-compare
                                          (string-compare . string-compare-67)
                                          symbol-compare
@@ -53,11 +52,14 @@
 (define-generic compare)
 
 (define-method (compare (x <boolean>) (y <boolean>))
-  (if (eq? x #nil)
-      (if (eq? y #nil) 0 -1)
-      (if (eq? y #nil)
+  (if (eq? x y)
+      0
+      (if (eq? x #t)
           1
-          (boolean-compare x y))))
+          (if (eq? x #nil)
+              -1
+              ;; x is #f
+              (if (eq? y #t) -1 1)))))
 
 (define-method (compare (x <number>) (y <number>))
   (if (or (nan? x) (nan? y))
