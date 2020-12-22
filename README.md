@@ -1,26 +1,26 @@
 Lokke is Clojure for Guile
 ==========================
 
+[Lokke](#Lokke-Danish) intends to provide a full dialect of Clojure
+for Guile.  It also consists of a set of Guile modules providing some
+of Clojure's functionality in two different guises.
+
 > Note: everything is currently very experimental, including the
 > various API "levels" -- they may not all survive, depending in part
 > on whether or not they end up seeming valuable enough to be worth
 > the maintenance costs.
 
-While the intention is to provide a full dialect of Clojure for Guile,
-[Lokke](#Lokke-Danish) also consists of a set of Guile modules
-providing some of Clojure's functionality in two different guises.
-
 For Clojure itself
 ------------------
 
 The Clojure dialect is currently available via `./lokke` which can run
-code, serve as a !# interpreter, or provide a REPL.  See
+code, serve as a `!#` interpreter, or provide a REPL.  See
 [below](#getting-started) for further information.
 
 For a more Clojure oriented experience in Scheme
 ------------------------------------------------
 
-Lokke provides one set of modules, starting with (lokke core) that
+Lokke provides one set of modules, starting with `(lokke core)` that
 create an environment that looks suspiciously like Clojure.  In most
 cases these modules prefer Clojure's approach when there's a conflict,
 and they're not shy about using generic functions.  For example, `=`
@@ -31,26 +31,24 @@ the Clojure practice of explicitly `#:select`ing the symbols you want
 to import, (or `#:prefix`ing the namespace) to avoid the problem
 entirely, and to make it much easier to discover the origin of a
 binding.  In some cases, Scheme vectors may be required in place of
-Clojure's immutable vectors, e.g. `(fn #(x 1 y 2) ...)`, though the
-approach to these binding forms on the Scheme side is still
-experimental.
+Clojure's immutable vectors, perhaps something like `(let #(x 1 y 2)
+...)`, though the approach to these binding forms on the Scheme side
+is still experimental.
 
 For a more Scheme oriented experience in Scheme
 -----------------------------------------------
 
-Lokke may also provide (lokke scm ...) modules, which define a more
+Lokke may also provide `(lokke scm ...)` modules, which define a more
 Scheme-friendly, and possibly more efficient interface -- think
-`(lokke-vector-length v)` as compared to `(count v)`.
-
-Perhaps the most notable existing module is `(lokke scm vector)` which
-is intended to provide a C backed implementation of Clojure's
-[persistent vectors](https://hypirion.com/musings/understanding-persistent-vector-pt-1).
+`(lokke-vector-length v)` as compared to `(count v)`.  Perhaps the
+most notable existing module is `(lokke scm vector)` which intends to
+provide a C backed implementation of Clojure's [persistent vectors](https://hypirion.com/musings/understanding-persistent-vector-pt-1).
 
 Getting started
 ---------------
 
 Ensure that a version of [Guile](https://www.gnu.org/software/guile/)
-2.2 or 3.0 is available, preferring 3.0, which should perform notably
+2.2 or 3.0 is available, preferring 3.0 which should perform notably
 better:
 
     $ guile --version
@@ -61,15 +59,18 @@ better:
 
 For Debian:
 
-    # apt-get install guile-3.0 guile-3.0-dev
-    # apt-get install gnulib libunistring-dev libpcre2-dev
+    # apt-get install autoconf automake libpcre2-dev libunistring-dev
+    # apt-get install  make gcc git gnulib
 
-or
+and then for Guile 3.0:
+
+    # apt-get install guile-3.0 guile-3.0-dev
+
+or for Guile 2.2:
 
     # apt-get install guile-2.2 guile-2.2-dev
-    # apt-get install gnulib libunistring-dev libpcre2-dev
 
-Then
+and then:
 
     $ git clone ... lokke
     $ cd lokke
@@ -86,9 +87,9 @@ to select a particular version at configuration time like this:
 
     $ ./configure GUILE_EFFECTIVE_VERSION=3.0
 
-Now you should be able to run a Clojure program like this:
+At this point you should be able to run a Clojure program like this:
 
-    $ ./lok hello.clj
+    $ ./lok -l hello.clj
     ...
     hello
 
@@ -111,11 +112,12 @@ lokke.1 | less`.
 
 Lokke expects all Clojure namespaces to be located in a lokke/ns/
 subdirectory of one of the directories specified by the Guile load
-path, which can be adjusted by setting `GUILE_LOAD_PATH` in the
+path, and the path can be adjusted by setting `GUILE_LOAD_PATH` in the
 environment.  For example, since `./mod` is in `./lokke`'s default
-load path, `clojure.string` can be loaded from
-mod/lokke/ns/clojure/string.scm (or `.clj` -- namspaces can be
-implemented in Clojure or Scheme).
+load path, Lokke will look for `clojure.string` in
+mod/lokke/ns/clojure/string.go (compiled version),
+mod/lokke/ns/clojure/string.clj, and mod/lokke/ns/clojure/string.clj
+in that order (namspaces can be implemented in Clojure or Scheme).
 
 Assuming your guile was compiled with readline support, it's likely
 you'll want to add something like this to `~/.lokke_guile`:
@@ -153,61 +155,88 @@ From `./guile`, you can switch to a Lokke REPL manually like this:
     lokke@(lokke user)> (inc 1)
     $1 = 2
 
-See the DESIGN document for an overview of the implementation.
+See the [DESIGN](DESIGN.md) document for an overview of the
+implementation.
 
+Detailed information about Guile is available in the
+[Guile Reference Manual](https://www.gnu.org/software/guile/manual/guile.html)
+which should also be available via `info guile` if installed.
 
-Differences from Clojure/JVM (an incomplete list)
--------------------------------------------------
-
-* Guile specific information should be available in the
-  [Guile Reference Manual](https://www.gnu.org/software/guile/manual/guile.html)
-  which should also be available via `info guile` if installed.
+Comparison with Clojure/JVM (an incomplete list)
+------------------------------------------------
 
 * The implementation should be properly tail-recursive.
 
 * Argument evaluation order is unspecified.
 
+* Lokke's reader conditional identifier is `:cljl`, for example,
+  `#?(:cljl x)`.
+
 * The default regular expressions are
   [PCRE2](http://www.pcre.org/current/doc/html/pcre2pattern.html)
   regular expressions.
 
-* Lokke's reader conditional identifier is `:cljl`, e.g. `#?(:cljl x)`.
-
-* At the moment reader conditionals are always supported by the reader
-  functions and are not restricted to `.cljc` files.
+* At the moment, `format` strings are
+  [Guile format](https://www.gnu.org/software/guile/manual/html_node/Formatted-Output.html)
+  strings.
 
 * Reader literal patterns `#"x"` currently just translate to an
   equivalent `(re-pattern ...)` at read time.  That is, they are not
   compiled at read time, and so are re-evaluated.
 
-* At the moment, various functions handle Scheme vectors as they would
-  Clojure vectors, i.e. many collection and sequence operations, etc.
+* At the moment reader conditionals are always supported by the reader
+  functions and are not restricted to `.cljc` files.
 
-* At the moment, various functions handle Scheme lists as they would
-  Clojure lists, i.e. many collection and sequence operations, etc.
+* The reader functions, `read`, `read-string`, etc. return the rnrs
+  end-of-file object, which can be identified with
+  `guile.guile/eof-object?`, rather than throwing an exception.
+
+* Currently, a Lokke `future` is a Guile `<future>`, which means that
+  it draws from a fixed-size thread pool of size `(dec
+  (current-processor-count))` while recent versions of Clojure/JVM
+  have an unbounded pool.
 
 * Multiple `:as` aliases are allowed in destructuring forms.
-
-* Currently, `future`s are Guile `<future>`s, which means they draw
-  from a fixed-size pool of size `(dec (current-processor-count))`.
-  Recent versions of Clojure/JVM have an unbounded pool.
 
 * The numeric tower is Guile's numeric tower, backed by
   [GMP](https://gmplib.org/), and there is currently no distinction
   between functions like `+'` and `+`, or `*'` and `*`, etc.
 
-* At the moment, `format` strings are Guile format strings, but we may
-  want to alter or agument that, i.e. perhaps we'll want a formatter
-  specifying print or pr format output, though for now pr(int)-str works
-  `(format "... ~a ..." (pr-str x))`.
-
-* The reader functions, `read`, `read-string`, etc. return the rnrs
-  end-of-file object rather than throwing an exception.
-
 * `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
   and `mod`.
 
-* Number is taken to mean <number> (i.e. objects satisfying number?).
+* Number is taken to mean <number> (i.e. objects satisfying `number?`).
+
+* Clojure namespaces may be implemented in either Clojure (.clj) or
+  Scheme (.scm).
+
+* Clojure namespaces *are* Guile modules (which have very comparable
+  semantics), and the entire Clojure namespace tree is situatied under
+  `(lokke ns)` in the Guile module tree, i.e. `clojure.string` is
+  implemented by the `(lokke ns clojure string)` module, and
+  `clojure.string/join` is exactly equivalent to a Guile reference to
+  the `join` function in the `(lokke ns clojure string)` module.
+
+* All clojure namspaces starting with `guile.` represent direct
+  references to the root of the guile module tree.  For example,
+  `(guile.guile/current-time)`, `(guile.srfi.srfi-19/current-date)`,
+  or `(guile.guile/delete-file ...)`.  More specifically, they provide
+  a convenient way to refer to modules that are not under a `(lokke ns
+  ...)` prefix, and of course you can use them in forms like `ns` and
+  `require`.
+
+* Metadata support is limited: vectors, hash-sets, and hash-maps, vars,
+  namespaces, and atoms are supported, lists and symbols are not.
+
+* In addition to `nil`, the `lokke` command's `-e` option doesn't print
+  unspecified values (Guile's `*unspecified*`).
+
+* `lokke.io` is the parallel of `clojure.java.io`.
+
+* `lokke.shell` is the parallel of `clojure.java.shell`.
+
+* Persistent lists are currently not `counted?`, so `count` must
+  traverse the list.
 
 * `compare` sorts all symbols lexically, without any special
   treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
@@ -227,45 +256,28 @@ Differences from Clojure/JVM (an incomplete list)
   recomputed in full whenever requested, though that's likely to
   change for some types like `hash-map`, `hash-set`, and `vector`.
 
-* Clojure namespaces *are* Guile modules (which have very comparable
-  semantcs), and the Clojure namespace is situatied under `(lokke ns)`
-  in the Guile module tree, i.e. `clojure.string` is implemented by the
-  `(lokke ns clojure string)` module.
-
-* Qualified Clojure references like the `clojure.string/join` in
-  `(clojure.string/join ...)` automatically resolve to the appropriate
-  Guile module reference.
-
-* All clojure namspaces starting with `guile` represent direct
-  references to the guile module tree,
-  e.g. `(guile.guile/current-time)` or `(guile.ice-9/pretty-print
-  ...)`.  More specifically, they provide a convenient way to refer to
-  Guile modules that are not under a `(lokke ns ...)` prefix.
-
 * `(alias ...)` calls only take full effect at the end of the
   enclosing top level form (because at the moment, the compiler works
   from a snapshot of the alias map, cf. `rewrite-il-calls`).
 
-* Metadata support is limited: vectors, hash-sets, and hash-maps, vars,
-  namespaces, and atoms are supported, lists and symbols are not.
-
-* Dynamic variables must be declared via `(defdyn name init-expr)`
-  rather than via metadata, and they are always inherited by
-  sub-threads, unlike on the JVM, where only some forms provide
-  "binding conveyance".
-
-* You can define dynamic variables that do not convey via `defdynloc`.
+* At the moment, dynamic variables must be declared via `(defdyn name
+  init-expr)` rather than via metadata, and they are always inherited
+  by sub-threads, unlike on the JVM, where only some forms provide
+  [binding conveyance](https://clojure.org/reference/vars#conveyance).
+  You can define dynamic variables without conveyance via
+  `defdynloc`.
 
 * Whether or not `bindings` are established in parallel is undefined.
 
-* `.indexOf` is `index-of`
+* Many of the coercions haven't been included: `float` `double` ...
 
-* `.lastIndexOf` is `last-index-of`
+* At the moment, various functions may handle Scheme vectors as they
+  would Clojure vectors, e.g. some collection and sequence operations,
+  etc.
 
-* Many of the coercions haven't been included: float double ...
-
-* Persistent lists are currently not `counted`, so `count` must
-  traverse the list.
+* At the moment, various functions may handle Scheme lists as they
+  would Clojure lists, e.g. some collection and sequence operations,
+  etc.
 
 * No agents or refs yet.
 
@@ -283,17 +295,12 @@ Differences from Clojure/JVM (an incomplete list)
 
 * No BigDecimal syntax, e.g. 4.2M
 
-* For now, types are implemented via GOOPS which means that you can
-  actually modify them via slot-set!.  We may eventually pursue
-  immutable GOOPS classes in Guile, but of course you can modify
-  anything on the JVM too, if you really set your mind to it.
-
-* In addition to `nil`, the `lokke` command's `-e` option doesn't print
-  unspecified values (Guile's `*unspecified*`).
-
-* `lokke.io` is the parallel of `clojure.java.io`.
-
-* `lokke.shell` is the parallel of `clojure.java.shell`.
+* For now, types are implemented via
+  [GOOPS](https://www.gnu.org/software/guile/manual/html_node/GOOPS.html)
+  which means that you can actually modify them via `slot-set!`.  We
+  may eventually pursue immutable GOOPS classes in Guile, but of
+  course you can modify anything on the JVM too, if you really set
+  your mind to it.
 
 * There is experimental support for `try/catch/finally` which maps
   very closely to Guile's underlying `catch/throw`, meaning that in
@@ -308,16 +315,17 @@ Differences from Clojure/JVM (an incomplete list)
   `(catch ExceptionInfo ex ...)` (no quote) works.  Access the
   elements of Lokke-specific exceptions via the normal accessors:
   `ex-message`, `ex-data`, etc.  The `lokke.exception` namespace also
-  provides an `ex-info?` predicate.
+  provides bindings like `ex-info?`, `ex-cause`, etc.
 
-  Note however, that Guile 3.0's exception handling changes may
-  prompt a rework, perhaps to be based on `raise-exception`,
-  `with-exception-handler`, and exception objects.  Consider the
-  current support very unstable.
+  Note however, that
+  [changes introduced in Guile 3.0](https://www.gnu.org/software/guile/manual/html_node/Exceptions.html#Exceptions)
+  may prompt a rework, perhaps to based our exception handling on
+  `raise-exception`, `with-exception-handler`, and exception objects.
+  Consider the current support very unstable.
 
 * Guile exception keys that map to `&error` in Guile 3.0 and above are
-  currently caught as `Error`s, even though we don't use the newer
-  style exception objects yet.
+  currently caught as `Error`s, even with Guile 2.2, and even though
+  we don't use the newer style exception objects yet.
 
 * Lokke's exceptions (`ExceptionInfo`, `Throwable`, etc.) have
   experimental support for suppressing exceptions, a concept also
@@ -397,9 +405,10 @@ On the Scheme side
 * Currently Clojure `=` is only available as an export from `(lokke
   core)`, and for now, it is implemented via `clj=`.
 
-* Bindings starting with /lokke/ are reserved (but they're illegal in
-  Clojure anyway).  We use them for internal compiler-communication,
-  among other things.  See the DESIGN document for more information.
+* Bindings starting with `/lokke/` are reserved (but they're illegal
+  in Clojure anyway).  We use them for internal
+  compiler-communication, among other things.  See the DESIGN document
+  for more information.
 
 * In the `(lokke scm)` apis, Scheme vectors are referred to as vector,
   Clojure's as lokke-vector.
@@ -431,7 +440,7 @@ Known Issues
   function that would cause it to produce a very poor distribution of
   values in some cases (e.g. for symbols and keywords), which is
   likely to decrease performance.  We may attempt to addresss that,
-  but for now, recommend preferring Guile 3.0 or newer if possible.
+  but for now, prefer Guile 3.0 or newer when possible.
 
 - The code has not been evaluated with respect to the need for
   continuation barriers yet.
@@ -450,10 +459,12 @@ Known Issues
   i.e. do we want to support `(fn #(...) ...)` or `(fn (...) ...)` if
   either?  Presumably all destructuring bindings should work the same.
 
-- `time` relies on guile's SRFI-19 `time-monotonic`, which is not yet
-  truly monotonic.  It's actually International Atomic Time.
+- `time` relies on
+  [guile's SRFI-19](https://www.gnu.org/software/guile/manual/html_node/SRFI_002d19.html)
+  `time-monotonic`, which is not yet truly monotonic.  It's actually
+  International Atomic Time.
 
-- See DESIGN for additional issues.
+- See [DESIGN](DESIGN.md) for additional issues.
 
 
 Contributing
@@ -465,8 +476,8 @@ under the terms described in the License section below.  If you like,
 git can can add the appropriate pseudo-header for you via the
 `--signoff` argument to commit, amend, etc.
 
-Additional information, conventions, etc. may be found in the Hacking
-section in the DESIGN.
+Additional information, conventions, etc. may be found in the [Hacking
+section](DESIGN.md#hacking) in DESIGN.
 
 Additional tests
 ----------------
@@ -522,8 +533,10 @@ describing the applicable terms, including, but not limited to:
   - mod/lokke/ns/clojure/zip.clj
   - test/clojure-walk
 
-Copyright © 2015-2020 Rob Browning <rlb@defaultvalue.org>
+Copyright © 2015-2020 Rob Browning &lt;<rlb@defaultvalue.org>&gt;
 
+<!--
 Local Variables:
 mode: markdown
 End:
+-->

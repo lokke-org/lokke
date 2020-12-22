@@ -6,23 +6,23 @@ The current approach is to let the Scheme macro-expansion process act
 as the primary compiler just as it does for Guile itself.  It's
 unclear whether or not this is the approach we'll want to keep.
 
-The Scheme compiler compiles from Scheme to the next level down in
-Guile's language tower which is tree-il.  We explicitly invoke the
-Scheme compiler in an environment (which is a Guile module, which is a
-Clojure namespace) that has macros defined that implement much of
-Clojure when expanded.
+The Scheme compiler compiles from Scheme to the next level down in the
+[compiler tower](https://www.gnu.org/software/guile/manual/html_node/Compiler-Tower.html)
+which is tree-il.  We explicitly invoke the Scheme compiler in an
+environment (which is a Guile module, which is a Clojure namespace)
+that has macros defined that implement much of Clojure when expanded.
 
 After that expansion, we walk the tree-il representation in order to
-rewrite normal (x ...) calls as (invoke x ...), where invoke is a
-generic function that has specializations allowing it to handle
-Clojure's "invokable" instances, e.g. (:foo #{bar}), ([1 2 3] 2), etc.
-Once the final tree-il code is ready, we return it to Guile for
+rewrite normal `(x ...)` calls as `(invoke x ...)`, where `invoke` is
+a generic function that has specializations allowing it to handle
+Clojure's "invokable" instances, e.g. `(:foo #{bar})`, `([1 2 3] 2)`,
+etc.  Once the final tree-il code is ready, we return it to Guile for
 compilation or execution via the lower levels of language tower.
 
 The compilation process uses some symbols starting with /lokke/ as a
-side channel for communication (discussed further below), which is
-fine since symbols staring with "/" are illegal in Clojure itself (and
-at least unreadable in Clojure on the JVM).
+side channel for communication (discussed further below), which should
+be fine since symbols staring with "/" are illegal in Clojure itself
+(and at least unreadable in Clojure on the JVM).
 
 Clojure's "compound" (namespaced) symbols like clojure.string/join
 present another wrinkle.  Currently these symbols are left alone at
@@ -39,22 +39,22 @@ vectors, i.e. `[(some-macro x)]` must expand `some-macro` at compile
 time.
 
 To support that, those literals are always represented to the compiler
-as pseudo-function invocations like `(/lokke/reader-hash-map metadata ...)`
-and `(/lokke/reader-hash-set metadata ...)`, which the
+as pseudo-function invocations like `(/lokke/reader-hash-map metadata
+...)` and `(/lokke/reader-hash-set metadata ...)`, which the
 macroexpander can traverse.  The reader creates this representation
-when invoked via `read-for-compiler`.  The `metadata` will either be
-#nil or a `(/lokke/reader-hash-map ...)` derived from any reader
+when invoked via `read-for-compiler`, and the `metadata` will either
+be #nil or a `(/lokke/reader-hash-map ...)` derived from any reader
 metadata preceeding the literal, e.g. via `^{:x 1} [1]`.
 
 These pseudo-functions present a problem for Clojure syntax expanders
-(created with the Clojure side defmacro) since the expanders expect to
-see actual hash-maps and hash-sets, so before a form is passed to one
-of them, all of the pseudo-function calls are transformed into the
+(created with the Clojure side `defmacro`) since the expanders expect
+to see actual hash-maps and hash-sets.  So before a form is passed to
+one of them, all of the pseudo-function calls are transformed into the
 instances they represent, and then, once the expander has returned its
 expansion, any instances in the result are transformed back to the
 corresponding pseudo-function calls.
 
-That is, `#{foo}` will be an actual hash-set instance containing the
+That is, `#{foo}` will be an actual `hash-set` instance containing the
 symbol `foo` whenever it is encountered by Clojure code during
 compilation, for example whenever a Clojure defmacro expander sees it,
 but it will be `(/lokke/reader-hash-set #nil foo)` whenever it is
@@ -92,9 +92,10 @@ immutable, though possibly only when compiled right now).
 When a dynamic variable `*out*` is defined via `defdyn`, it is
 actually represented by a "hidden" top-level definition `(define
 /lokke/dynamic-*out* (make-fluid ...))` in the current Guile module.
-Then `foo` itself is made an identifier-syntax that expands into
-`(fluid-ref /lokke/dynamic-foo)`.
-[Bindingconveyance](https://clojure.org/reference/vars#conveyance) is
+Then `foo` itself is made an
+[identifier-syntax](https://www.gnu.org/software/guile/manual/html_node/Identifier-Macros.html)
+that expands into `(fluid-ref /lokke/dynamic-foo)`.
+[Binding conveyance](https://clojure.org/reference/vars#conveyance) is
 provided by transferring Guile's `current-dynamic-state`.
 
 This raises a question.  How does a form like `binding` locate the
@@ -102,10 +103,11 @@ original fluid during expansion when it only sees a variable name like
 `*out*` which is bound to the identifier syntax?  Currently, when a
 dynamic variable is defined, the fluid is also associated with the
 module variable holding the identifier-syntax definition via an
-object-property.  That variable is what is imported into other modules
-via say `use-modules`, so `binding` can look up the module-variable
-associated with `*out*` by calling `module-variable`, and can then
-call `(dynamic-fluid var)` on the variable to get the fluid itself.
+[object-property](https://www.gnu.org/software/guile/manual/html_node/Identifier-Macros.html).
+That variable is what is imported into other modules via say
+`use-modules`, so `binding` can look up the module-variable associated
+with `*out*` by calling `module-variable`, and can then call
+`(dynamic-fluid var)` on the variable to get the fluid itself.
 
 Modules and namespaces
 ----------------------
@@ -123,8 +125,8 @@ Modules and namespaces
 - Currently Clojure namespaces can be written in either Clojure or
   Scheme, though some care must be taken with the latter, and
   namespace lookups will load the first suitably located file ending
-  in ".clj" or ".scm" after compiling it with the appropriate compiler
-  with a ".clj" file taking precedence within a given directory.
+  in ".clj" or ".scm" after compiling it with the appropriate compiler.
+  A ".clj" file takes precedence within any given directory.
 
 - Guile's module lookups, of course, only search for ".scm" (by
   default, though there is a way to change that).
@@ -217,8 +219,6 @@ TODO
 - Make sure the .go files are always installed after their sources.
   See guile's am/guilec for an example.
 
-- Automatically update the version (and maybe date) in lokke.1.
-
 - Add `sorted-set-by` and `sorted-map-by` (and then update
   test/clojure-walk)..
 
@@ -230,6 +230,10 @@ TODO
   collections, i.e. Scheme vector and Clojure vector, etc., which
   would also require consideration of Guile's tree-depth diminishing,
   partial hashing.
+
+- Propose upstream support for an option to prevent Guile from ever
+  falling back to an existing (stale) compiled file when compilation
+  fails.  See the Hacking section below for further details.
 
 - File and line numbers are not handled properly everywhere in the
   reader, errors, etc.
@@ -259,16 +263,16 @@ TODO
 
 - Remove vestigial bits from the reader (syntax, synquote, etc.?)
 
+- Create clojure.edn, maybe some suitable File shims, etc.
+
+- Contemplate eval-when -- do we have it where we need it, does it,
+  and/or can it work reasonably from the Clojure side?
+
 - Investigate difference in repl wrt \`(foo \`()) (ignore the markdown
   backslashes).  Along those lines, we may need another syntax-quote
   recursion there (in `quote-empty-lists`), to move () handling to the
   tree-il level, or to add a new /lokke/reader-list, which might end
   up being desirable for other reasons.
-
-- Create clojure.edn, maybe some suitable File shims, etc.
-
-- Contemplate eval-when -- do we have it where we need it, does it,
-  and/or can it work reasonably from the Clojure side?
 
 - Right now Lokke's `try/catch/finally` very closely follows Guile's
   `catch/throw`, which is Guile's more efficient exception handling
@@ -296,10 +300,10 @@ TODO
   https://github.com/clojure/clojurescript/wiki/Exception-Handling
 
   What we have at the moment is more along those lines, in spirit at
-  least, though we do support a small subset of the more common
-  Clojure/JVM behaviors.
+  least, and more like Guile's `with-exception-handler`, though we do
+  support a small subset of the more common Clojure/JVM behaviors.
 
-  See the README for some additional information.
+  See the [README](README.md) for some additional information.
 
 - I'm still not sure whether the way we're handling the compilation
   environment, via default-environment, bootstrap, (lokke user), etc.,
@@ -316,8 +320,8 @@ TODO
   to cause guile to set the reader to lokke universally, which
   breaks (use-modules ...), etc.
 
-- Add a delete operation to fash, use it in hash-map dissoc and
-  hash-set disj, and then remove the not-empty hacks.
+- Add a delete operation to fash, use it in hash-map `dissoc` and
+  hash-set `disj`, and then remove the not-empty hacks.
 
 - Improve hash-map and hash-set seqs, which may require improvements
   to fash or...
@@ -325,9 +329,6 @@ TODO
 - Stop altering `LTDL_LIBRARY_PATH` to load module libs.  Ludovic
   suggested we might add `GUILE_EXTENSIONS_PATH` to guile (hopefully
   with a parallel `%extensions-path`, which would solve the problem.
-
-- Finish fixing up the pr-related functions (prn, pr-str, etc.) and
-  augment the tests.
 
 - What about pr vs print vs str?  On the JVM for example, prn falls
   back to printing the class name pointer and str (.toString), but our
@@ -357,14 +358,9 @@ TODO
 
 - Handle all the FIXMEs...
   
-- Test lazy/infinite seqs.
-
 - Run some large structure memory tests.
 
 - Fix up source-properties, etc.
-
-- Argument lists like (fn [& xs] ...) are not lazy collections,
-  they're handled natively as guile (lambda args ...) etc.
 
 - Do we care about `allow-legacy-syntax-objects?`:
 
@@ -376,14 +372,14 @@ TODO
 Notes
 -----
 
-- A (@...) reference inside a function in a module appeared to be
+- A `(@...)` reference inside a function in a module appeared to be
   unconditionally forcing the creation of the referred module, which
   was empty because it was a clojure module (since guile has no idea
   that a .clj file may produce a guile module).  This caused trouble
   because code that checks for the existence of the module
   (i.e. perhaps ns/require), was fooled.  The resulting error was
 
-    no code for module (lokke ns some thing)
+        no code for module (lokke ns some thing)
 
   We should perhaps double-check, but in that case, adding/using
   `resolve-ns` instead was the preferable solution.
@@ -402,14 +398,15 @@ Hacking
 
 - For now, all EPL licenced code (e.g. code ported from upstream)
   should go in separate namespaces, e.g. (lokke ns clojure walk) or
-  (lokke ns clojure core epl).
+  (lokke ns clojure core epl).  Include any changes in the
+  [License section of the README](README.md#License).
 
 - When defining syntaxes - note the use of (expand ...) functions in
   say (lokke base syntax).  The relevant cases just call a common
   expand(er) to do the work.  That makes sure that the scoping of
   introduced variables will be correct, as compared to what may happen
-  if you just redirect one syntax-case redirect to another via
-  recursive expansion.
+  if you just redirect one syntax-case to another via recursive
+  expansion.
 
 - Guile has no syntax/macro dependency tracking, so changes to a macro
   will not automatically propagate outside the module they're defined
@@ -431,15 +428,19 @@ Hacking
 - For more diagnostic information (and yes, we definitely need
   something more sophisticated...), there are a few debug settings you
   can set to #t, including:
-    - (language lokke spec) debug-lang?
-    - (lokke base syntax) debug-let? debug-fn?
-    - (lokke compile) debug-il?
-    - (lokke reader) debug-reader?
+    - `(language lokke spec)` `debug-lang?`
+    - `(lokke base syntax)` `debug-let?` `debug-fn?`
+    - `(lokke compile)` `debug-il?`
+    - `(lokke reader)` `debug-reader?`
+
+- Functions like `unparse-tree-il` in the `(language tree-il)` module
+  may be helpful when debugging issues related to
+  [Tree-IL](https://www.gnu.org/software/guile/docs/master/guile.html/Tree_002dIL.html).
 
 - If you want to see where a call is coming from:
 
-    (let ((s (make-stack #t)))
-      (display-backtrace s (current-error-port) 0 100))
+        (let ((s (make-stack #t)))
+          (display-backtrace s (current-error-port) 0 100))
 
 - "unexpected syntax in form": might mean there's a missing
   use-modules in the namespace declaring the syntax.
@@ -449,4 +450,4 @@ Hacking
   or GOOPS methods (at least).
 
 - At the moment in some cases we treat keywords much like symbols.
-  cf. the (lokke symbol) module.
+  cf. the `(lokke symbol)` module.
