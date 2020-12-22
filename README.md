@@ -162,8 +162,8 @@ Detailed information about Guile is available in the
 [Guile Reference Manual](https://www.gnu.org/software/guile/manual/guile.html)
 which should also be available via `info guile` if installed.
 
-Comparison with Clojure/JVM (an incomplete list)
-------------------------------------------------
+General comparison with Clojure/JVM
+-----------------------------------
 
 * The implementation should be properly tail-recursive.
 
@@ -183,6 +183,10 @@ Comparison with Clojure/JVM (an incomplete list)
 
 * There are no agents or refs yet.
 
+* At the moment, `format` strings are
+  [Guile `format`](https://www.gnu.org/software/guile/manual/html_node/Formatted-Output.html)
+  strings.
+
 * The default regular expressions are
   [PCRE2](http://www.pcre.org/current/doc/html/pcre2pattern.html)
   regular expressions, and right now, reader literal patterns `#"x"`
@@ -190,9 +194,8 @@ Comparison with Clojure/JVM (an incomplete list)
   time.  That is, they are not compiled at read time, and so are
   re-evaluated.
 
-* At the moment, `format` strings are
-  [Guile format](https://www.gnu.org/software/guile/manual/html_node/Formatted-Output.html)
-  strings.
+* `lokke.io` is analogous `clojure.java.io`, and `lokke.shell` is
+  analogous to `clojure.java.shell`.
 
 * There is some experimental, rudimentary
   [compability with Clojure/JVM exception handling](#exception-handling).
@@ -202,79 +205,40 @@ Comparison with Clojure/JVM (an incomplete list)
   (current-processor-count))` while recent versions of Clojure/JVM
   have an unbounded pool.
 
-* Metadata support is limited: vectors, hash-sets, and hash-maps, vars,
-  namespaces, and atoms are supported, lists and symbols are not.
+* Metadata support is limited: vectors, hash-sets, and hash-maps,
+  vars, namespaces, and atoms are supported, lists and symbols are
+  not.  Often metadata will just be discarded when it's unsupported.
 
 * Persistent lists are currently not `counted?`, so `count` must
   traverse the list.
 
-* In addition to `nil`, the `lokke` command's `-e` option doesn't print
-  unspecified values (Guile's `*unspecified*`).
+* [Dynamic variables](#dynamic-variables-and-binding) and `binding`
+  behave a bit differently, and they must be defined via `defdyn`.
 
-* The reader functions, `read`, `read-string`, etc. return the rnrs
-  end-of-file object, which can be identified with
-  `guile.guile/eof-object?`, rather than throwing an exception.
-
-* At the moment, dynamic variables must be declared via `(defdyn name
-  init-expr)` rather than via metadata, and they are always inherited
-  by sub-threads, unlike on the JVM, where only some forms provide
-  [binding conveyance](https://clojure.org/reference/vars#conveyance).
-  You can define dynamic variables without conveyance via
-  `defdynloc`.
-
-* Whether or not `bindings` are established in parallel is undefined.
-
-* Multiple `:as` aliases are allowed in destructuring forms.
-
-* The numeric tower is Guile's numeric tower, backed by
-  [GMP](https://gmplib.org/), and there is currently no distinction
-  between functions like `+'` and `+`, or `*'` and `*`, etc.
+* The numeric tower is
+  [Guile's](https://www.gnu.org/software/guile/manual/html_node/Numerical-Tower.html),
+  backed by [GMP](https://gmplib.org/), and there is currently no
+  distinction between functions like `+'` and `+`, or `*'` and `*`,
+  etc.
 
 * There are no explicit bigints or BigDecimal (bigint, decimal?,
   bigdec, 7N, 4.2M, etc.), but of course arbitrarily large integers
   are supported.
 
-* The integer syntax does not support BASErNUM bases over 16.
+* The integer syntax does not yet support BASErNUM bases over 16.
 
-* `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
-  and `mod`.
+* Rather than throwing an exception, the reader functions, `read`,
+  `read-string`, etc. return the rnrs end-of-file object, which can be
+  identified with `guile.guile/eof-object?`.
 
-* Many of the coercions haven't been included: `float` `double` ...
+* There are some differences and limitations with respect to the
+  handling of [comparisons, hashes, and equality](#comparisons-hashing-and-equality).
 
-* Number is taken to mean <number> (i.e. objects satisfying `number?`).
+* `fn` condition maps (i.e. `:pre` `:post`, etc.) are currently ignored.
 
-* `lokke.io` is the parallel of `clojure.java.io`.
-
-* `lokke.shell` is the parallel of `clojure.java.shell`.
-
-* `compare` sorts all symbols lexically, without any special
-  treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
-  might eventually change for at least Clojure side.
-
-* The `compare` ordering of refs is unspecified; it is not the order
-  of their creation.
-
-* Currently, `hash` does not produce values *consistent* with `=`
-  across Clojure and non-clojure collections, e.g. `(hash [1 2 3])` is
-  not likely to be equal to `(hash (guile.guile/vector 1 2 3))`.
-  Although as an exception, proper Scheme lists should be handled
-  consistently right now, given the way seqs are implemented via
-  `<pair>`s.
-
-* Currently, `hash` values are not cached.  At the moment, they're
-  recomputed in full whenever requested, though that's likely to
-  change for some types like `hash-map`, `hash-set`, and `vector`.
-
-* At the moment, various functions may handle Scheme vectors as they
-  would Clojure vectors and Scheme lists as the would clojure lists,
-  e.g. some collection and sequence operations, etc.
-
-* There is no support for `fn` condition maps (i.e. `:pre` `:post`,
-  etc.).
-
-* `deftest` is very little more than a `do` right now, i.e. it
-  executes immediately, there's no support for `*load-tests*`, and it
-  doesn't create a test function to run later.
+* `deftest` is little more than a `do`, i.e. it executes immediately,
+  there's no support for `*load-tests*`, and it doesn't create a test
+  function to run later.
 
 * For now, types are implemented via
   [GOOPS](https://www.gnu.org/software/guile/manual/html_node/GOOPS.html)
@@ -444,6 +408,57 @@ resource management.  For example:
                    ...]
         true)
 ```
+
+Dynamic variables and binding
+-----------------------------
+
+At the moment, dynamic variables must be declared via `(defdyn name
+init-expr)` rather than via metadata, and they are always inherited by
+sub-threads, unlike on the JVM, where only some forms provide [binding
+conveyance](https://clojure.org/reference/vars#conveyance).  You can
+define dynamic variables without conveyance via `defdynloc`.
+
+Whether or not bindings are established in parallel is undefined.
+
+Comparisons, hashing, and equality
+----------------------------------
+
+* As on the JVM, `hash` does not produce values *consistent* with `=`
+  across Clojure and non-clojure collections, e.g. `(hash [1 2 3])` is
+  not likely to be equal to `(hash (guile.guile/vector 1 2 3))`.
+  Although as an exception, proper Scheme lists should be handled
+  consistently right now, given the way seqs are implemented via
+  Scheme `<pair>`s.
+
+* Currently, `hash` values are not cached.  At the moment, they're
+  recomputed in full whenever requested, though that's likely to
+  change for some types like `hash-map`, `hash-set`, and `vector`.
+
+* `compare` sorts all symbols lexically, without any special
+  treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
+  might eventually change for at least Clojure side.
+
+* The `compare` ordering of refs is unspecified; it is not the order
+  of their creation.
+
+Additional differences from Clojure/JVM
+---------------------------------------
+
+* In addition to `nil`, the `lokke` command's `-e` option doesn't print
+  unspecified values (Guile's `*unspecified*`).
+
+* Multiple `:as` aliases are allowed in destructuring forms.
+
+* `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
+  and `mod`.
+
+* Many of the coercions haven't been included: `float` `double` ...
+
+* Number is taken to mean <number> (i.e. objects satisfying `number?`).
+
+* At the moment, various functions may handle Scheme vectors as they
+  would Clojure vectors and Scheme lists as the would clojure lists,
+  e.g. some collection and sequence operations, etc.
 
 Known issues
 ------------
