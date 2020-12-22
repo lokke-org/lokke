@@ -169,32 +169,60 @@ Comparison with Clojure/JVM (an incomplete list)
 
 * Argument evaluation order is unspecified.
 
+* Clojure namespaces may be implemented in either Clojure (.clj) or
+  Scheme (.scm).
+
+* Clojure namespaces *are* Guile modules with the entire Clojure
+  namespace tree situated under `(lokke ns)` in the Guile module
+  tree.
+
 * Lokke's reader conditional identifier is `:cljl`, for example,
-  `#?(:cljl x)`.
+  `#?(:cljl x)`, and at the moment reader conditionals are always
+  supported by the reader functions and are not restricted to `.cljc`
+  files.
+
+* There are no agents or refs yet.
 
 * The default regular expressions are
   [PCRE2](http://www.pcre.org/current/doc/html/pcre2pattern.html)
-  regular expressions.
+  regular expressions, and right now, reader literal patterns `#"x"`
+  currently just translate to an equivalent `(re-pattern ...)` at read
+  time.  That is, they are not compiled at read time, and so are
+  re-evaluated.
 
 * At the moment, `format` strings are
   [Guile format](https://www.gnu.org/software/guile/manual/html_node/Formatted-Output.html)
   strings.
 
-* Reader literal patterns `#"x"` currently just translate to an
-  equivalent `(re-pattern ...)` at read time.  That is, they are not
-  compiled at read time, and so are re-evaluated.
-
-* At the moment reader conditionals are always supported by the reader
-  functions and are not restricted to `.cljc` files.
-
-* The reader functions, `read`, `read-string`, etc. return the rnrs
-  end-of-file object, which can be identified with
-  `guile.guile/eof-object?`, rather than throwing an exception.
+* There is some experimental, rudimentary
+  [compability with Clojure/JVM exception handling](#exception-handling).
 
 * Currently, a Lokke `future` is a Guile `<future>`, which means that
   it draws from a fixed-size thread pool of size `(dec
   (current-processor-count))` while recent versions of Clojure/JVM
   have an unbounded pool.
+
+* Metadata support is limited: vectors, hash-sets, and hash-maps, vars,
+  namespaces, and atoms are supported, lists and symbols are not.
+
+* Persistent lists are currently not `counted?`, so `count` must
+  traverse the list.
+
+* In addition to `nil`, the `lokke` command's `-e` option doesn't print
+  unspecified values (Guile's `*unspecified*`).
+
+* The reader functions, `read`, `read-string`, etc. return the rnrs
+  end-of-file object, which can be identified with
+  `guile.guile/eof-object?`, rather than throwing an exception.
+
+* At the moment, dynamic variables must be declared via `(defdyn name
+  init-expr)` rather than via metadata, and they are always inherited
+  by sub-threads, unlike on the JVM, where only some forms provide
+  [binding conveyance](https://clojure.org/reference/vars#conveyance).
+  You can define dynamic variables without conveyance via
+  `defdynloc`.
+
+* Whether or not `bindings` are established in parallel is undefined.
 
 * Multiple `:as` aliases are allowed in destructuring forms.
 
@@ -202,41 +230,22 @@ Comparison with Clojure/JVM (an incomplete list)
   [GMP](https://gmplib.org/), and there is currently no distinction
   between functions like `+'` and `+`, or `*'` and `*`, etc.
 
+* There are no explicit bigints or BigDecimal (bigint, decimal?,
+  bigdec, 7N, 4.2M, etc.), but of course arbitrarily large integers
+  are supported.
+
+* The integer syntax does not support BASErNUM bases over 16.
+
 * `quotient`, `remainder`, and `modulus` are Scheme's `quot`, `rem`,
   and `mod`.
 
+* Many of the coercions haven't been included: `float` `double` ...
+
 * Number is taken to mean <number> (i.e. objects satisfying `number?`).
-
-* Clojure namespaces may be implemented in either Clojure (.clj) or
-  Scheme (.scm).
-
-* Clojure namespaces *are* Guile modules (which have very comparable
-  semantics), and the entire Clojure namespace tree is situatied under
-  `(lokke ns)` in the Guile module tree, i.e. `clojure.string` is
-  implemented by the `(lokke ns clojure string)` module, and
-  `clojure.string/join` is exactly equivalent to a Guile reference to
-  the `join` function in the `(lokke ns clojure string)` module.
-
-* All clojure namspaces starting with `guile.` represent direct
-  references to the root of the guile module tree.  For example,
-  `(guile.guile/current-time)`, `(guile.srfi.srfi-19/current-date)`,
-  or `(guile.guile/delete-file ...)`.  More specifically, they provide
-  a convenient way to refer to modules that are not under a `(lokke ns
-  ...)` prefix, and of course you can use them in forms like `ns` and
-  `require`.
-
-* Metadata support is limited: vectors, hash-sets, and hash-maps, vars,
-  namespaces, and atoms are supported, lists and symbols are not.
-
-* In addition to `nil`, the `lokke` command's `-e` option doesn't print
-  unspecified values (Guile's `*unspecified*`).
 
 * `lokke.io` is the parallel of `clojure.java.io`.
 
 * `lokke.shell` is the parallel of `clojure.java.shell`.
-
-* Persistent lists are currently not `counted?`, so `count` must
-  traverse the list.
 
 * `compare` sorts all symbols lexically, without any special
   treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
@@ -256,44 +265,16 @@ Comparison with Clojure/JVM (an incomplete list)
   recomputed in full whenever requested, though that's likely to
   change for some types like `hash-map`, `hash-set`, and `vector`.
 
-* `(alias ...)` calls only take full effect at the end of the
-  enclosing top level form (because at the moment, the compiler works
-  from a snapshot of the alias map, cf. `rewrite-il-calls`).
-
-* At the moment, dynamic variables must be declared via `(defdyn name
-  init-expr)` rather than via metadata, and they are always inherited
-  by sub-threads, unlike on the JVM, where only some forms provide
-  [binding conveyance](https://clojure.org/reference/vars#conveyance).
-  You can define dynamic variables without conveyance via
-  `defdynloc`.
-
-* Whether or not `bindings` are established in parallel is undefined.
-
-* Many of the coercions haven't been included: `float` `double` ...
-
 * At the moment, various functions may handle Scheme vectors as they
-  would Clojure vectors, e.g. some collection and sequence operations,
-  etc.
+  would Clojure vectors and Scheme lists as the would clojure lists,
+  e.g. some collection and sequence operations, etc.
 
-* At the moment, various functions may handle Scheme lists as they
-  would Clojure lists, e.g. some collection and sequence operations,
-  etc.
-
-* No agents or refs yet.
-
-* No support for `fn` condition maps yet (i.e. `:pre` `:post`, etc.).
+* There is no support for `fn` condition maps (i.e. `:pre` `:post`,
+  etc.).
 
 * `deftest` is very little more than a `do` right now, i.e. it
   executes immediately, there's no support for `*load-tests*`, and it
   doesn't create a test function to run later.
-
-* No BigDecimal (decimal?, bigdec, etc.).
-
-* No support for BASErNUM bases over 16.
-
-* No bigint syntax, e.g. 7N, nor explicit bigints
-
-* No BigDecimal syntax, e.g. 4.2M
 
 * For now, types are implemented via
   [GOOPS](https://www.gnu.org/software/guile/manual/html_node/GOOPS.html)
@@ -301,88 +282,6 @@ Comparison with Clojure/JVM (an incomplete list)
   may eventually pursue immutable GOOPS classes in Guile, but of
   course you can modify anything on the JVM too, if you really set
   your mind to it.
-
-* There is experimental support for `try/catch/finally` which maps
-  very closely to Guile's underlying `catch/throw`, meaning that in
-  addition to catching an `ex-info` exception via `(catch
-  ExceptionInfo ex ...)`, you can also catch Guile exceptions if you
-  know the appropriate tag (symbol) with `(catch 'something ex ...)`.
-
-  When an exception is caught, `ex` will be bound a Scheme list of
-  exactly the arguments that were passed to Guile's throw.  For
-  `ex-info` exceptions, it will currently be a list starting with the
-  (uninterned) tag that is bound to `ExceptionInfo`, which is why
-  `(catch ExceptionInfo ex ...)` (no quote) works.  Access the
-  elements of Lokke-specific exceptions via the normal accessors:
-  `ex-message`, `ex-data`, etc.  The `lokke.exception` namespace also
-  provides bindings like `ex-info?`, `ex-cause`, etc.
-
-  Note however, that
-  [changes introduced in Guile 3.0](https://www.gnu.org/software/guile/manual/html_node/Exceptions.html#Exceptions)
-  may prompt a rework, perhaps to based our exception handling on
-  `raise-exception`, `with-exception-handler`, and exception objects.
-  Consider the current support very unstable.
-
-* Guile exception keys that map to `&error` in Guile 3.0 and above are
-  currently caught as `Error`s, even with Guile 2.2, and even though
-  we don't use the newer style exception objects yet.
-
-* Lokke's exceptions (`ExceptionInfo`, `Throwable`, etc.) have
-  experimental support for suppressing exceptions, a concept also
-  found on the JVM and in Python, though the details vary.  If an
-  exception is thrown from within a `finally` block, and there was a
-  pending Lokke exception, the exception that was thrown from the
-  `finally` block will be added to the exception as a suppressed
-  exception, and the Lokke exception will be rethrown.  The collection
-  of suppressed exceptions can be retrieved with the `ex-suppressed`
-  function provided by `lokke.exception`.  A suppressed exception can
-  be added to an `ex-info` exception using the `add-suppressed`
-  function in that same namespace.  Note that `add-suppressed` is
-  persistent, returning a new `ex-info` exception that may or may not
-  share structure with the original, rather than mutating the
-  original.
-
-  As an example:
-  ```clojure
-    (try
-      (print-masterpiece)  ; Throws lp0-on-fire
-      (finally
-        (turn-off-light)))  ; Throws switch-broken
-  ```
-  At this point, without suppression you'd know that you need to fix
-  your light switch, but have no idea that your printer is on fire.
-  But with suppression, that information is preserved:
-  ```clojure
-    (try
-      (print-masterpiece)  ; Throws lp0-on-fire
-      (finally
-        (turn-off-light)))  ; Throws lp0-on-fire, with switch-broken
-                            ; available via (ex-suppressed lp0-on-fire).
-  ```
-  At least for now, if the pending exception is not a Lokke
-  exception, then there will be no suppression, and the original
-  exception will be lost (as is the case for Java and Clojure/JVM).
-
-  The JVM provides a [related precedent](https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#addSuppressed-java.lang.Throwable-]),
-  though it only applies to `try-with-resources` constructs.
-
-  See DESIGN for further details.
-- `with-final` is available in `lokke.exception` for more flexible
-  resource management.  For example:
-  ```clojure
-    (defn start-server [...]
-      (with-final [foo (open-foo ...) :error close
-                   bar (connect-bar ...) :error disconnect
-                   ...]
-        ...do many things...
-        {:foo foo :bar bar ...}))
-
-    (defn stop-server [info]
-      (with-final [_ (:foo info) :always close
-                   _ (:bar info) :always disconnect
-                   ...]
-        true)
-  ```
 
 On the Scheme side
 ------------------
@@ -428,7 +327,125 @@ On the Scheme side
 * We prefer to format module declarations along the same lines
   suggested here: https://stuartsierra.com/2016/clojure-how-to-ns.html
 
-Known Issues
+
+Clojure namespaces and Guile modules
+------------------------------------
+
+Clojure namespaces *are* Guile modules (which have very comparable
+semantics), and the entire Clojure namespace tree is situatied under
+`(lokke ns)` in the Guile module tree, i.e. `clojure.string` is
+implemented by the `(lokke ns clojure string)` module, and
+`clojure.string/join` is exactly equivalent to a Guile reference to
+the `join` function in the `(lokke ns clojure string)` module.
+
+All clojure namspaces starting with `guile.` represent direct
+references to the root of the guile module tree.  For example,
+`(guile.guile/current-time)`, `(guile.srfi.srfi-19/current-date)`, or
+`(guile.guile/delete-file ...)`.  More specifically, they provide a
+convenient way to refer to modules that are not under a `(lokke ns
+...)` prefix, and of course you can use them in forms like `ns` and
+`require`.
+
+`(alias ...)` calls only take full effect at the end of the
+enclosing top level form (because at the moment, the compiler works
+from a snapshot of the alias map, cf. `rewrite-il-calls`).
+
+Exception handling
+------------------
+
+There is experimental support for `try/catch/finally` which maps very
+closely to Guile's underlying `catch/throw`, meaning that in addition
+to catching an `ex-info` exception via `(catch ExceptionInfo ex ...)`,
+you can also catch Guile exceptions if you know the appropriate tag
+(symbol) with `(catch 'something ex ...)`.
+
+When an exception is caught, `ex` will be bound a Scheme list of
+exactly the arguments that were passed to Guile's throw.  For
+`ex-info` exceptions, it will currently be a list starting with the
+(uninterned) tag that is bound to `ExceptionInfo`, which is why
+`(catch ExceptionInfo ex ...)` (no quote) works.  Access the elements
+of Lokke-specific exceptions via the normal accessors: `ex-message`,
+`ex-data`, etc.  The `lokke.exception` namespace also provides
+bindings like `ex-info?`, `ex-cause`, etc.
+
+Note however, that
+[changes introduced in Guile 3.0](https://www.gnu.org/software/guile/manual/html_node/Exceptions.html#Exceptions)
+may prompt a rework, perhaps to based our exception handling on
+`raise-exception`, `with-exception-handler`, and exception objects.
+Consider the current support very unstable.
+
+Guile exception keys that map to `&error` in Guile 3.0 and above are
+currently caught as `Error`s, even with Guile 2.2, and even though we
+don't use the newer style exception objects yet.
+
+### Exception suppression
+
+Lokke's exceptions (`ExceptionInfo`, `Throwable`, etc.) have
+experimental support for suppressing exceptions, a concept also found
+on the JVM and in Python, though the details vary.  If an exception is
+thrown from within a `finally` block, and there was a pending Lokke
+exception, the exception that was thrown from the `finally` block will
+be added to the exception as a suppressed exception, and the Lokke
+exception will be rethrown.  The collection of suppressed exceptions
+can be retrieved with the `ex-suppressed` function provided by
+`lokke.exception`.  A suppressed exception can be added to an
+`ex-info` exception using the `add-suppressed` function in that same
+namespace.  Note that `add-suppressed` is persistent, returning a new
+`ex-info` exception that may or may not share structure with the
+original, rather than mutating the original.
+
+As an example:
+
+```clojure
+    (try
+      (print-masterpiece)  ; Throws lp0-on-fire
+      (finally
+        (turn-off-light)))  ; Throws switch-broken
+```
+
+At this point, without suppression you'd know that you need to fix
+your light switch, but have no idea that your printer is on fire.  But
+with suppression, that information is preserved:
+
+```clojure
+    (try
+      (print-masterpiece)  ; Throws lp0-on-fire
+      (finally
+        (turn-off-light)))  ; Throws lp0-on-fire, with switch-broken
+                            ; available via (ex-suppressed lp0-on-fire).
+```
+
+At least for now, if the pending exception is not a Lokke exception,
+then there will be no suppression, and the original exception will be
+lost (as is the case for Java and Clojure/JVM).
+
+The JVM provides a
+[related precedent](https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#addSuppressed-java.lang.Throwable-]),
+though it only applies to `try-with-resources` constructs.
+
+See DESIGN for further details.
+
+### with-final
+
+`with-final` is provided by `lokke.exception` for more flexible
+resource management.  For example:
+
+```clojure
+    (defn start-server [...]
+      (with-final [foo (open-foo ...) :error close
+                   bar (connect-bar ...) :error disconnect
+                   ...]
+        ...do many things...
+        {:foo foo :bar bar ...}))
+
+    (defn stop-server [info]
+      (with-final [_ (:foo info) :always close
+                   _ (:bar info) :always disconnect
+                   ...]
+        true)
+```
+
+Known issues
 ------------
 
 - *Many* things are still broken or incomplete.
