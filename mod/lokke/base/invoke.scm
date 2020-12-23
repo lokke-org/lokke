@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -15,10 +15,6 @@
   #:use-module (oop goops)
   #:export (invoke)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(define-method (invoke f . args)
-  (error (format #f "No invoke method for ~s:" (class-of f))
-         f))
 
 (define-method (invoke (f <procedure>) . args)
   (apply f args))

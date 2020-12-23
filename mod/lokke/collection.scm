@@ -226,6 +226,9 @@
 (define-method (invoke (key <keyword>) map) (get map key))
 (define-method (invoke (key <keyword>) map not-found) (get map key not-found))
 
+(define-method (invoke (sym <symbol>) map) (get map sym))
+(define-method (invoke (sym <symbol>) map not-found) (get map sym not-found))
+
 (define-method (reversible? x) #f)
 
 ;; FIXME: match https://clojure.org/guides/equality#_summary as appropriate

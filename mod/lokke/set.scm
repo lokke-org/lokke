@@ -63,5 +63,5 @@
        (every? (lambda (elt) (contains? y elt))
                (seq x))))
 
-(define-method (invoke (s <set>) item)
-  (get s item))
+(define-method (invoke (s <set>) item) (get s item))
+(define-method (invoke (s <set>) item not-found) (get s item not-found))

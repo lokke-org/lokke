@@ -16,6 +16,7 @@
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((lokke base collection) #:select (define-nth-seq))
+  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke base collection)
@@ -86,6 +87,7 @@
                get
                into-array
                into-list
+               invoke
                meta
                nth
                peek
@@ -177,6 +179,9 @@
 (define-method (nth (v <lokke-vector>) i) (lokke-vector-ref v i))
 (define-method (nth (v <lokke-vector>) i not-found)
   (lokke-vector-ref v i not-found))
+
+(define-method (invoke (v <lokke-vector>) (i <integer>))
+  (lokke-vector-ref v i))
 
 (define-method (get (v <lokke-vector>) i)
   (if (and (integer? i) (> i 0))

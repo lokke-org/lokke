@@ -28,7 +28,6 @@
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((ice-9 q) #:select (enq! deq! make-q q-length))
-  #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= compare hash))
@@ -99,7 +98,7 @@
             update
             update-in
             vals)
-  #:re-export (clj= invoke)
+  #:re-export (clj=)
   #:replace (apply assoc first list? merge peek reverse sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -320,9 +319,6 @@
       (if s
           (if (= i n) (first s) (loop (1+ i) (next s)))
           not-found))))
-
-(define-method (invoke (s <sequential>) (i <integer>))
-  (nth s i))
 
 
 (define-class <seq> (<sequential>))

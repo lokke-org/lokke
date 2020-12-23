@@ -147,6 +147,29 @@
   (is (= nil (get {1 2} 3)))
   (is (= :something (get {1 2} 3 :something))))
 
+(testing "invoke"
+  (is (= 1 ([1 2 3] 0)))
+  (is (= nil (#{} :x)))
+  (is (= :y (#{} :x :y)))
+  (is (= :x (#{:x} :x)))
+  (is (= nil ({} :x)))
+  (is (= :z ({:x :y} :nope :z)))
+  (is (= :y ({:x :y} :x)))
+
+  (is (= nil (:x #{})))
+  (is (= :y (:x #{} :y)))
+  (is (= :x (:x #{:x})))
+  (is (= nil (:x {})))
+  (is (= :z (:nope {:x :y} :z)))
+  (is (= :y (:x {:x :y})))
+
+  (is (= nil ('x #{})))
+  (is (= :y ('x #{} :y)))
+  (is (= 'x ('x #{'x})))
+  (is (= nil ('x {})))
+  (is (= :z ('nope {:x :y} :z)))
+  (is (= :y ('x {'x :y}))))
+
 (testing "take"
   (is (= [] (take 0 [])))
   (is (= [] (take 0 [1])))
