@@ -242,10 +242,11 @@
      not-found)))
 
 (define-method (seq (m <hash-map>))
-  (let ((item (some-item (map-fm m))))
-    (if (eq? item not-found)
-        #nil
-        (lazy-seq (cons item (dissoc m (first item)))))))
+  (let loop ((m m))
+    (let ((item (some-item (map-fm m))))
+      (if (eq? item not-found)
+          #nil
+          (cons item (lazy-seq (loop (dissoc m (first item)))))))))
 
 (define-method (seqable? (b <hash-map>)) #t)
 

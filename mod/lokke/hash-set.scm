@@ -209,10 +209,11 @@
      not-found)))
 
 (define-method (seq (s <hash-set>))
-  (let ((item (some-item (set-fm s))))
-    (if (eq? item not-found)
-        #nil
-        (lazy-seq (cons item (disj s item))))))
+  (let loop ((s s))
+    (let ((item (some-item (set-fm s))))
+      (if (eq? item not-found)
+          #nil
+          (cons item (lazy-seq (loop (disj s item))))))))
 
 (define-method (seqable? (b <hash-set>)) #t)
 
