@@ -471,12 +471,10 @@
   (lokke-vector (take-while pred coll) (drop-while pred coll)))
 
 (define (cycle coll)
-  (let ((s (seq coll)))
-    (if (not s)
-        '()
-        (cons (first s)
-              (let loop ((s (rest s)))
-                (lazy-seq
-                 (if-let (s (seq s))
-                   (cons (first s) (loop (rest s)))
-                   (loop coll))))))))
+  (if (seq coll)
+    (let loop ((s coll))
+      (lazy-seq
+       (if-let (s (seq s))
+         (cons (first s) (loop (rest s)))
+         (cycle coll))))
+    '()))
