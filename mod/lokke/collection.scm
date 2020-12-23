@@ -482,13 +482,6 @@
                    (loop coll))))))))
 
 ;; FIXME: depth diminishing tree-structured sampling like guile's hash.c?
-;; FIXME: sorted-map and sorted-set don't need the sort
-
-(define-method (hash (x <set>))
-  (let ((hashes (mapv hash x)))
-    (reduce (lambda (result x) (logxor result (hash x)))
-            (hash (count hashes))
-            (sort hashes))))
 
 (define-method (hash (x <map>))
   ;; Currently aliases [[w x] [y z] ...]

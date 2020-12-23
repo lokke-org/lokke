@@ -42,6 +42,8 @@
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module ((lokke set) #:select (<set>))
   #:use-module (oop goops)
+  #:use-module ((rnrs sorting) #:select (vector-sort!))
+  #:use-module ((srfi srfi-43) #:select (vector-fold))
   #:export (<hash-set>
             disj
             foo
@@ -54,6 +56,7 @@
                count
                empty
                get
+               hash
                into
                meta
                pr-approachable
@@ -218,5 +221,21 @@
 (define-method (seqable? (b <hash-set>)) #t)
 
 (define-method (rest (s <hash-set>)) (rest (seq s)))
+
+;; FIXME: depth diminishing tree-structured sampling like guile's hash.c?
+
+(define-method (hash (x <hash-set>))
+  (let* ((m (set-fm x))
+         (n (fash-size m))
+         (hashes (make-vector n)))
+    (fash-fold (lambda (k v i)
+                 (vector-set! hashes i (hash k))
+                 (1+ i))
+               m
+               0)
+    (vector-sort! < hashes)
+    (vector-fold (lambda (i result x) (logxor result (hash x)))
+                 (hash n)
+                 hashes)))
 
 ;; FIXME: custom merge?
