@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or modify
 ;;; it under the terms of (at your option) either of the following two
@@ -13,6 +13,7 @@
 
 (define-module (lokke set)
   #:version (0 0 0)
+  #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base collection)
                 #:select (<coll>
                           contains?
@@ -20,8 +21,9 @@
                           every?
                           get
                           seq))
-  #:use-module ((lokke base invoke) #:select (invoke))
+  #:use-module ((lokke base invoke) #:select (apply invoke))
   #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:export (<set>
             difference
@@ -39,6 +41,8 @@
             union)
   #:re-export (clj= invoke)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'apply)
 
 (define-class <set> (<coll>))
 (define-generic difference)
@@ -65,3 +69,8 @@
 
 (define-method (invoke (s <set>) item) (get s item))
 (define-method (invoke (s <set>) item not-found) (get s item not-found))
+
+(define-method (apply (s <set>) . args)
+  (match args
+    (((item)) (get s item))
+    ((item (not-found)) (get s item not-found))))

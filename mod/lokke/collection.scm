@@ -15,6 +15,7 @@
   #:version (0 0 0)
   #:use-module ((guile) #:hide (peek))
   #:use-module ((ice-9 format) #:select (format))
+  #:use-module ((ice-9 match) #:select (match))
   #:use-module (oop goops)
   #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
   #:use-module ((srfi srfi-1) #:select (circular-list? proper-list?))
@@ -226,8 +227,18 @@
 (define-method (invoke (key <keyword>) map) (get map key))
 (define-method (invoke (key <keyword>) map not-found) (get map key not-found))
 
+(define-method (apply (k <keyword>) . args)
+  (match args
+    (((x)) (get x k))
+    ((x (not-found)) (get x k not-found))))
+
 (define-method (invoke (sym <symbol>) map) (get map sym))
 (define-method (invoke (sym <symbol>) map not-found) (get map sym not-found))
+
+(define-method (apply (s <symbol>) . args)
+  (match args
+    (((x)) (get x s))
+    ((x (not-found)) (get x s not-found))))
 
 (define-method (reversible? x) #f)
 

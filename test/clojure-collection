@@ -170,6 +170,29 @@
   (is (= :z ('nope {:x :y} :z)))
   (is (= :y ('x {'x :y}))))
 
+(testing "apply"
+  (is (= 1 (apply [1 2 3] '(0))))
+  (is (= nil (apply #{} '(:x))))
+  (is (= :y (apply #{} :x '(:y))))
+  (is (= :x (apply #{:x} '(:x))))
+  (is (= nil (apply {} '(:x))))
+  (is (= :z (apply {:x :y} :nope '(:z))))
+  (is (= :y (apply {:x :y} '(:x))))
+
+  (is (= nil (apply :x (list #{}))))
+  (is (= :y (apply :x #{} '(:y))))
+  (is (= :x (apply :x (list #{:x}))))
+  (is (= nil (apply :x (list {}))))
+  (is (= :z (apply :nope {:x :y} '(:z))))
+  (is (= :y (apply :x (list {:x :y}))))
+
+  (is (= nil (apply 'x (list #{}))))
+  (is (= :y (apply 'x #{} '(:y))))
+  (is (= 'x (apply 'x (list #{'x}))))
+  (is (= nil (apply 'x (list {}))))
+  (is (= :z (apply 'nope {:x :y} '(:z))))
+  (is (= :y (apply 'x (list {'x :y})))))
+
 (testing "take"
   (is (= [] (take 0 [])))
   (is (= [] (take 0 [1])))

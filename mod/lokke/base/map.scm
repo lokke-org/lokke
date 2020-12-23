@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -12,15 +12,19 @@
 ;;;      option) any later version.
 
 (define-module (lokke base map)
+  #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base collection) #:select (<coll> count every? get seq))
-  #:use-module ((lokke base invoke) #:select (invoke))
+  #:use-module ((lokke base invoke) #:select (apply invoke))
   #:use-module ((lokke base map-entry) #:select (key val))
   #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:export (<map> map?)
   #:re-export (clj= get invoke)
   #:replace (assoc)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! 'apply)
 
 ;; Define the <map> basics here.  They can't go in anything that
 ;; depends on (lokke collection) because it depends on (lokke base
@@ -41,5 +45,10 @@
                          (val entry)))
                (seq x))))
 
-(define-method (invoke (m <map>) . args)
-  (apply get m args))
+(define-method (invoke (s <map>) item) (get s item))
+(define-method (invoke (s <map>) item not-found) (get s item not-found))
+
+(define-method (apply (s <map>) . args)
+  (match args
+    (((item)) (get s item))
+    ((item (not-found)) (get s item not-found))))

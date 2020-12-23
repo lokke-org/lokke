@@ -12,9 +12,16 @@
 ;;;      option) any later version.
 
 (define-module (lokke base invoke)
+  #:use-module ((guile) #:select ((apply . %scm-apply)))
   #:use-module (oop goops)
   #:export (invoke)
+  #:replace (apply)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+;; FIXME: this base case will be clobbered later by (lokke base collection)
+(define apply %scm-apply)
+
+(define-generic apply)
 
 (define-method (invoke (f <procedure>) . args)
   (apply f args))

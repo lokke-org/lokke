@@ -28,6 +28,7 @@
                 :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((ice-9 q) #:select (enq! deq! make-q q-length))
+  #:use-module ((lokke base invoke) #:select (apply))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= compare hash))
@@ -99,10 +100,10 @@
             update-in
             vals)
   #:re-export (clj=)
-  #:replace (apply assoc first list? merge peek reverse sort)
+  #:replace (assoc first list? merge peek reverse sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'cons 'hash)
+(re-export-and-replace! 'apply 'cons 'hash)
 
 ;; FIXME: should these implmentations of rest actually be next?
 
@@ -149,7 +150,12 @@
           (loop (next s) (%scm-cons (first s) result))
           (reverse! result)))))
 
-(define (apply f . args)
+(define-method (apply f . args)
+  ;; Handle cases where we end up with (apply f (cons thing lazy-seq))
+  ;; i.e. lazy seqs are currently generated as improper lists.  This
+  ;; is the "real" apply base case, replacing the one established in
+  ;; (lokke base invoke).
+  ;;
   ;; FIXME: tolerable?
   (if (null? args)
       (f)

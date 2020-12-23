@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -12,11 +12,12 @@
 ;;;      option) any later version.
 
 (define-module (lokke vector)
+  #:use-module ((guile) #:select ((apply . %scm-apply)))
   #:use-module ((guile) #:hide (peek))
-  #:use-module ((ice-9 match) #:select (match-lambda*))
+  #:use-module ((ice-9 match) #:select (match match-lambda*))
   #:use-module (oop goops)
   #:use-module ((lokke base collection) #:select (define-nth-seq))
-  #:use-module ((lokke base invoke) #:select (invoke))
+  #:use-module ((lokke base invoke) #:select (apply invoke))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke base collection)
@@ -102,7 +103,7 @@
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'assoc)
+(re-export-and-replace! 'apply 'assoc)
 
 
 ;;; <lokke-vector>
@@ -168,7 +169,7 @@
 
 ;; FIXME: here and update -- there is no zero arg version of either...
 (define-method (assoc (v <lokke-vector>) . indexes-and-values)
-  (apply lokke-vector-assoc v indexes-and-values))
+  (%scm-apply lokke-vector-assoc v indexes-and-values))
 
 (define (valid-index? v i)
   (and (integer? i) (>= i 0) (< i (lokke-vector-length v))))
@@ -182,6 +183,10 @@
 
 (define-method (invoke (v <lokke-vector>) (i <integer>))
   (lokke-vector-ref v i))
+
+(define-method (apply (v <lokke-vector>) . args)
+  (match args
+    (((i)) (lokke-vector-ref v i))))
 
 (define-method (get (v <lokke-vector>) i)
   (if (and (integer? i) (> i 0))
@@ -199,7 +204,7 @@
       #nil))
 
 (define-method (update (v <lokke-vector>) (i <integer>) f . args)
-  (lokke-vector-assoc v i (apply f (lokke-vector-ref v i #nil) args)))
+  (lokke-vector-assoc v i (%scm-apply f (lokke-vector-ref v i #nil) args)))
 
 
 (define-nth-seq <lokke-vector-seq>
@@ -350,7 +355,7 @@
                 (cond
                  ((null? rst) result)
                  ((>= i vlen)
-                  (apply lokke-vector-conj result rst))
+                  (%scm-apply lokke-vector-conj result rst))
                  (else
                   (loop (1+ i)
                         (cdr rst)
@@ -371,10 +376,10 @@
 
 (define (fold-indexed f init . lists)
   (let ((i -1))
-    (apply fold (lambda args
-                  (set! i (1+ i))
-                  (apply f i args))
-           init lists)))
+    (%scm-apply fold (lambda args
+                       (set! i (1+ i))
+                       (%scm-apply f i args))
+                init lists)))
 
 (define-method (assoc (v <subvec>) . indexes-and-values)
   ;; FIXME: optimize a bit?
@@ -394,7 +399,8 @@
                             indexes-and-values)))
     (clone-subvec v
                   #:length (+ svlen appended)
-                  #:vec (apply lokke-vector-assoc (subvec-vec v) (reverse! ivs)))))
+                  #:vec (%scm-apply lokke-vector-assoc
+                                    (subvec-vec v) (reverse! ivs)))))
 
 (define-method (update (v <subvec>) (i <integer>) f . args)
   (let ((len (subvec-length v)))
@@ -408,7 +414,8 @@
                              (values len (lokke-vector-ref vec vec-i)))))
       (clone-subvec v
                     #:length new-len
-                    #:vec (lokke-vector-assoc vec vec-i (apply f prev args ))))))
+                    #:vec (lokke-vector-assoc vec vec-i
+                                              (%scm-apply f prev args))))))
 
 (define-method (contains? (v <subvec>) i)
   (and (integer? i)

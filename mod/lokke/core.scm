@@ -161,7 +161,6 @@
                           -'
                           comment
                           comp
-                          complement
                           constantly
                           dec
                           dec'
@@ -206,6 +205,7 @@
             assert
             boolean
             byte
+            complement
             distinct?
             fnil
             instance?
@@ -283,7 +283,6 @@
                comment
                comp
                compare
-               complement
                concat
                condp
                conj
@@ -521,6 +520,9 @@
 
 (define (boolean x)
   (not (or (eq? x #f) (eq? x #nil))))
+
+(define (complement f)
+  (lambda args (not (apply f args))))
 
 (defdyn *assert* #t)
 
