@@ -57,7 +57,9 @@
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module (oop goops)
+  #:use-module ((rnrs sorting) #:select (vector-sort!))
   #:use-module ((srfi srfi-1) #:select (fold))
+  #:use-module ((srfi srfi-43) #:select (vector-fold))
   #:export (<hash-map>
             hash-map
             hash-map?
@@ -291,5 +293,19 @@
                    (assoc result k v)))
              (map-fm m)
              (empty-hash-map-w-meta (map-meta m))))
+
+(define-method (hash (x <hash-map>))
+  (let* ((m (map-fm x))
+         (n (fash-size m))
+         (hashes (make-vector n)))
+    (fash-fold (lambda (k v i)
+                 (vector-set! hashes i (logxor (hash k) (hash v)))
+                 (1+ i))
+               m
+               0)
+    (vector-sort! < hashes)
+    (vector-fold (lambda (i result x) (logxor result (hash x)))
+                 (hash n)
+                 hashes)))
 
 ;; FIXME: custom merge?

@@ -480,12 +480,3 @@
                  (if-let (s (seq s))
                    (cons (first s) (loop (rest s)))
                    (loop coll))))))))
-
-;; FIXME: depth diminishing tree-structured sampling like guile's hash.c?
-
-(define-method (hash (x <map>))
-  ;; Currently aliases [[w x] [y z] ...]
-  (let ((hashes (mapv hash x)))
-    (reduce (lambda (result x) (logxor result (hash x)))
-            (hash (count hashes))
-            (sort hashes))))
