@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or modify
 ;;; it under the terms of (at your option) either of the following two
@@ -14,7 +14,7 @@
 ;; Note: this currently cannot depend on core, since core pulls some
 ;; functions like read-line from here.
 
-(define-module (lokke ns lokke io)
+(define-module (lokke io)
   #:version (0 0 0)
   #:use-module ((ice-9 binary-ports) #:select (get-bytevector-all put-bytevector))
   #:use-module ((ice-9 rdelim) #:select ((read-line . %scm-read-line)))

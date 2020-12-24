@@ -195,7 +195,9 @@ General comparison with Clojure/JVM
   re-evaluated.
 
 * `lokke.io` is analogous `clojure.java.io`, and `lokke.shell` is
-  analogous to `clojure.java.shell`.
+  analogous to `clojure.java.shell`.  At the moment, paths are
+  generally only handled as (Unicode) strings.  We'll fix that once
+  Guile does.
 
 * There is some experimental, rudimentary
   [compability with Clojure/JVM exception handling](#exception-handling).
