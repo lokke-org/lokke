@@ -189,12 +189,12 @@
     (((i)) (lokke-vector-ref v i))))
 
 (define-method (get (v <lokke-vector>) i)
-  (if (and (integer? i) (> i 0))
+  (if (and (integer? i) (>= i 0))
       (lokke-vector-ref v i #nil)
       #nil))
 
 (define-method (get (v <lokke-vector>) i not-found)
-  (if (and (integer? i) (> i 0))
+  (if (and (integer? i) (>= i 0))
       (lokke-vector-ref v i not-found)
       #nil))
 
