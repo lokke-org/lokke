@@ -203,6 +203,7 @@
             *clojure-version*
             *command-line-args* ;; this is wrong...
             *file*
+            *warn-on-reflection*
             assert
             boolean
             byte
@@ -516,6 +517,8 @@
             #:minor ver/minor
             #:increment ver/increment
             #:qualifier ver/qualifier))
+
+(defdyn *warn-on-reflection* #f)
 
 (define (boolean? x)
   (or (eq? x #t) (eq? x #f)))

@@ -178,4 +178,6 @@
     (is (= :tired (trampoline (bouncer 1))))
     (is (= :tired (trampoline (bouncer 2))))))
 
+(is (= *warn-on-reflection* false))
+
 (end-tests (ns-name *ns*) :exit? true)
