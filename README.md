@@ -563,9 +563,9 @@ Definition provided by the [wiktionary](https://en.wiktionary.org/wiki/lokke).
 License
 -------
 
-This project is free software; unless otherwise specified you can
-redistribute it and/or modify it under the terms of (at your option)
-either of the following two licences:
+This project (Lokke) is free software; unless otherwise specified you
+can redistribute it and/or modify it under the terms of (at your
+option) either of the following two licences:
 
   1) The GNU Lesser General Public License as published by the Free
      Software Foundation; either version 2.1, or (at your option) any
@@ -573,6 +573,13 @@ either of the following two licences:
 
   2) The Eclipse Public License; either version 1.0 (EPL-1.0) or (at
      your option) any later version.
+
+which is also specified by
+
+  SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+When an SPDX-License-Identifier appears in a given file, it specifies
+the license that applies to the contents of that file.
 
 Any files covered by another license include a suitable disclaimer
 describing the applicable terms, including, but not limited to:

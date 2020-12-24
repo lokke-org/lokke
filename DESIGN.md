@@ -337,8 +337,8 @@ TODO
 - Consider adding pr-str methods if the string port overhead becomes
   relevant.
 
-- Use SPDX license identifiers?  And can we automate copyright notice
-  updates (years) via git?
+- Can we (at least somewhat) automate copyright notice updates (years)
+  via git?
 
 - Settle Scheme side binding vector vs list question and bring code
   into compliance.
