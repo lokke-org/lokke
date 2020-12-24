@@ -101,7 +101,7 @@ or run the REPL:
 
 `./lok ...` is equivalent to `./lokke run ...`.
 
-Currently the Lokke repl *is* the Guile repl, with the initial
+Currently the Lokke REPL *is* the Guile REPL, with the initial
 language and environment set for Lokke, and so all of the Guile
 features should be available.  Though for now, `lokke` loads
 `~/.lokke_guile` (which must be Scheme code) rather than `~/.guile`.
@@ -465,6 +465,25 @@ Known issues
 
 - *Many* things are still broken or incomplete.
 
+- When an error occurs in the REPL, a
+  [new (recursive) prompt is created](https://www.gnu.org/software/guile/manual/html_node/Error-Handling.html).
+  At the moment, the new prompt will use the Guile printer instead of
+  Lokke's.  For example:
+
+        lokke@(lokke user)> true
+        $1 = true
+        lokke@(lokke user)> (/ :x)
+        ice-9/boot-9.scm:1669:16: In procedure raise-exception:
+        In procedure /: Wrong type argument in position 1: #:x
+
+        Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
+        lokke@(lokke user) [1]> true
+        $2 = #t
+
+  An exit back to the top-level prompt will restore the Lokke writer.
+
+- `deref` does not support a timeout for futures yet.
+
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
 
@@ -478,8 +497,6 @@ Known issues
   continuation barriers yet.
 
 - atom semantics may not be completely right yet (see code).
-
-- `deref` does not support a timeout for futures yet.
 
 - To the extent that pairs are used right now (and they're currently
   used for lists like `'(1 2 3)`), they don't support metadata, and
