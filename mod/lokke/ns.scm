@@ -428,6 +428,7 @@
                         ((#:refer-clojure) `(refer-clojure ,@(quotify (cdr ref))))
                         ;;((#:load) `(load ,@(quotify (cdr ref))))
                         ((#:import) (error ":import is not supported yet"))
+                        ((#:gen-class) '(do))
                         (else (error "Unrecognized ns directive" ref))))
                     refs))
          (cmds (if (or core?

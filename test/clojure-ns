@@ -1,7 +1,7 @@
-#!./lokke -0
+#!./lokke -0 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -61,6 +61,11 @@
 (is (= {:doc "doc" :x 1} (meta *ns*)))
 (ns test.clojure-ns)
 
+(ns test-ns-ignores-genclass
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]])
+  (:gen-class))
+(ns test.clojure-ns)
 
 (ns test-def-private)
 (def yep true)
