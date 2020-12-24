@@ -19,7 +19,7 @@
    [clojure.test :refer [begin-tests end-tests is testing]]
    [guile.ice-9.ports :refer [port-filename]]
    [lokke.exception :refer [with-final]]
-   [lokke.io :refer [delete-file mkstemp reader slurp spit writer]]))
+   [lokke.io :refer [delete-file mkstemp path-seq reader slurp spit writer]]))
 
 (begin-tests (ns-name *ns*))
 
@@ -32,5 +32,11 @@
       (is (= message (slurp outname))))
     (is (not (guile.guile/file-exists? outname))))
   (is (= "Lokke" (subs (slurp "README") 0 5))))
+
+(testing "path-seq"
+  (let [found (-> "mod/lokke/ns" path-seq set)]
+    (is (found "mod/lokke/ns/clojure/core.clj" ))
+    (is (found "mod/lokke/ns/clojure/string.scm"))
+    (is (found "mod/lokke/ns/lokke/shell.scm"))))
 
 (end-tests (ns-name *ns*) :exit? true)

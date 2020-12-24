@@ -13,6 +13,8 @@
 
 (ns lokke.io
   (:require
+   [guile.guile
+    :refer [closedir eof-object? opendir readdir stat stat:mode stat:type]]
    [guile.lokke.io
     :refer [copy
             delete-file
@@ -26,7 +28,8 @@
             spit
             spit-bytes
             writer]]
-   [guile.lokke.ns :refer [re-export]]))
+   [guile.lokke.ns :refer [re-export]]
+   [lokke.exception :refer [with-final]]))
 
 (re-export copy
            delete-file
@@ -40,3 +43,15 @@
            spit
            spit-bytes
            writer)
+
+(defn path-seq [dir]
+  (tree-seq
+   #(= 'directory (-> % stat stat:type))
+   (fn [dir]
+     (with-final [d (opendir dir) :always closedir]
+       (doall
+        (->> (repeatedly #(readdir d))
+             (take-while #(not (eof-object? %)))
+             (remove #{"." ".."})
+             (map #(str dir "/" %))))))
+   dir))
