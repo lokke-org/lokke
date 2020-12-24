@@ -60,7 +60,7 @@ better:
 For Debian:
 
     # apt-get install autoconf automake libpcre2-dev libunistring-dev
-    # apt-get install  make gcc git gnulib
+    # apt-get install  make gcc git
 
 and then for Guile 3.0:
 

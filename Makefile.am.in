@@ -18,10 +18,9 @@ Makefile.am: Makefile.am.in gen-makefile state/module-paths
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = gnulib
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver.sh
 
-EXTRA_DIST = m4/gnulib-cache.m4 $(TESTS)
+EXTRA_DIST = $(TESTS)
 
 lokke_scripts = lok lok-@LOKKE_MAJOR_VERSION@ lokke lokke-@LOKKE_MAJOR_VERSION@
 
@@ -29,7 +28,7 @@ lokke_scripts = lok lok-@LOKKE_MAJOR_VERSION@ lokke lokke-@LOKKE_MAJOR_VERSION@
 man1_MANS = lok.1 lokke.1
 
 AM_CFLAGS = \
-  -g -I gnulib -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
+  -g -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
   -fno-strict-aliasing
 
 vpkglibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)

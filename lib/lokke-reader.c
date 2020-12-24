@@ -26,8 +26,6 @@
 #include <unistd.h>
 #include <unicase.h>
 #include <unictype.h>
-#include <c-strcase.h>
-#include <c-ctype.h>
 #include <alloca.h>
 
 #include <libguile.h>

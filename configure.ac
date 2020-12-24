@@ -51,7 +51,7 @@ AC_SUBST(LOKKE_INCREMENT_VERSION, [${lokke_increment_version}])
 AC_SUBST(LOKKE_EFFECTIVE_VERSION, [${VERSION%.*}])
 
 AC_CONFIG_FILES([
-  Makefile gnulib/Makefile lokke.1 mod/lokke/base/version.scm
+  Makefile lokke.1 mod/lokke/base/version.scm
 ])
 
 AC_CONFIG_FILES([guile], [chmod +x guile])

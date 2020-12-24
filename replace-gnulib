@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -ex
-
-# We include havelib to avoid:
-#   configure.ac:35: error: required file 'build-aux/config.rpath' not found
-
-gnulib-tool --no-vc-files --source-base=gnulib --import c-ctype c-strcase havelib

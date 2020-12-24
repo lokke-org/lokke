@@ -20,11 +20,6 @@
 /config.log
 /config.status
 /configure
-/gnulib/*.o
-/gnulib/.deps/
-/gnulib/Makefile
-/gnulib/Makefile.in
-/gnulib/libgnu.a
 /guile
 /lib/*.la
 /lib/*.lo
