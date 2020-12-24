@@ -1,7 +1,7 @@
-#!./lokke -0
+#!./lokke -0 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -16,13 +16,10 @@
 
 (ns test.lokke-io
   (:require
-   [guile.ice-9.ports :refer [port-filename]])
-  (:require
-   [lokke.exception :refer [with-final]])
-  (:require
-   [lokke.io :refer [delete-file mkstemp reader slurp spit writer]])
-  (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [guile.ice-9.ports :refer [port-filename]]
+   [lokke.exception :refer [with-final]]
+   [lokke.io :refer [delete-file mkstemp reader slurp spit writer]]))
 
 (begin-tests (ns-name *ns*))
 
