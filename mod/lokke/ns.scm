@@ -50,7 +50,7 @@
             resolve-ns
             require
             use)
-  #:re-export (alter-meta!)
+  #:re-export (alter-meta! re-export)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: assuming we need to, does guile handle locking/blocking wrt
