@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;;
 ;;; This project is free software; you can redistribute it and/or
 ;;; modify it under the terms of (at your option) either of the
@@ -15,10 +15,12 @@
 ;; without needing a full dependency on (lokke base syntax).
 
 (define-module (lokke base dynamic)
+  #:use-module ((guile) #:select ((set! . %set!)))
   #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base util) #:select (module-name->ns-str vec-tag?))
   #:use-module ((system syntax) #:select (syntax-module))
-  #:export (binding defdyn defdynloc))
+  #:export (binding defdyn defdynloc)
+  #:replace (set!))
 
 
 (define (secret-dynfluid-name context syn)
@@ -33,7 +35,7 @@
 (define (remember-fluid! dyn-name fluid-name fluid)
   (let* ((mod (current-module))
          (var (module-variable mod dyn-name)))
-    (set! (dynamic-fluid var)
+    (%set! (dynamic-fluid var)
       (list (module-name mod) dyn-name fluid-name fluid))))
 
 (define-syntax defdyn
@@ -82,3 +84,24 @@
               #`(with-fluid*
                     (@@ mod fluid-name) init
                     (lambda () (binding (rest ...) body ...)))))))))))
+
+(define-syntax set!
+  ;; FIXME: duplication wrt binding
+  (lambda (x)
+    (syntax-case x ()
+      ((_ name val)
+       (let* ((mod (current-module))
+              (name-sym (syntax->datum #'name))
+              (var (module-variable mod name-sym))
+              (info (dynamic-fluid var)))
+         (unless info
+           (error
+            (format #f
+                    "binding: unable to resolve dynamic variable ~a in ns ~a"
+                    name-sym
+                    (module-name->ns-str (module-name mod)))))
+         (match info
+           ((mod name fluid-name fluid)
+            (with-syntax ((mod (datum->syntax x mod))
+                          (fluid-name (datum->syntax x fluid-name)))
+              #`(fluid-set! (@@ mod fluid-name) val)))))))))
