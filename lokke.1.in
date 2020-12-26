@@ -19,11 +19,11 @@ lokke \- a Clojure dialect for Guile
 .B run
 .OP \-l path
 .OP \-e expr
-.OP \-a function
+.OP \-a func
 .RB [ RUN_OPT
 \&.\|.\|.\&]
 .RB [ \-\-
-.B argument
+.B arg
 \&.\|.\|.\&]
 .YS
 .SY lok
@@ -32,11 +32,11 @@ lokke \- a Clojure dialect for Guile
 .SY lok
 .OP \-l path
 .OP \-e expr
-.OP \-a function
+.OP \-a func
 .RB [ RUN_OPT
 \&.\|.\|.\&]
 .RB [ \-\-
-.B argument
+.B arg
 \&.\|.\|.\&]
 .YS
 .
@@ -56,7 +56,7 @@ provided, both commands present an interactive Read-Eval-Print-Loop
 (REPL) on the terminal.
 .P
 Any
-.BR argument s
+.BR arg s
 will be available as
 .B *command-line-args*
 in Clojure, and must be delimited from the others by
