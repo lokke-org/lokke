@@ -3,7 +3,8 @@
 
 (define-module (lokke base map)
   #:use-module ((ice-9 match) #:select (match))
-  #:use-module ((lokke base collection) #:select (<coll> count every? get seq))
+  #:use-module ((lokke base collection)
+                #:select (<coll> conj count every? get reduce seq))
   #:use-module ((lokke base invoke) #:select (apply invoke))
   #:use-module ((lokke base map-entry) #:select (key val))
   #:use-module ((lokke compare) #:select (clj=))
@@ -11,7 +12,7 @@
   #:use-module (oop goops)
   #:export (<map> map?)
   #:re-export (clj= get invoke)
-  #:replace (assoc)
+  #:replace (assoc merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'apply)
@@ -42,3 +43,16 @@
   (match args
     (((item)) (get s item))
     ((item (not-found)) (get s item not-found))))
+
+(define (merge . xs)
+  (if (null? xs)
+      #nil
+      (let loop ((xs xs)
+                 (result (car xs)))
+        (if (null? xs)
+            result
+            (let ((x (car xs)))
+              (loop (cdr xs)
+                    (if (eq? x #nil)
+                        result
+                        (reduce conj result x))))))))

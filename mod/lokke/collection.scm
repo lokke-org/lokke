@@ -58,7 +58,6 @@
                           keys
                           lazy-seq
                           list?
-                          merge
                           next
                           nfirst
                           nnext
@@ -87,7 +86,7 @@
                           update-in
                           vals))
   #:use-module ((lokke base invoke) #:select (invoke))
-  #:use-module ((lokke base map) #:select (<map> map?))
+  #:use-module ((lokke base map) #:select (<map> map? merge))
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke compare) #:select (clj= hash))

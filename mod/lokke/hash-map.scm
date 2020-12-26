@@ -24,7 +24,6 @@
                           get
                           keys
                           lazy-seq
-                          merge
                           reduce-kv
                           second
                           select-keys
@@ -76,7 +75,7 @@
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc 'hash 'merge)
+(re-export-and-replace! 'assoc 'hash)
 
 ;; FIXME: move rest of common map generics to (lokke map)
 

@@ -90,7 +90,7 @@
             update-in
             vals)
   #:re-export (clj=)
-  #:replace (assoc first list? merge peek reverse sort)
+  #:replace (assoc first list? peek reverse sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'apply 'cons 'hash)
@@ -676,18 +676,6 @@
      (if s
          (reductions f (first s) (rest s))
          (list (f))))))
-
-(define (merge . xs)
-  (if (null? xs)
-      #nil
-      (let loop ((xs xs)
-                 (result (car xs)))
-        (if (null? xs)
-            result
-            (loop (cdr xs)
-                  (reduce (lambda (result x) (conj result x))
-                          result
-                          (car xs)))))))
 
 (define concat
   (match-lambda*
