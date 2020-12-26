@@ -1,0 +1,147 @@
+lokke(1)                    General Commands Manual                   lokke(1)
+
+NAME
+       lokke - a Clojure dialect for Guile
+
+SYNOPSIS
+       lokke (help|--help|-h|-?)
+
+       lokke [repl]
+
+       lokke -0
+
+       lokke run [-l path] [-e expr] [-a func] [RUN_OPT ...] [-- arg ...]
+
+       lok (--help|-h|-?)
+
+       lok [-l path] [-e expr] [-a func] [RUN_OPT ...] [-- arg ...]
+
+DESCRIPTION
+       Lokke  is  a Clojure dialect for Guile, and may be invoked in two ways.
+       lokke is the most general command, acting as specified  by  an  initial
+       subcommand argument (e.g.  repl, run, etc.), while lok is a convenience
+       for interactive use, and behaves exactly as if lokke run had  been  in-
+       voked  with  the  same arguments.  When no arguments are provided, both
+       commands present an interactive Read-Eval-Print-Loop (REPL) on the ter-
+       minal.
+
+       Any  args will be available as *command-line-args* in Clojure, and must
+       be delimited from the others by --.
+
+       The -0 option allows lokke to act as a script interpreter in  a  flexi-
+       ble,  portable  manner, given that the handling of #!  interpeter lines
+       is not standardized across platforms.  See SCRIPT EVALUATION below  for
+       additional information.
+
+       Unless  otherwise specified, and unlike Guile, lokke sets Guile's *ran-
+       dom-state*  at  startup  to  a  value   generated   by   Guile's   ran-
+       dom-state-from-platform,  meaning  that  rand-int  values, for example,
+       will usually differ across invocations.
+
+       You can invoke lokke run ... -e guile.guile/%load-path or  lok  ...  -e
+       guile.guile/%load-path  to  display  the Guile load path (including any
+       dependencies) for a given invocation.
+
+RUN_OPT
+       -l, --load file
+              Execute code in file.
+
+       -e, --eval code
+              Evaluate code, printing any values that are not nil or  unspeci-
+              fied.
+
+       -a, --apply some.ns/function
+              Apply some.ns/function to the *command-line-args*.
+
+       -      Execute any code provided on standard input.
+
+       file   Execute code in file, which must not start with a dash (-).
+
+       --seed sys
+              Initialize   the   *random-state*   (which  affects  calls  like
+              rand-int) at startup in a  platform-specific  way.  Insufficient
+              for security-critical applications.
+
+       --seed integer
+              Initialize  the  *random-state* at startup using the given inte-
+              ger.
+
+       --no-seed
+              Suppress the  default,  implicit  --seed sys  at  startup.   The
+              rightmost seed related argument determines the startup behavior.
+
+SCRIPT EVALUATION
+       If,  and  only  if, you don't need to specify any additional arguments,
+       you may begin your scripts like this:
+
+              #!/path/to/lokke-0 -0 ;; -*-clojure-*-
+              !#
+              (prn :hello-world)
+              ...
+
+       When lokke executes the program, the content between the #!  !# pair is
+       ignored as a block comment, just as with Guile itself.
+
+       Whenever  you  do  need to specify additional arguments, you should not
+       put them on the #!  line because the handling  of  additional  text  on
+       that line varies from platform to platform.  Sometimes the remainder of
+       the line becomes a single arrgument, sometimes it is  split  on  white-
+       space, and (more rarely), sometimes part of the line is ignored.
+
+       Accordingly, if you need to make adjustments, you may do something like
+       this:
+
+              #!/path/to/lokke-0 -0 ;; -*-clojure-*-
+              ;; We're in a Guile preamble module defining a procedure for each
+              ;; lokke subcommand.
+              (apply run "-l" %0 "--" %&)
+              !#
+
+              ;; Place your Clojure code here, after the !#
+              (prn :hello-world)
+              ...
+
+       This will behave exactly the same as the  previous  example.   When  no
+       code  is provided in the block comment, lokke will act as if (apply run
+       "-l" %0 "--" %&) had been specified, but you can of course  adjust  the
+       run invocation to suit your needs, or provide something else entirely.
+
+       Everything after the -0 and before the !# is executed as Scheme code by
+       Guile in a module that has definitions for each of  the  lokke  subcom-
+       mands.  Note that the code Guile executes will begin with the character
+       immediately after the zero in -0 no matter what it is (i.e. even if  it
+       is not whitespace).  The zero actually specifies a compatibility level,
+       and for now zero is the only valid number.
+
+       As you may have guessed, the preamble module binds  %0  to  the  script
+       path  (like  $0 in POSIX shells), %& to a list of all of the subsequent
+       command line arguments, and %1, %2, etc. to the elements of %&.
+
+       At the moment lokke is not a binary executable.  If the system requires
+       #!  interpreters  to  be binary executables, or if you'd like to locate
+       lokke via the current PATH, you may be able to rely on env like this:
+
+              #!/usr/bin/env lokke-0 -0
+              ...
+
+READLINE SUPPORT
+       Assuming your guile was compiled with  readline  support,  it's  likely
+       you'll  want  to add something like this to ~/.lokke_guile to enable it
+       in the REPL:
+
+              ;;; -*-scheme-*-
+              (use-modules (ice-9 readline))
+              (activate-readline)
+
+ENVIRONMENT
+       LOKKE_HISTORY
+              Specifies the path  to  the  REPL  history  file.   Defaults  to
+              $XDG_CACHE_HOME/lokke/history when XDG_CACHE_HOME is set, other-
+              wise $HOME/.cache/lokke/history.
+
+SEE ALSO
+       guile(1),  and  for  much  more  detail,  the  Guile  Reference  Manual
+       <https://www.gnu.org/software/guile/manual/html_node/index.html>  which
+       may also be available via info guile or M-x info in emacs.
+
+0.0.1                             2020-08-27                          lokke(1)

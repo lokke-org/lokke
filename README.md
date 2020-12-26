@@ -106,9 +106,10 @@ language and environment set for Lokke, and so all of the Guile
 features should be available.  Though for now, `lokke` loads
 `~/.lokke_guile` (which must be Scheme code) rather than `~/.guile`.
 
-See `./lokke --help` or `man -l ./lokke.1` for additional information,
+See `./lokke --help` or `man -l lokke.1` for additional information,
 or if `man -l` isn't available, perhaps something like `nroff -man
-lokke.1 | less`.
+lokke.1 | less`.  A [plain text version of the manual page](lokke.1.txt)
+is also available.
 
 Lokke expects all Clojure namespaces to be located in a lokke/ns/
 subdirectory of one of the directories specified by the Guile load

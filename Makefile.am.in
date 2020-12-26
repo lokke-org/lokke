@@ -26,6 +26,10 @@ lokke_scripts = lok lok-@LOKKE_MAJOR_VERSION@ lokke lokke-@LOKKE_MAJOR_VERSION@
 
 # FIXME: preserve symlinks in install tree?
 man1_MANS = lok.1 lokke.1
+noinst_DATA = lokke.1.txt
+
+lokke.1.txt: lokke.1
+	COLUMNS=80 man -l $^ > $@
 
 AM_CFLAGS = \
   -g -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
