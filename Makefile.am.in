@@ -102,6 +102,7 @@ TESTS = \
   test/lokke-scm-promise \
   test/lokke-scm-vector \
   test/lokke-symbol \
+  test/example-nbody \
   test/ns-lokke-io \
   test/ns-lokke-shell \
   test/reader-basics \

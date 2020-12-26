@@ -588,6 +588,7 @@ describing the applicable terms, including, but not limited to:
   - The file lib/lokke-reader.c
   - The file mod/fhash.scm
   - Any file named epl.clj
+  - Files under example/nbody/
   - mod/lokke/ns/clojure/walk.clj
   - mod/lokke/ns/clojure/zip.clj
   - test/clojure-walk

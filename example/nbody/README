@@ -1,0 +1,6 @@
+<!-- -*-markdown-*- -->
+
+[nbody.clj-1.clj](nbody.clj-1.clj) was coped from
+https://github.com/jafingerhut/clojure-benchmarks.git and adapted to
+work with Lokke as [nbody](nbody).  Both files are covered under the
+terms described in [COPYING](COPYING).
