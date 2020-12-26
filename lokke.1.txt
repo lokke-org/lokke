@@ -126,8 +126,8 @@ SCRIPT EVALUATION
 
 READLINE SUPPORT
        Assuming your guile was compiled with  readline  support,  it's  likely
-       you'll  want  to add something like this to ~/.lokke_guile to enable it
-       in the REPL:
+       you'll  want  to  add  something  like this to ~/.config/lokke/interac-
+       tive.scm to enable it in the REPL:
 
               ;;; -*-scheme-*-
               (use-modules (ice-9 readline))

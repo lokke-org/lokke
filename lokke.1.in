@@ -214,7 +214,7 @@ this:
 .SH READLINE SUPPORT
 Assuming your guile was compiled with readline support, it's likely
 you'll want to add something like this to
-.B ~/.lokke_guile
+.B ~/.config/lokke/interactive.scm
 to enable it in the REPL:
 .P
 .RS

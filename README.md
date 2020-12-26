@@ -104,7 +104,8 @@ or run the REPL:
 Currently the Lokke REPL *is* the Guile REPL, with the initial
 language and environment set for Lokke, and so all of the Guile
 features should be available.  Though for now, `lokke` loads
-`~/.lokke_guile` (which must be Scheme code) rather than `~/.guile`.
+`~/.config/lokke/interactive.scm` (which must be Scheme code) rather
+than `~/.guile`.
 
 See `./lokke --help` or `man -l lokke.1` for additional information,
 or if `man -l` isn't available, perhaps something like `nroff -man
@@ -121,7 +122,8 @@ mod/lokke/ns/clojure/string.clj, and mod/lokke/ns/clojure/string.clj
 in that order (namspaces can be implemented in Clojure or Scheme).
 
 Assuming your guile was compiled with readline support, it's likely
-you'll want to add something like this to `~/.lokke_guile`:
+you'll want to add something like this to
+`~/.config/lokke/interactive.scm`:
 
     ;;; -*-scheme-*-
     (use-modules (ice-9 readline))

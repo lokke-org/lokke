@@ -17,11 +17,10 @@
   (let* ((home (or (getenv "HOME")
                    (false-if-exception (passwd:dir (getpwuid (getuid))))
                    file-name-separator-string)) ;; fallback for cygwin etc.
-         (init-file (in-vicinity home ".lokke_guile")))
+         (init-file (string-append (ensure-config-dir) "/interactive.scm")))
     ;; FIXME: add support for suppressing the init file (e.g. Guile's -q)
-    ;; FIXME: either add support for loading a clj ~/.lokke after
-    ;; this, or if feasible, drop .lokke_guile entirely in favor of
-    ;; that.  We'll need a primitive_load equivalent, etc.
+    ;; FIXME: instead of or in addition, support loading an interactive.clj?
+    ;; We'll need a primitive-load equivalent, etc.
     (if (file-exists? init-file)
         (save-module-excursion
          (lambda ()
