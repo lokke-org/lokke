@@ -2,6 +2,7 @@
 !#
 
 ;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>
+;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-collection
@@ -22,6 +23,28 @@
   (is (empty? (rest [1])))
   (is (= (list) (rest [1])))
   (is (= () (rest [1]))))
+
+(testing "conj"
+  (is (= nil (conj nil)))
+  (is (= () (conj ())))
+  (is (= [] (conj [])))
+  (is (= {} (conj {})))
+  (is (= #{} (conj #{})))
+
+  (is (= '(nil) (conj nil nil)))
+  (is (= [1] (conj nil 1)))
+  (is (= [2 1] (conj nil 1 2)))
+  (is (= [1 2] (conj [] 1 2)))
+
+  (is (= #{nil} (conj #{} nil)))
+  (is (= #{1} (conj #{} 1)))
+  (is (= #{1 nil} (conj #{} 1 nil)))
+  (is (= [#{}] (conj nil #{})))
+
+  (is (= {} (conj {} nil)))
+  (is (= {1 2} (conj {} [1 2])))
+  (is (= {1 2} (conj {} [1 2] nil)))
+  (is (= [{}] (conj nil {}))))
 
 (testing "empty list/vector tests"
   (is (= () ()))

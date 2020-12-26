@@ -7,6 +7,7 @@
                 #:select (<coll> conj count every? get reduce seq))
   #:use-module ((lokke base invoke) #:select (apply invoke))
   #:use-module ((lokke base map-entry) #:select (key val))
+  #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
@@ -43,6 +44,10 @@
   (match args
     (((item)) (get s item))
     ((item (not-found)) (get s item not-found))))
+
+(define-method (conj (m1 <map>) (m2 <boolean>))
+  (require-nil 'conj m2)
+  m1)
 
 (define (merge . xs)
   (if (null? xs)
