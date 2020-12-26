@@ -151,7 +151,7 @@
               (let* ((what-sym (string->symbol what))
                      (ns (string->symbol (sym/namespace what-sym)))
                      (n (string->symbol (sym/name what-sym))))
-                (apply (module-ref (resolve-ns ns) n) args)))
+                (apply (module-ref (resolve-ns ns) n) *command-line-args*)))
             actions)))
   (let loop ((args args)
              (add-repl? #t)
