@@ -102,6 +102,10 @@ Evaluate code, printing any values that are not nil or unspecified.
 Apply some.ns/function to the
 .BR *command\-line\-args* .
 .TP
+.BI \-m \fR,\ \fB\-\-main \fI\ some.ns
+Apply some.ns/-main to the
+.BR *command\-line\-args* .
+.TP
 .B \-
 Execute any code provided on standard input.
 .TP

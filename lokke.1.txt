@@ -53,6 +53,9 @@ RUN_OPT
        -a, --apply some.ns/function
               Apply some.ns/function to the *command-line-args*.
 
+       -m, --main some.ns
+              Apply some.ns/-main to the *command-line-args*.
+
        -      Execute any code provided on standard input.
 
        file   Execute code in file, which must not start with a dash (-).

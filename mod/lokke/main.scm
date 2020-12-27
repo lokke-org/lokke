@@ -43,6 +43,7 @@
    "  -e, --eval CODE    evaluate CODE, printing any values that are\n"
    "                     not nil or unspecified\n"
    "  -a, --apply REF    apply REF to the *command-line-args*\n"
+   "  -m, --main NS      same as -a NS/-main"
    "  --seed sys         set the random state to (random-state-from-platform)\n"
    "  --seed INTEGER     seed the random state with INTEGER\n"
    "  --no-seed          suppress the default, implicit --seed sys.  The rightmost\n"
@@ -179,6 +180,12 @@
               (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-apply (cadr args)))
             (loop (cddr args) #f result))
+           ((member arg '("-m" "--main"))
+            (when (null? (cdr args))
+              (quit-early "lokke: no argument for ~a\n" arg))
+            (loop (cons* "-a" (string-append (cadr args) "/-main")
+                         (cddr args))
+                  add-repl? result))
            ((equal? "--" arg)
             (hash-table-set! result 'args (cdr args))
             (clean-up result))
