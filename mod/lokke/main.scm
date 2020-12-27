@@ -15,6 +15,7 @@
   #:use-module ((lokke config) #:select (ensure-config-dir))
   #:use-module ((lokke core) #:select (*command-line-args* prn))
   #:use-module ((lokke compile) #:select (load-file))
+  #:use-module ((lokke io) #:select (slurp))
   #:use-module ((lokke ns) #:select (default-environment resolve-ns))
   #:use-module ((lokke reader) #:select ((read . read-edn)))  ; FIXME: real edn reader
   #:use-module ((lokke symbol) #:prefix sym/)
@@ -135,6 +136,7 @@
     (hash-table-update! result 'actions (lambda (x) (reverse! x)))
     result)
   (define (add-loader path)
+    ;; FIXME: friendly error messages for missing files
     (lambda (actions)
       (cons (lambda () (load-file path)) actions)))
   (define (add-evaluator code)
@@ -186,6 +188,13 @@
             (loop (cons* "-a" (string-append (cadr args) "/-main")
                          (cddr args))
                   add-repl? result))
+           ((string=? "-" arg)
+            (hash-table-update! result 'actions
+                                (add-evaluator (slurp (current-input-port))))
+            (loop (cdr args) #f result))
+           ((not (eqv? #\- (string-ref arg 0)))
+            (hash-table-update! result 'actions (add-loader arg))
+            (loop (cdr args) #f result))
            ((equal? "--" arg)
             (hash-table-set! result 'args (cdr args))
             (clean-up result))
