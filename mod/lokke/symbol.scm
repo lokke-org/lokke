@@ -35,10 +35,11 @@
       ((@ (guile) gensym) "__<?!?>__")))
 
 (define simple-symbol?
-  (let ((rx (make-regexp "[./]")))
+  ;; No . or / characters excepting perhaps a trailing dot (e.g. Exception.)
+  (let ((rx (make-regexp "^[^./]+\\.?$")))  ;;  FIXME: pcre (guaranteed to exist)
     (lambda (s)
       (and (symbol? s)
-           (not (regexp-exec rx (symbol->string s)))))))
+           (regexp-exec rx (symbol->string s))))))
 
 (define (make-parsed-sym ns ref) (cons ns ref))
 

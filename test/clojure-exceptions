@@ -105,4 +105,13 @@
 ;; We can't easily test with-open here until we have some way to
 ;; create custom close methods.  See test/lokke-exception instead.
 
+(testing "compatibility constructors"
+  (is (= "x" (ex-message (Throwable. "x"))))
+  (is (= "x" (ex-message (Error. "x"))))
+  (is (= "x" (ex-message (Exception. "x"))))
+
+  (is (= "x" (ex-message (new Throwable "x"))))
+  (is (= "x" (ex-message (new Error "x"))))
+  (is (= "x" (ex-message (new Exception "x")))))
+
 (end-tests (ns-name *ns*) :exit? true)
