@@ -2,7 +2,11 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke config)
-  #:export (cache-dir config-dir ensure-cache-dir ensure-config-dir))
+  #:export (add-to-guile-load-path
+            cache-dir
+            config-dir
+            ensure-cache-dir
+            ensure-config-dir))
 
 (define (ensure-dir path)
   (catch 'system-error
@@ -24,3 +28,8 @@
 (define (config-dir) (xdg-dir "XDG_CONFIG_HOME" ".config"))
 (define (ensure-cache-dir) (ensure-dir (cache-dir)))
 (define (ensure-config-dir) (ensure-dir (config-dir)))
+
+;; FIXME: move somewhere more appropriate?
+;; This is just a macro adapter.
+(define (add-to-guile-load-path dir)
+  (add-to-load-path dir))

@@ -49,6 +49,7 @@
    "  --seed INTEGER     seed the random state with INTEGER\n"
    "  --no-seed          suppress the default, implicit --seed sys.  The rightmost\n"
    "                     seed related argument determines the behavior.\n"
+   "  --deps FILE        acquire depenencies as specified by EDN FILE (deps.edn)\n"
    "  FILE               execute code in FILE (name must not start with -)\n"
    "  -                  execute any code provided on standard input\n"
    "  --                 Make all subsequent arguments *command-line-args*\n"))
@@ -127,12 +128,14 @@
 
 (define (make-options-hash)
   (let ((result (make-hash-table)))
+    (hash-table-set! result 'deps '())
     (hash-table-set! result 'actions '())
     (hash-table-set! result 'args '())
     result))
 
 (define (parse-run-args args usage)
   (define (clean-up result)
+    (hash-table-update! result 'deps (lambda (x) (reverse! x)))
     (hash-table-update! result 'actions (lambda (x) (reverse! x)))
     result)
   (define (add-loader path)
@@ -167,6 +170,11 @@
         (let ((arg (car args)))
           (cond
            ((member arg '("-?" "-h" "--help")) (quit (usage) 0))
+           ((equal? arg "--deps")
+            (when (null? (cdr args))
+              (quit-early "lokke: no argument for ~a\n" arg))
+            (hash-table-update! result 'deps (lambda (x) (cons (cadr args) x)))
+            (loop (cddr args) add-repl? result))
            ((member arg '("-e" "--eval"))
             (when (null? (cdr args))
               (quit-early "lokke: no argument for ~a\n" arg))
@@ -205,6 +213,8 @@
 (define (lokke-run args usage)
   (maybe-randomize-state args)
   (let ((opts (parse-run-args (remove-seed-args args) usage)))
+    ((module-ref (resolve-ns 'lokke.deps) 'load-deps-files)
+     (hash-table-ref opts 'deps))
     (let ((actions (hash-table-ref opts 'actions)))
       (begin
         (binding (*command-line-args* (hash-table-ref opts 'args))

@@ -114,6 +114,13 @@ Execute code in
 .IR file ,
 which must not start with a dash (\-).
 .TP
+.BI \-\-deps \fI\ file
+Merge the dependencies described in the
+.I file
+into the dependency map.  See the
+.B DEPENDENCIES
+section below for further information.
+.TP
 .BI \-\-seed \fB\ sys
 Initialize the *random\-state* (which affects calls like rand\-int) at
 startup in a platform-specific way. Insufficient for security-critical
@@ -210,10 +217,29 @@ this:
 .P
 .RS
 .EX
+
 #!/usr/bin/env lokke-@LOKKE_MAJOR_VERSION@ -0
 \&.\|.\|.\&
 .EE
 .RE
+.
+.SH DEPENDENCIES
+Dependencies may be specified via
+.BI \-\-deps \fI\ file .
+Each
+.I file
+must contain a subset of the
+.UR https://clojure.org/reference/deps_and_cli#_deps_edn
+deps.edn syntax
+.UE ,
+and at the moment, only
+.B :git/url
+dependencies are supported.  When multiple files are specified, their
+dependency maps are merged from left to right.  If you just want to
+ensure you have acquired all of the dependencies, you can run
+.B lok \-\-deps some.edn -e
+.BR nil .
+.P
 .
 .SH READLINE SUPPORT
 Assuming your guile was compiled with readline support, it's likely

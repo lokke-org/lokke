@@ -315,7 +315,18 @@ convenient way to refer to modules that are not under a `(lokke ns
 ...)` prefix, and of course you can use them in forms like `ns` and
 `require`.
 
-`(alias ...)` calls only take full effect at the end of the
+In many cases, you may have `lokke` or `lok` handle the Guile
+`%load-path` for you via deps.edn `:paths`, but manual arrangements
+like this will also work just fine too:
+
+    src/something/core.clj
+    mod/lokke/ns -> ../../src
+
+and then:
+
+    $ GUILE_LOAD_PATH=$(pwd)/mod lok
+
+Namespace `(alias ...)` calls only take full effect at the end of the
 enclosing top level form (because at the moment, the compiler works
 from a snapshot of the alias map, cf. `rewrite-il-calls`).
 

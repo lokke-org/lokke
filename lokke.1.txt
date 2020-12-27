@@ -60,6 +60,11 @@ RUN_OPT
 
        file   Execute code in file, which must not start with a dash (-).
 
+       --deps file
+              Merge the dependencies described in the file into the dependency
+              map.  See the DEPENDENCIES section below  for  further  informa-
+              tion.
+
        --seed sys
               Initialize   the   *random-state*   (which  affects  calls  like
               rand-int) at startup in a  platform-specific  way.  Insufficient
@@ -126,6 +131,15 @@ SCRIPT EVALUATION
 
               #!/usr/bin/env lokke-0 -0
               ...
+
+DEPENDENCIES
+       Dependencies may be specified via --deps file.  Each file must  contain
+       a         subset         of         the         deps.edn         syntax
+       <https://clojure.org/reference/deps_and_cli#_deps_edn>, and at the  mo-
+       ment,  only  :git/url  dependencies are supported.  When multiple files
+       are specified, their dependency maps are merged from left to right.  If
+       you  just want to ensure you have acquired all of the dependencies, you
+       can run lok --deps some.edn -e nil.
 
 READLINE SUPPORT
        Assuming your guile was compiled with  readline  support,  it's  likely

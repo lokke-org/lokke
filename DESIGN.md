@@ -263,7 +263,10 @@ TODO
 
 - Remove vestigial bits from the reader (syntax, synquote, etc.?)
 
-- Create clojure.edn, maybe some suitable File shims, etc.
+- Create clojure.edn, and then switch lokke.deps, and anything else
+  that can, to use it.
+
+- File shims plausible, or too much a hack?
 
 - Contemplate eval-when -- do we have it where we need it, does it,
   and/or can it work reasonably from the Clojure side?
