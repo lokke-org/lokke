@@ -384,5 +384,8 @@
               (call-with-exception-suppression
                ex
                (lambda () (action resource)))))))
+      ((_ (var init binding ...) body ...)
+       #'(let (var init)
+           (with-final (binding ...) body ...)))
       ((_ () body ...)
        #'(begin #nil body ...)))))
