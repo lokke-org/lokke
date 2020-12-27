@@ -7,10 +7,7 @@ lokke \- a Clojure dialect for Guile
 .
 .SH SYNOPSIS
 .SY lokke
-.RB ( help | \-\-help | \-h | \-? )
-.YS
-.SY lokke
-.RB [ repl ]
+.RB [ help | \-\-help | \-h | \-? ]
 .YS
 .SY lokke
 .B \-0
@@ -45,15 +42,22 @@ Lokke is a Clojure dialect for Guile, and may be invoked in two ways.
 .B lokke
 is the most general command, acting as specified by an initial
 subcommand argument (e.g.
-.BR repl ,
-.BR run ,
-etc.), while
+.BR run ),
+while
 .B lok
 is a convenience for interactive use, and behaves exactly as if
 .B lokke run
 had been invoked with the same arguments.  When no arguments are
 provided, both commands present an interactive Read-Eval-Print-Loop
-(REPL) on the terminal.
+(REPL) on the terminal, and the
+.B run
+subcommand acts as if the final arguments had been
+.B -e '(clojure.main/repl)'
+whenever no other
+.BR \-l , \ \-e , \ \-a, \ \- ,
+or
+.B FILE
+arguments are given.
 .P
 Any
 .BR arg s

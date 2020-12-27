@@ -54,10 +54,9 @@
 (define (lokke-usage)
   (string-append
    "Usage:\n"
-   "  lokke (help | --help | -h | -?)\n"
-   "  lokke -0\n"
-   "  lokke [repl]\n"
+   "  lokke [help | --help | -h | -?]\n"
    "  lokke run [RUN_OPT ...] [-- COMMAND_LINE_ARG ...]\n"
+   "  lokke -0\n"
    (run-opts)))
 
 (define (lok-usage)
@@ -155,9 +154,13 @@
                 (apply (module-ref (resolve-ns ns) n) args)))
             actions)))
   (let loop ((args args)
+             (add-repl? #t)
              (result (make-options-hash)))
     (if (null? args)
-        (clean-up result)
+        (begin
+          (when add-repl?
+            (hash-table-update! result 'actions (add-apply "clojure.main/repl")))
+          (clean-up result))
         (let ((arg (car args)))
           (cond
            ((member arg '("-?" "-h" "--help")) (quit (usage) 0))
@@ -165,17 +168,17 @@
             (when (null? (cdr args))
               (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-evaluator (cadr args)))
-            (loop (cddr args) result))
+            (loop (cddr args) #f result))
            ((member arg '("-l" "--load"))
             (when (null? (cdr args))
               (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-loader (cadr args)))
-            (loop (cddr args) result))
+            (loop (cddr args) #f result))
            ((member arg '("-a" "--apply"))
             (when (null? (cdr args))
               (quit-early "lokke: no argument for ~a\n" arg))
             (hash-table-update! result 'actions (add-apply (cadr args)))
-            (loop (cddr args) result))
+            (loop (cddr args) #f result))
            ((equal? "--" arg)
             (hash-table-set! result 'args (cdr args))
             (clean-up result))
@@ -187,32 +190,11 @@
   (maybe-randomize-state args)
   (let ((opts (parse-run-args (remove-seed-args args) usage)))
     (let ((actions (hash-table-ref opts 'actions)))
-      (if (null? actions)
-          (present-repl '()) ;; Might get here with args via --strip
-          (begin
-            (binding (*command-line-args* (hash-table-ref opts 'args))
-                     (set-current-module (default-environment))
-                     (for-each (lambda (action) (action)) actions))
-            0)))))
-
-(define (configure-history)
-  (setenv "GUILE_HISTORY"
-          (or (getenv "LOKKE_HISTORY")
-              (string-append (ensure-config-dir) "/history"))))
-
-;; load-user-init adapted from the version in Guile 2.2.6 (LGPL 3)
-;; FIXME: propose accommodations upstream
-(define (load-user-init)
-  (let* ((home (or (getenv "HOME")
-                   (false-if-exception (passwd:dir (getpwuid (getuid))))
-                   file-name-separator-string)) ;; fallback for cygwin etc.
-         (init-file (in-vicinity home ".lokke_guile")))
-    ;; FIXME: add support for suppressing the init file (e.g. Guile's -q)
-    ;; FIXME: either add support for loading a clj ~/.lokke after
-    ;; this, or if feasible, drop .lokke_guile entirely in favor of
-    ;; that.  We'll need a primitive_load equivalent, etc.
-    (if (file-exists? init-file)
-        (primitive-load init-file))))
+      (begin
+        (binding (*command-line-args* (hash-table-ref opts 'args))
+                 (set-current-module (default-environment))
+                 (for-each (lambda (action) (action)) actions))
+        0))))
 
 (define (read-string-until port terminator)
   "Reads from port until reaching a match for the terminator string.
@@ -282,27 +264,17 @@ terminator."
       (set-program-arguments (cddr (program-arguments)))
       (eval preamble preamble-mod))))
 
-(define (present-repl args)
-  (unless (null? args)
-    (quit-early "lokke: repl invocation currently accepts no arguments\n"))
-  (set! *random-state* (random-state-from-platform))
-  (configure-history)
-  (load-user-init)
-  ((@ (lokke repl) repl)))
-
 (define (lok-main args)
   (lokke-run (cdr args) lok-usage))
 
 (define (lokke-main args)
-  (let ((len (length args)))
-    (if (< len 2)
-        (present-repl '())
-        (let ((cmd (cadr args)))
-          (cond
-           ((member cmd '("-?" "-h" "--help" "help")) (quit (lokke-usage) 0))
-           ((string-prefix? "-0" cmd) (run-script args lokke-usage))
-           ((string=? "repl" cmd) (present-repl (cddr args)))
-           ((string=? "run" cmd) (lokke-run (cddr args) lokke-usage))
-           (else
-            (display (lokke-usage) (err))
-            (quit-early "lokke: unrecognized subcommand ~s\n" cmd)))))))
+  (let* ((len (length args))
+         (args (if (< len 2) (cons* (car args) "run" (cdr args)) args))
+         (cmd (cadr args)))
+    (cond
+     ((member cmd '("-?" "-h" "--help" "help")) (quit (lokke-usage) 0))
+     ((string-prefix? "-0" cmd) (run-script args lokke-usage))
+     ((string=? "run" cmd) (lokke-run (cddr args) lokke-usage))
+     (else
+      (display (lokke-usage) (err))
+      (quit-early "lokke: unrecognized subcommand ~s\n" cmd)))))

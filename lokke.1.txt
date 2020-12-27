@@ -4,9 +4,7 @@ NAME
        lokke - a Clojure dialect for Guile
 
 SYNOPSIS
-       lokke (help|--help|-h|-?)
-
-       lokke [repl]
+       lokke [help|--help|-h|-?]
 
        lokke -0
 
@@ -19,11 +17,13 @@ SYNOPSIS
 DESCRIPTION
        Lokke  is  a Clojure dialect for Guile, and may be invoked in two ways.
        lokke is the most general command, acting as specified  by  an  initial
-       subcommand argument (e.g.  repl, run, etc.), while lok is a convenience
-       for interactive use, and behaves exactly as if lokke run had  been  in-
-       voked  with  the  same arguments.  When no arguments are provided, both
-       commands present an interactive Read-Eval-Print-Loop (REPL) on the ter-
-       minal.
+       subcommand  argument (e.g.  run), while lok is a convenience for inter-
+       active use, and behaves exactly as if lokke run had been  invoked  with
+       the  same  arguments.   When  no  arguments are provided, both commands
+       present an interactive Read-Eval-Print-Loop (REPL) on the terminal, and
+       the  run  subcommand  acts as if the final arguments had been -e '(clo-
+       jure.main/repl)' whenever no other -l, -e, -a, -, or FILE arguments are
+       given.
 
        Any  args will be available as *command-line-args* in Clojure, and must
        be delimited from the others by --.
