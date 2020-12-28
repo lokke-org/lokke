@@ -202,8 +202,10 @@
   (validate-arg 'add-suppressed lokke-exception? "an exception" ex)
   (validate-arg 'add-suppressed (lambda (x) (maybe-exception? x))
                 "an exception" suppressed-ex)
-  (ex-info (ex-message ex)
-           (ex-data ex)
+  (make-ex 'add-suppressed
+           (ex-tag ex)
+           #:msg (ex-message ex)
+           #:data (if (ex-info? ex) (ex-data ex) #nil)
            #:cause (ex-cause ex)
            #:suppressed (lokke-vector-conj (or (list-ref ex 4) (lokke-vector))
                                            suppressed-ex)))
