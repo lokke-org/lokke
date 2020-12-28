@@ -296,9 +296,9 @@
 
 (define-syntax loop
   (lambda (x)
-    (define (expand bindings body)
+    (define (expand context bindings body)
       (with-syntax ((((var val) ...) (pairify bindings))
-                    (recur (datum->syntax x 'recur)))
+                    (recur (datum->syntax context 'recur)))
         (let* ((var-vals #'((var val) ...))
                (shim-args (generate-temporaries var-vals))
                (recur-args (map (lambda (shim var-val)
@@ -313,10 +313,10 @@
                       (let** #,let-args
                              #,@body)))))
     (syntax-case x ()
-      ((_ (vec-tag meta binding ...) body ...) (vec-tag? #'vec-tag)
-       (expand #'(binding ...) #'(body ...)))
-      ((_ (binding ...) body ...)
-       (expand #'(binding ...) #'(body ...))))))
+      ((loop (vec-tag meta binding ...) body ...) (vec-tag? #'vec-tag)
+       (expand #'loop #'(binding ...) #'(body ...)))
+      ((loop (binding ...) body ...)
+       (expand #'loop #'(binding ...) #'(body ...))))))
 
 (define-syntax dotimes
   (lambda (x)
