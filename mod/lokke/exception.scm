@@ -385,4 +385,4 @@
                ex
                (lambda () (action resource)))))))
       ((_ () body ...)
-       #'(begin body ...)))))
+       #'(begin #nil body ...)))))
