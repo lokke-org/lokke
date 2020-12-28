@@ -6,8 +6,8 @@
 
 (ns test.clojure-exceptions
   (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]
-   [lokke.exception :refer [ex-suppressed ex-tag]]))
+   [clojure.test :refer [begin-tests deftest end-tests is testing]]
+   [lokke.exception :refer [ex-suppressed ex-tag with-final]]))
 
 ;; The tests for this namespace are split between here and
 ;; test/lokke-exception.
@@ -101,6 +101,290 @@
         (is (same-ex-excepting-suppressed? ex-1 ex))
         (is (= [ex-2] (seq (ex-suppressed ex))))))
     (is (= [1] (deref fin)))))
+
+  (testing "try suppression"
+    (is (= nil (try)))
+    (is (= 1 (try 1)))
+    (is (= 3 (try 1 2 3)))
+    (is (= nil (try (finally))))
+    (is (= 1 (try 1 (finally))))
+    (let [fin (atom [])]
+      (is (= nil (try
+                   (finally
+                     (swap! fin conj 1)))))
+      (is (= [1] @fin)))
+    (let [fin (atom [])]
+      (is (= nil (try
+                   (catch Exception ex
+                     (swap! fin conj 1))
+                   (finally
+                     (swap! fin conj 2)))))
+      (is (= [2] @fin)))
+    (let [fin (atom [])]
+      (is (= [1] (try
+                   (throw (Exception. "one"))
+                   (catch Exception ex
+                     (swap! fin conj 1))
+                   (finally
+                     (swap! fin conj 2)))))
+      (is (= [1 2] @fin)))
+    (let [fin (atom [])]
+      (is (= nil (try
+                   (finally
+                     (swap! fin conj 1)
+                     (swap! fin conj 2)))))
+      (is (= [1 2] @fin)))
+    (let [fin (atom [])]
+      (is (= 1 (try
+                 (inc 0)
+                 (finally
+                   (swap! fin conj 1)))))
+      (is (= [1] @fin)))
+    (let [fin (atom [])
+          ex-1 (Exception. "one")]
+      (try
+        (try
+          (throw ex-1)
+          (finally
+            (swap! fin conj 1)))
+        (catch Exception ex
+          ;; UNRESOLVED: decide if lokke exceptions can remain
+          ;; immutable, and if so, what that should mean for equal?
+          ;; (is (= ex-1 ex))
+          ;; Until then...
+          (is (= "one" (ex-message ex)))))
+      (is (= [1] @fin)))
+    (let [fin (atom [])
+          ex-1 (Exception. "one")
+          ex-2 (Exception. "two")]
+      (try
+        (try
+          (throw ex-1)
+          (finally
+            (swap! fin conj 1)
+            (throw ex-2)))
+        (catch Exception ex
+          ;; See UNRESOLVED above
+          ;;(is (= ex-1 ex))
+          (is (= "one" (ex-message ex)))
+          (is (= [ex-2] (seq (ex-suppressed ex))))))
+      (is (= [1] @fin))))
+
+(testing "with-final :always behavior"
+  (is (= nil (with-final [])))
+  (is (= 1 (with-final [] 1)))
+
+  (testing "when nothing is thrown"
+    (let [closed? (atom false)
+          close #(reset! closed? %)]
+      (is (= false @closed?))
+      (is (= :foo (with-final [x :yep :always close]
+                    (is (= false @closed?))
+                    (is (= :yep x))
+                    :foo)))
+      (is (= :yep @closed?)))
+
+    (let [closes (atom [])
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(swap! closes conj [2 %])]
+      (is (=  [] @closes))
+      (is (= :foo (with-final [x :x :always close-1
+                               y :y :always close-2]
+                    (is (= [] @closes))
+                    (is (= :x x))
+                    (is (= :y y))
+                    :foo)))
+      (is (= [[2 :y] [1 :x]] @closes))))
+
+  (testing "when body throws"
+    (let [closes (atom [])
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(swap! closes conj [2 %])]
+      (is (=  [] @closes))
+      (is (= ["bar" {::bar 1}]
+             (try
+               (with-final [x :x :always close-1
+                            y :y :always close-2]
+                 (is (= [] @closes))
+                 (throw (ex-info "bar" {::bar 1})))
+               (catch ExceptionInfo ex
+                 [(ex-message ex) (ex-data ex)]))))
+      (is (= [[2 :y] [1 :x]] @closes))))
+
+  (testing "when close throws"
+    (let [closes (atom [])
+          close-ex (ex-info "bar" {::bar 1})
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(do (swap! closes conj [2 %]) (throw close-ex))
+          close-3 #(swap! closes conj [3 %])]
+      (let [ex (try
+                 (with-final [x :x :always close-1
+                              y :y :always close-2
+                              z :z :always close-3]
+                   (is (= [] @closes))
+                   :foo)
+                 (catch ExceptionInfo ex
+                   ex))]
+        (is (= [[3 :z] [2 :y] [1 :x]] @closes))
+        (is (= "bar" (ex-message ex)))
+        (is (= {::bar 1} (ex-data ex)))
+        (is (= nil (seq (ex-suppressed ex)))))))
+
+  (testing "when body and close throw"
+    (let [closes (atom [])
+          close-ex-1 (ex-info "bar" {::bar 1})
+          close-ex-2 (ex-info "baz" {::baz 1})
+          body-ex (ex-info "bax" {::bax 1})
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(do (swap! closes conj [2 %]) (throw close-ex-1))
+          close-3 #(do (swap! closes conj [3 %]) (throw close-ex-2))]
+      (let [ex (try
+                 (with-final [x :x :always close-1
+                              y :y :always close-2
+                              z :z :always close-3]
+                   (is (=  [] @closes))
+                   (throw body-ex))
+                 (catch ExceptionInfo ex
+                   ex))]
+        (is (= [[3 :z] [2 :y] [1 :x]] @closes))
+        (is (= "bax" (ex-message ex)))
+        (is (= {::bax 1} (ex-data ex)))
+        (is (= [(ex-message close-ex-2) (ex-message close-ex-1)]
+               (map ex-message (ex-suppressed ex))))))))
+
+(testing "trivial with final destructuring"
+  (is (= [2 1] (with-final [[x y] [1 2]]
+                 [y x])))
+  (is (= [3 1] (with-final [[x] [1 2]
+                            [y] [3 4]]
+                 [y x]))))
+
+(deftest with-final-error-behavior
+  (is (= nil (with-final [])))
+  (is (= 1 (with-final [] 1)))
+
+  (testing "when nothing is thrown"
+    (let [closed? (atom false)
+          close #(reset! closed? %)]
+      (is (= false @closed?))
+      (is (= :foo (with-final [x :x :error close]
+                    (is (= false @closed?))
+                    (is (= :x x))
+                    :foo)))
+      (is (= false @closed?)))
+
+    (let [closes (atom [])
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(swap! closes conj [2 %])]
+      (is (=  [] @closes))
+      (is (= :foo (with-final [x :x :error close-1
+                               y :y :error close-2]
+                    (is (=  [] @closes))
+                    (is (= :x x))
+                    (is (= :y y))
+                    :foo)))
+      (is (= [] @closes))))
+
+  (testing "when body throws"
+    (let [closes (atom [])
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(swap! closes conj [2 %])]
+      (is (=  [] @closes))
+      (is (= ["bar" {::bar 1}]
+             (try
+               (with-final [x :x :error close-1
+                            y :y :error close-2]
+                 (is (= [] @closes))
+                 (throw (ex-info "bar" {::bar 1})))
+               (catch ExceptionInfo ex
+                 [(ex-message ex) (ex-data ex)]))))
+      (is (= [[2 :y] [1 :x]] @closes))))
+
+  (testing "when only a close throws"
+    (let [closes (atom [])
+          close-ex (ex-info "bar" {::bar 1})
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(do (swap! closes conj [2 %]) (throw close-ex))
+          close-3 #(swap! closes conj [3 %])]
+      (let [result (try
+                     (with-final [x :x :error close-1
+                                  y :y :error close-2
+                                  z :z :error close-3]
+                       (is (=  [] @closes))
+                       :foo)
+                     (catch ExceptionInfo ex
+                       ex))]
+        (is (= [] @closes))
+        (is (= :foo result)))))
+
+  (testing "when body and close throw"
+    (let [closes (atom [])
+          close-ex-1 (ex-info "bar" {::bar 1})
+          close-ex-2 (ex-info "baz" {::baz 1})
+          body-ex (ex-info "bax" {::bax 1})
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(do (swap! closes conj [2 %]) (throw close-ex-1))
+          close-3 #(do (swap! closes conj [3 %]) (throw close-ex-2))]
+      (let [ex (try
+                 (with-final [x :x :error close-1
+                              y :y :error close-2
+                              z :z :error close-3]
+                   (is (= [] @closes))
+                   (throw body-ex))
+                 (catch ExceptionInfo ex
+                   ex))]
+
+        (is (= [[3 :z] [2 :y] [1 :x]] @closes))
+        (is (= "bax" (ex-message ex)))
+        (is (= {::bax 1} (ex-data ex)))
+        (is (= [(ex-message close-ex-2) (ex-message close-ex-1)]
+               (map ex-message (ex-suppressed ex))))))))
+
+(testing "with-final mixed forms"
+
+  (is (= 1 (with-final [x 1] x)))
+
+  (testing "normal let bindings and :error"
+    (let [closes (atom [])
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(swap! closes conj [2 %])]
+      (is (= [] @closes))
+      (is (= ["bar" {::bar 1}]
+             (try
+               (with-final [c1 :x
+                            x c1 :error close-1
+                            c2 :y
+                            y c2 :error close-2]
+                 (is (= [] @closes))
+                 (is (= :x c1))
+                 (is (= :x x))
+                 (is (= :y c2))
+                 (is (= :y y))
+                 (throw (ex-info "bar" {::bar 1})))
+               (catch ExceptionInfo ex
+                 [(ex-message ex) (ex-data ex)]))))
+      (is (= [[2 :y] [1 :x]] @closes))))
+
+  (testing "normal let bindings and :always"
+    (let [closes (atom [])
+          close-1 #(swap! closes conj [1 %])
+          close-2 #(swap! closes conj [2 %])]
+      (is (= [] @closes))
+      (is (= ["bar" {::bar 1}]
+             (try
+               (with-final [c1 :x
+                            x c1 :always close-1
+                            c2 :y
+                            y c2 :always close-2]
+                 (is (= [] @closes))
+                 (is (= :x c1))
+                 (is (= :x x))
+                 (is (= :y c2))
+                 (is (= :y y))
+                 (throw (ex-info "bar" {::bar 1})))
+               (catch ExceptionInfo ex
+                 [(ex-message ex) (ex-data ex)]))))
+      (is (= [[2 :y] [1 :x]] @closes)))))
 
 ;; We can't easily test with-open here until we have some way to
 ;; create custom close methods.  See test/lokke-exception instead.

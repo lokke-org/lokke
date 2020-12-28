@@ -215,15 +215,18 @@
   (apply %scm-throw ex))
 
 (define (call-with-exception-suppression ex thunk)
-  (%scm-catch
-   #t
-   thunk
-   (lambda suppressed
-     (if (lokke-exception? ex)
-         (apply %scm-throw (add-suppressed ex suppressed))
-         ;; Match the JVM for now -- until/unless we figure out
-         ;; a way to handle suppressed exceptions universally.
-         (apply %scm-throw suppressed)))))
+  (let* ((result (%scm-catch
+                  #t
+                  thunk
+                  (lambda suppressed
+                    (if (lokke-exception? ex)
+                        (apply %scm-throw (add-suppressed ex suppressed))
+                        ;; Match the JVM for now -- until/unless we figure out
+                        ;; a way to handle suppressed exceptions universally.
+                        (apply %scm-throw suppressed))))))
+    (when ex
+      (apply %scm-throw ex))
+    result))
 
 ;; Wonder about allowing an exception arg for a custom finally clause,
 ;; say (finally* ex ...), which would be nil unless an exception was
@@ -288,25 +291,23 @@
        (let* ((caught (car (generate-temporaries '(#t))))
               (body (body-clauses #'(exp* ...)))
               (catches (catch-clauses caught #'(exp* ...))))
-         #`(%scm-catch
-            #t
-            (lambda ()
-              (let* ((result (%scm-catch
+         #`(let* ((result (%scm-catch
+                           #t
+                           (lambda ()
+                             (%scm-catch
                               #t
                               (lambda () #nil #,@body)
                               ;; FIXME: compiler smart enough to elide?
                               (lambda #,caught
                                 (cond
                                  #,@catches
-                                 (else (apply %scm-throw #,caught)))))))
-                finally-exp* ...
-                result))
-            (lambda ex
-              (call-with-exception-suppression
-               ex
-               (lambda ()
-                 finally-exp* ...
-                 (apply %scm-throw ex)))))))
+                                 (else (apply %scm-throw #,caught))))))
+                           (lambda ex
+                             (call-with-exception-suppression
+                              ex
+                              (lambda () #nil finally-exp* ...))))))
+             finally-exp* ...
+             result)))
 
       ;; Assume no finally clause
       ((_ exp* ...)
