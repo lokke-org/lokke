@@ -141,8 +141,8 @@
         (let* ((x (lokke-vector-ref suppressed i)))
           (unless (maybe-exception? x)
             (scm-error 'wrong-type-arg fn-name
-                       "suppressed item is not an exception: ~A"
-                       (list x) (x)))))))
+                       "suppressed item is not an exception: ~s"
+                       (list x) (list x)))))))
   (list kind msg data cause suppressed))
 
 (define (make-ex-constructor fn-name kind)
