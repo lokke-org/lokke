@@ -180,15 +180,6 @@
                             #'(format (current-error-port) arg ...)
                             #t)))))
 
-(define (find-id exp)
-        (syntax-case exp ()
-          (() #f)
-          ((() exp ...) (find-id #'(exp ...)))
-          (((x subexp ...) exp ...)
-           (%scm-if (identifier? #'x) #'x (find-id #'((subexp ...) exp ...))))
-          ((x exp ...)
-           (%scm-if (identifier? #'x) #'x (find-id #'(exp ...))))))
-
 (define (strip-top-level-metadata forms)
   ;; e.g. (let [^Integer x 5] x)
   ;;
@@ -200,16 +191,9 @@
 (define-syntax let**
   (lambda (x)
     (define (destructured-bindings binding init body)
-      ;; Suspect there's a more correct way to handle this (imagine we
-      ;; may want to rework destructuring), but for now, just search
-      ;; the body for an identifier to use to establish the context
-      ;; (scoping) when insinuating destructuring-related bindings
-      ;; (e.g. :keys), so that x will be in scope in the body of say
-      ;; (fn [{:keys [x]}] x) ...).
-      (let ((var (car (generate-temporaries '(#t))))
-            (context (%scm-or (find-id body) x)))
+      (let ((var (car (generate-temporaries '(#t)))))
         (cons #`(#,var #,init)
-              (destructure-binding-syntax context binding var))))
+              (destructure-binding-syntax binding binding var))))
     (define (expand bindings body)
       (let* ((bindings (strip-top-level-metadata bindings))
              (destructured (append-map!
