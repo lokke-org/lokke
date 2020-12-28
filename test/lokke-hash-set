@@ -62,7 +62,10 @@
 (test-assert (t/get (t/hash-set 1 2 3) 2))
 (test-eq 'not-found (t/get (t/hash-set) 1 'not-found))
 
-(test-eqv 15 (reduce + 0 (t/hash-set 1 2 3 4 5)))
+(test-eqv 0 (reduce + (t/hash-set)))
+(test-eqv 15 (reduce + (t/hash-set 1 2 3 4 5)))
+(test-eqv 16 (reduce + 1 (t/hash-set 1 2 3 4 5)))
+(test-eqv "x" (reduce / (t/hash-set "x")))
 
 (test-end)
 

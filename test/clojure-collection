@@ -120,6 +120,7 @@
 
 (testing "reduce"
   (is (= 0 (reduce + [])))
+  (is (= :fine (reduce + [:fine])))
   (is (= :fine (reduce (fn [] :crash) [:fine])))
   (is (= 3 (reduce + [1 2])))
   (is (= 6 (reduce + [1 2 3])))

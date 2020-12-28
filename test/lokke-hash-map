@@ -63,6 +63,7 @@
 (test-equal 4 (t/get (t/hash-map 1 2 3 4) 3))
 (test-eq 'not-found (t/get (t/hash-map) 1 'not-found))
 
+(test-eqv "x" (t/reduce-kv / "x" (t/hash-map)))
 (test-eqv 21 (t/reduce-kv (lambda (result k v) (+ result k v))
                           0
                           (t/hash-map 1 2 3 4 5 6)))
