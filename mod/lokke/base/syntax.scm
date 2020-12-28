@@ -207,10 +207,10 @@
                 (syntax->datum `(let* ,destructured ,@body)))
          result))
     (syntax-case x ()
+      ((_ ()) #nil)
+      ((_ (vec-tag meta) body ...)  (vec-tag? #'vec-tag) #nil)
       ((_ (vec-tag meta binding ...) body ...)  (vec-tag? #'vec-tag)
        (expand #'(binding ...) #'(body ...)))
-      ;; Lists of bindings
-      ((_ ()) #nil)
       ((_ (binding ...) body ...) (expand #'(binding ...) #'(body ...))))))
 
 (define-syntax if

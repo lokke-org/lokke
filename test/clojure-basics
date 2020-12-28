@@ -10,6 +10,8 @@
 
 (begin-tests (ns-name *ns*))
 
+(is (= nil (let [])))
+
 (testing "version"
   (is (string? (clojure-version)))
   (is (re-matches #"\d+\.\d+\.\d+" (clojure-version)))
