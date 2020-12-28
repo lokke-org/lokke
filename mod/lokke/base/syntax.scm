@@ -417,8 +417,7 @@
       (define (expand args body)
         (if (null? body)
             (make-fn args body)
-            ;; Do we need (car body), or could it be context?
-            (with-syntax ((recur (datum->syntax (car body) 'recur)))
+            (with-syntax ((recur (datum->syntax context 'recur)))
               #`(letrec ((recur #,(make-fn args body)))
                   recur))))
       (syntax-case args (&)
@@ -429,11 +428,11 @@
         (#(arg ... & rst) (expand #'(arg ... . rst) body))
         (#(arg ...) (expand #'(arg ...) body))))
 
-    (define (named-single-arity template name args body)
+    (define (named-single-arity context name args body)
       (define (expand args body)
         (if (null? body)
             (make-fn args body)
-            (with-syntax ((recur (datum->syntax (car body) 'recur)))
+            (with-syntax ((recur (datum->syntax context 'recur)))
               #`(letrec ((#,name (lambda args (apply recur args)))
                          (recur #,(make-fn args body)))
                   recur))))
@@ -491,15 +490,15 @@
 
       ;; Named single arity
       ((_ name (args body ...)) (and (identifier? #'name) (single-arity? #'args))
-       (named-single-arity x #'name #'args #'(body ...)))
+       (named-single-arity #'args #'name #'args #'(body ...)))
       ((_ name args body ...) (and (identifier? #'name) (single-arity? #'args))
-       (named-single-arity x #'name #'args #'(body ...)))
+       (named-single-arity #'args #'name #'args #'(body ...)))
 
       ;; Unnamed single arity
       ((_ args body ...) (single-arity? #'args)
-       (single-arity x #'args #'(body ...)))
+       (single-arity #'args #'args #'(body ...)))
       ((_ (args body ...)) (single-arity? #'args)
-       (single-arity x #'args #'(body ...)))
+       (single-arity #'args #'args #'(body ...)))
 
       ;; Better be multi-arity...
 

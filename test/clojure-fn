@@ -15,9 +15,11 @@
 
 (testing "single arity fn"
   (is (= nil ((fn []))))
+  (is (= nil ((fn [] nil))))
   (is (= 1 ((fn [] 1))))
   (is (= 1 ((fn [x] x) 1)))
   (is (= nil ((fn foo []))))
+  (is (= nil ((fn foo [] nil))))
   (is (= 1 ((fn foo [x] x) 1)))
   (is (= 0 ((fn foo [x] (if (zero? x) x (foo (dec x)))) 3)))
   (is (= 0 ((fn foo [x] (if (zero? x) x (recur (dec x)))) 3)))
@@ -26,6 +28,9 @@
 
 (testing "multiple arity fn with single body"
   (is (= nil ((fn ([])))))
+  (is (= nil ((fn ([] nil)))))
+  (is (= nil ((fn foo ([])))))
+  (is (= nil ((fn foo ([] nil)))))
   (is (= 1 ((fn ([] 1)))))
   (is (= 1 ((fn ([x] x)) 1)))
   (is (= 1 ((fn foo ([x] x)) 1)))
@@ -36,6 +41,7 @@
 
 (testing "multiple arity fn with multiple bodies"
   (is (= nil ((fn ([]) ([x])))))
+  (is (= nil ((fn ([] nil) ([x] nil)))))
   (is (= nil ((fn ([]) ([x])) 1)))
   (is (= 1 ((fn ([] 1) ([x] x)))))
   (is (= 2 ((fn ([] 1) ([x] x)) 2)))
@@ -43,12 +49,15 @@
   (is (= '(1 2 3) ((fn ([] 1) ([x & y] (apply list x y))) 1 2 3)))
   ;; named
   (is (= nil ((fn foo ([]) ([x])))))
+  (is (= nil ((fn foo ([] nil) ([x] nil)))))
   (is (= nil ((fn foo ([]) ([x])) 1)))
   (is (= 1 ((fn foo ([] 1) ([x] x)))))
   (is (= 2 ((fn foo ([] 1) ([x] x)) 2)))
   (is (= 3 ((fn foo ([] 1) ([x y] y)) 2 3)))
   (is (= '(1 2 3) ((fn foo ([] 1) ([x & y] (apply list x y))) 1 2 3)))
   ;; recursions
+  (is (= nil ((fn ([] nil) ([x] (if (zero? x) (recur) (recur (dec x))))) 3)))
+  (is (= nil ((fn foo ([] nil) ([x] (if (zero? x) (foo) (foo (dec x))))) 3)))
   (is (= 0 ((fn ([] 0) ([x] (if (zero? x) (recur) (recur (dec x))))) 3)))
   (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (foo) (foo (dec x))))) 3)))
   (is (= 0 ((fn foo ([] 0) ([x] (if (zero? x) (recur) (recur (dec x))))) 3))))
