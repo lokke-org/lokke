@@ -91,22 +91,24 @@
 
 (define-class <hash-map> (<map>)
   (internals #:init-keyword #:internals)
+  (count #:init-keyword #:count)
   (meta #:init-keyword #:meta))
 
-(define-syntax-rule (make-map fm meta)
-  (make <hash-map> #:internals fm #:meta meta))
+(define-syntax-rule (make-map fm n meta)
+  (make <hash-map> #:internals fm #:count n #:meta meta))
 
 (define-syntax-rule (map-fm m) (slot-ref m 'internals))
+(define-syntax-rule (map-count m) (slot-ref m 'count))
 (define-syntax-rule (map-meta m) (slot-ref m 'meta))
 
 (define-method (meta (m <hash-map>)) (map-meta m))
 
 (define-method (with-meta (m <hash-map>) (mdata <boolean>))
   (require-nil 'with-meta 2 mdata)
-  (make-map (map-fm m) mdata))
+  (make-map (map-fm m) (map-count m) mdata))
 
 (define-method (with-meta (m <hash-map>) (mdata <hash-map>))
-  (make-map (map-fm m) mdata))
+  (make-map (map-fm m) (map-count m) mdata))
 
 (define (show m emit port)
   (display "{" port)
@@ -135,15 +137,21 @@
 (define (hash-map? x) (is-a? x <hash-map>))
 
 (define-method (assoc (m <hash-map>) k v)
-  (make-map (fash-set (map-fm m) k v)
-            (map-meta m)))
+  (let* ((n (map-count m))
+         (fm (fash-update (map-fm m) k
+                          (lambda (existing)
+                            (when (eq? existing not-found)
+                              (set! n (1+ n)))
+                            v)
+                          not-found)))
+    (make-map fm n (map-meta m))))
 
 (define empty-fash (make-fash #:hash hash #:equal clj=))
-(define empty-hash-map (make-map empty-fash #nil))
+(define empty-hash-map (make-map empty-fash 0 #nil))
 (define (empty-hash-map-w-meta data)
   (if (eq? #nil data)
       empty-hash-map
-      (make-map empty-fash data)))
+      (make-map empty-fash 0 data)))
 
 (define (hash-map . alternating-keys-and-values)
   (if (null? alternating-keys-and-values)
@@ -161,27 +169,37 @@
              '()))
 
 (define-method (conj (m1 <hash-map>) (m2 <hash-map>))
-  (make-map (fash-fold (lambda (k v result)
-                         (if (eq? v not-found)
-                             result
-                             (fash-set result k v)))
-                       (map-fm m2)
-                       (map-fm m1))
-            (map-meta m1)))
+  ;; FIXME: should this just be in terms of assoc or an %assoc?
+  (let* ((n (map-count m1))
+         (fm (fash-fold (lambda (k v result)
+                          (if (eq? v not-found)
+                              result
+                              (fash-update result k
+                                           (lambda (existing)
+                                             (when (eq? existing not-found)
+                                               (set! n (1+ n)))
+                                             v)
+                                           not-found)))
+                        (map-fm m2)
+                        (map-fm m1))))
+    (make-map fm n (map-meta m1))))
 
 (define-method (dissoc (m <hash-map>) . xs)
-  (make-map (fold (lambda (x result)
-                    (fash-set result x not-found))
-                  (map-fm m)
-                  xs)
-            (map-meta m)))
-
-(define-method (count (m <hash-map>))
-  (fash-fold (lambda (k v size) (if (eq? v not-found) size (1+ size)))
-             (map-fm m)
-             0))
+  (let* ((n (map-count m))
+         (fm (fold (lambda (x result)
+                     (fash-update result x
+                                  (lambda (existing)
+                                      (unless (eq? existing not-found)
+                                        (set! n (1- n)))
+                                      not-found)
+                                  not-found))
+                   (map-fm m)
+                   xs)))
+    (make-map fm n (map-meta m))))
 
 (define-method (counted? (m <hash-map>)) #t)
+(define-method (count (m <hash-map>)) (map-count m))
+
 (define-method (empty (m <hash-map>)) (empty-hash-map-w-meta (map-meta m)))
 ;; not-empty - generic default is correct
 
@@ -263,6 +281,7 @@
 
 (define (update m k f . args)
   (make-map (apply fash-update (map-fm m) k f #nil args)
+            (map-count m)
             (map-meta m)))
 
 (define-method (reduce-kv f init (m <hash-map>))
@@ -283,11 +302,12 @@
 
 (define-method (hash (x <hash-map>))
   (let* ((m (map-fm x))
-         (n (fash-size m))
+         (n (map-count x))
          (hashes (make-vector n)))
     (fash-fold (lambda (k v i)
-                 (vector-set! hashes i (logxor (hash k) (hash v)))
-                 (1+ i))
+                 (unless (eq? v not-found)
+                   (vector-set! hashes i (logxor (hash k) (hash v)))
+                   (1+ i)))
                m
                0)
     (vector-sort! < hashes)
