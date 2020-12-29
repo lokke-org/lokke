@@ -206,12 +206,12 @@
 
 
 (defn -main [& args]
+  #?(:clj (def n (. Integer valueOf (nth args 0) 10))
+     :cljl (def n (guile.guile/string->number (nth args 0) 10)))
   (when (not= (count args) 1)
     (usage 1))
   (when (not (re-matches #"^\d+$" (nth args 0)))
     (usage 1))
-  #?(:clj (def n (. Integer valueOf (nth args 0) 10))
-     :cljl (def n (guile.guile/string->number (nth args 0) 10)))
   (when (< n 1)
     (usage 1))
   (let [bodies (n-body-system)
