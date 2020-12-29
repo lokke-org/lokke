@@ -170,6 +170,8 @@
         (let ((arg (car args)))
           (cond
            ((member arg '("-?" "-h" "--help")) (quit (usage) 0))
+           ((equal? arg "-p")
+            (loop (cons* "--deps" "deps.edn" (cdr args)) add-repl? result))
            ((equal? arg "--deps")
             (when (null? (cdr args))
               (quit-early "lokke: no argument for ~a\n" arg))

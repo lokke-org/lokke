@@ -121,6 +121,12 @@ into the dependency map.  See the
 .B DEPENDENCIES
 section below for further information.
 .TP
+.B \-p
+Treat the current working directory as a project.  At the moment, this
+just acts as if
+.B \-\-deps \ deps.edn
+had been specified in its place.
+.TP
 .BI \-\-seed \fB\ sys
 Initialize the *random\-state* (which affects calls like rand\-int) at
 startup in a platform-specific way. Insufficient for security-critical

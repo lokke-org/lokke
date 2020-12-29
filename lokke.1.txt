@@ -65,6 +65,10 @@ RUN_OPT
               map.  See the DEPENDENCIES section below  for  further  informa-
               tion.
 
+       -p     Treat  the  current  working directory as a project.  At the mo-
+              ment, this just acts as if --deps  deps.edn had  been  specified
+              in its place.
+
        --seed sys
               Initialize   the   *random-state*   (which  affects  calls  like
               rand-int) at startup in a  platform-specific  way.  Insufficient
