@@ -12,6 +12,8 @@ jobs:
       - run: sudo -i "$(pwd)/dev/prep-for-debianish-build" guile-2.2
       - run: test 2 = $(guile -c '(display (major-version))')
       - run: ./setup && autoreconf -fi && ./configure
+      - run: git config --global user.email "you@example.com"
+      - run: git config --global user.name "Your Name"
       - run: make -j4 check-everything
   guile-3:
     runs-on: ubuntu-20.04
@@ -22,4 +24,6 @@ jobs:
       - run: sudo -i "$(pwd)/dev/prep-for-debianish-build" guile-3.0
       - run: test 3 = $(guile -c '(display (major-version))')
       - run: ./setup && autoreconf -fi && ./configure
+      - run: git config --global user.email "you@example.com"
+      - run: git config --global user.name "Your Name"
       - run: make -j4 check-everything
