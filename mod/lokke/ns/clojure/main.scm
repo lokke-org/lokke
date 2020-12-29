@@ -6,26 +6,35 @@
   #:use-module ((lokke config) #:select (ensure-config-dir))
   #:export (repl))
 
+(define history-configured? #f)
+
 (define (configure-history)
-  (setenv "GUILE_HISTORY"
-          (or (getenv "LOKKE_HISTORY")
-              (string-append (ensure-config-dir) "/history"))))
+  (unless history-configured?
+    (setenv "GUILE_HISTORY"
+            (or (getenv "LOKKE_HISTORY")
+                (string-append (ensure-config-dir) "/history")))
+    (set! history-configured? #t)))
+
+
+(define user-init-loaded? #f)  ;; Should this be per-module?
 
 ;; load-user-init adapted from the version in Guile 2.2.6 (LGPL 3)
 ;; FIXME: propose accommodations upstream
 (define (load-user-init)
-  (let* ((home (or (getenv "HOME")
-                   (false-if-exception (passwd:dir (getpwuid (getuid))))
-                   file-name-separator-string)) ;; fallback for cygwin etc.
-         (init-file (string-append (ensure-config-dir) "/interactive.scm")))
-    ;; FIXME: add support for suppressing the init file (e.g. Guile's -q)
-    ;; FIXME: instead of or in addition, support loading an interactive.clj?
-    ;; We'll need a primitive-load equivalent, etc.
-    (if (file-exists? init-file)
-        (save-module-excursion
-         (lambda ()
-           (set-current-module (resolve-module '(guile-user)))
-           (primitive-load init-file))))))
+  (unless user-init-loaded?
+    (let* ((home (or (getenv "HOME")
+                     (false-if-exception (passwd:dir (getpwuid (getuid))))
+                     file-name-separator-string)) ;; fallback for cygwin etc.
+           (init-file (string-append (ensure-config-dir) "/interactive.scm")))
+      ;; FIXME: add support for suppressing the init file (e.g. Guile's -q)
+      ;; FIXME: instead of or in addition, support loading an interactive.clj?
+      ;; We'll need a primitive-load equivalent, etc.
+      (if (file-exists? init-file)
+          (save-module-excursion
+           (lambda ()
+             (set-current-module (resolve-module '(guile-user)))
+             (primitive-load init-file)))))
+    (set! user-init-loaded? #t)))
 
 (define (repl)
   (configure-history)
