@@ -424,4 +424,22 @@
   (is (= {:x 1} (zipmap [:x :y] [1])))
   (is (= {:x 1 :y 2} (zipmap [:x :y] [1 2]))))
 
+(testing "some"
+  (is (= 3 (some identity [nil nil false 3 4 5])))
+  (is (= 1 (some identity [1 2 3 4 5])))
+  (is (= nil (some identity [nil false nil])))
+  (is (= nil (some identity []))))
+
+(testing "repeat"
+  (is (= [1 1 1] (take 3 (repeat 1))))
+  (is (= [1 1 1] (repeat 3 1)))
+  (is (= [] (repeat 0 1)))
+  (is (= [nil nil nil] (repeat 3 nil))))
+
+(testing "repeatedly"
+  (is (= [1 1 1] (take 3 (repeatedly (fn [] 1)))))
+  (is (= [1 1 1] (take 3 (drop 100 (repeatedly (fn [] 1))))))
+  (is (= [1 1 1] (repeatedly 3 (fn [] 1))))
+  (is (= [] (repeatedly 0 (fn [] 1)))))
+
 (end-tests (ns-name *ns*) :exit? true)
