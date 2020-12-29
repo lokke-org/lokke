@@ -16,10 +16,8 @@
 
 (define (xdg-dir env-name dot-name)
   (let ((xdg (getenv env-name)))
-    (if xdg
-        (if (string=? "" xdg)
-            (string-append (getenv "HOME") "/" dot-name "/lokke")
-            xdg)
+    (if (and xdg (not (string=? "" xdg)))
+        (string-append xdg "/lokke")
         (string-append (getenv "HOME") "/" dot-name "/lokke"))))
 
 (define (cache-dir) (xdg-dir "XDG_CACHE_HOME" ".cache"))
