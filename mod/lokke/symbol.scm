@@ -63,7 +63,9 @@ clojure string) for clojure.string."
                  (list ref)
                  (map string->symbol split))))
     (if (eq? 'guile (car ns))
-        (cdr ns)
+        (if (null? (cdr ns))
+            ns
+            (cdr ns))
         (apply list 'lokke 'ns ns))))
 
 

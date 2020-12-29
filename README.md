@@ -307,13 +307,15 @@ implemented by the `(lokke ns clojure string)` module, and
 `clojure.string/join` is exactly equivalent to a Guile reference to
 the `join` function in the `(lokke ns clojure string)` module.
 
-All clojure namspaces starting with `guile.` represent direct
-references to the root of the guile module tree.  For example,
-`(guile.guile/current-time)`, `(guile.srfi.srfi-19/current-date)`, or
-`(guile.guile/delete-file ...)`.  More specifically, they provide a
-convenient way to refer to modules that are not under a `(lokke ns
-...)` prefix, and of course you can use them in forms like `ns` and
-`require`.
+All clojure namspaces starting with `guile` represent direct
+references to the root of the guile module tree, e.g.
+`(guile.srfi.srfi-19/current-date)` calls the `current-date` function
+in the guile `(srfi srfi-19)` module.  These provide a convenient way
+to refer to modules that are not under a `(lokke ns ...)` prefix, and
+of course you can use them in forms like `ns` and `require`.  As a
+special case, the `guile` namespace refers to the `(guile)` module,
+not `(guile guile)`.  For example `(guile/current-time)` or
+`(guile/delete-file ...)`.
 
 In many cases, you may have `lokke` or `lok` handle the Guile
 `%load-path` for you via deps.edn `:paths`, but manual arrangements
