@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+set -uxeo pipefail
+
+top="$(pwd)"
+
+exit_rm_paths=()
+
+on_exit()
+{
+    if test "${#exit_rm_paths[@]}" -gt 0; then
+        rm -rf "${exit_rm_paths[@]}"
+    fi
+}
+trap on_exit EXIT
+
+if test -z "${LOKKE_TEST_ALLOW_RANDOM_DOWNLOADS:-}"; then
+    echo '1..0 # skip trivial-deps tests (LOKKE_TEST_ALLOW_RANDOM_DOWNLOADS unset)'
+    exit 0
+fi
+
+echo '1..1'
+
+test -f test/trivial-deps
+mkdir -p test/tmp
+tmpdir=$(mktemp -d "test/tmp/trivial-deps-XXXXXX")
+tmpdir=$(cd "$tmpdir" && pwd)
+exit_rm_paths+="$tmpdir"
+
+cache="$tmpdir/cache"
+mkdir "$cache"
+export XDG_CACHE_HOME="$cache"
+
+cd example/cli
+
+../../lok --deps deps.edn -e nil
+
+git -C "$cache/lokke/tree/d633ef9b028ab452fa2c35b6520d7aed6cf7958e/root/" \
+    am "$top/example/cli/patch/0001-Provide-jvm-defaults-for-all-reader-conditionals.patch"
+
+../../lok --deps deps.edn -m trycli -- -vvv -i 42 > "$tmpdir/out"
+
+if test "integer: 42
+verbosity: 3" = "$(<$tmpdir/out)"; then
+    echo ok 1 trivial clojure.tools.cli test works
+else
+    echo $(printf "not ok 1 output was %q" "$(<$tmpdir/out)")
+fi

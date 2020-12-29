@@ -1,0 +1,7 @@
+{:paths ["src"]
+ :deps
+ ;;{org.clojure/tools.cli {:mvn/version "0.14.2"}}
+ {org.clojure/tools.cli
+  {:git/url "https://github.com/clojure/tools.cli.git"
+   :sha "d633ef9b028ab452fa2c35b6520d7aed6cf7958e"
+   :tag "tools.cli-1.0.194"}}}

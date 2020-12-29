@@ -114,7 +114,8 @@ TESTS = \
   test/clojure-walk \
   test/clojure-zip \
   test/standalone-install \
-  test/startup-randomization
+  test/startup-randomization \
+  test/trivial-deps
 
 
 SUFFIXES = .x .clj.go .scm.go
