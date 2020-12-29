@@ -6,8 +6,7 @@
                 #:select (make-fash
                           fash-fold
                           fash-ref
-                          fash-set
-                          fash-size))
+                          fash-update))
   #:use-module ((ice-9 control) #:select (call/ec))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base invoke) #:select (invoke))
@@ -70,22 +69,25 @@
 
 (define-class <hash-set> (<set>)
   (internals #:init-keyword #:internals)
+  ;; FIXME: remove once fash supports disj
+  (count #:init-keyword #:count)
   (meta #:init-keyword #:meta))
 
-(define-inlinable (make-set fm meta)
-  (make <hash-set> #:internals fm #:meta meta))
+(define-inlinable (make-set fm n meta)
+  (make <hash-set> #:internals fm #:count n #:meta meta))
 
 (define-inlinable (set-fm s) (slot-ref s 'internals))
+(define-inlinable (set-count s) (slot-ref s 'count))
 (define-inlinable (set-meta s) (slot-ref s 'meta))
 
 (define-method (meta (s <hash-set>)) (set-meta s))
 
 (define-method (with-meta (s <hash-set>) (mdata <boolean>))
   (require-nil 'with-meta 2 mdata)
-  (make-set (set-fm s) mdata))
+  (make-set (set-fm s) (set-count s) mdata))
 
 (define-method (with-meta (s <hash-set>) (mdata <hash-map>))
-  (make-set (set-fm s) mdata))
+  (make-set (set-fm s) (set-count s) mdata))
 
 (define-method (get (s <hash-set>) x)
   (ref (set-fm s) x))
@@ -120,39 +122,55 @@
 (define (hash-set? x) (is-a? x <hash-set>))
 
 (define empty-fash (make-fash #:hash hash #:equal clj=))
-(define empty-hash-set (make-set empty-fash #nil))
+(define empty-hash-set (make-set empty-fash 0 #nil))
 (define (empty-hash-set-w-meta data)
   (if (eq? #nil data)
       empty-hash-set
-      (make-set empty-fash data)))
+      (make-set empty-fash 0 data)))
 
 (define (set coll)
-  (make-set (reduce (lambda (result x) (fash-set result x x))
-                    (set-fm empty-hash-set)
-                    coll)
-            #nil))
+  (let* ((n 0)
+         (fm (reduce (lambda (result x)
+                       (fash-update result x
+                                    (lambda (existing)
+                                      (when (eq? existing not-found)
+                                        (set! n (1+ n)))
+                                      x)
+                                    not-found))
+                     (set-fm empty-hash-set)
+                     coll)))
+    (make-set fm n #nil)))
 
 (define (hash-set . xs) (set xs))
 
 (define-method (conj (s <hash-set>) . xs)
-  (make-set (reduce (lambda (result x) (fash-set result x x))
-                    (set-fm s)
-                    xs)
-            (set-meta s)))
+  (let* ((n (set-count s))
+         (fm (reduce (lambda (result x)
+                       (fash-update result x
+                                    (lambda (existing)
+                                      (when (eq? existing not-found)
+                                        (set! n (1+ n)))
+                                      x)
+                                    not-found))
+                     (set-fm s)
+                     xs)))
+    (make-set fm n (set-meta s))))
 
 (define-method (disj (s <hash-set>) . xs)
-  (make-set (reduce (lambda (result x) (fash-set result x not-found))
-                    (set-fm s)
-                    xs)
-            (set-meta s)))
+  (let* ((n (set-count s))
+         (fm (reduce (lambda (result x)
+                       (fash-update result x
+                                    (lambda (existing)
+                                      (unless (eq? existing not-found)
+                                        (set! n (1- n)))
+                                     not-found)
+                                    not-found))
+                     (set-fm s)
+                     xs)))
+    (make-set fm n (set-meta s))))
 
-(define-method (count (x <hash-set>))
-  (fash-fold (lambda (k v size) (if (eq? v not-found) size (1+ size)))
-             (set-fm x)
-             0))
-
-(define-method (counted? (x <hash-set>))
-  #t)
+(define-method (count (x <hash-set>)) (set-count x))
+(define-method (counted? (x <hash-set>)) #t)
 
 (define-method (empty (x <hash-set>))
   (empty-hash-set-w-meta (set-meta x)))
@@ -216,11 +234,12 @@
 
 (define-method (hash (x <hash-set>))
   (let* ((m (set-fm x))
-         (n (fash-size m))
+         (n (set-count x))
          (hashes (make-vector n)))
     (fash-fold (lambda (k v i)
-                 (vector-set! hashes i (hash k))
-                 (1+ i))
+                 (unless (eq? v not-found)
+                   (vector-set! hashes i (hash k))
+                   (1+ i)))
                m
                0)
     (vector-sort! < hashes)

@@ -37,8 +37,6 @@
                 #:select (make-fash
                           fash-fold
                           fash-ref
-                          fash-set
-                          fash-size
                           fash-update))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
