@@ -117,6 +117,12 @@ TESTS = \
   test/startup-randomization \
   test/trivial-deps
 
+check-everything:
+	$(MAKE) \
+	  LOKKE_TEST_ALLOW_RANDOM_DOWNLOADS=t LOKKE_TEST_EXT_BEHAVIOR=t \
+	  check
+
+lokke_clean += test/tmp
 
 SUFFIXES = .x .clj.go .scm.go
 
