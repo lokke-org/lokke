@@ -8,7 +8,7 @@ usage()
 }
 
 guile="${1:-guile-3.0}"
-debs='autoconf automake libpcre2-dev libunistring-dev make gcc git'
+debs='autoconf automake libpcre2-dev libunistring-dev make gettext gcc git'
 
 export DEBIAN_FRONTEND=noninteractive
 
