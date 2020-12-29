@@ -62,11 +62,15 @@ For Debian:
     # apt-get install autoconf automake libpcre2-dev libunistring-dev
     # apt-get install  make gcc git gnulib
 
-and then for Guile 3.0:
+Note libpcre2-dev version 10.36 or greater is needed to build
+Lokke. If you are running Debian buster, install the version from
+testing via `apt-get install -t testing libpcre2-dev`.
+
+For Guile 3.0 (Debian Bullseye or unstable):
 
     # apt-get install guile-3.0 guile-3.0-dev
 
-or for Guile 2.2:
+or for Guile 2.2 (Debian Buster):
 
     # apt-get install guile-2.2 guile-2.2-dev
 
