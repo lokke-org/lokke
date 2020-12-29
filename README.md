@@ -1,5 +1,5 @@
-Lokke is Clojure for Guile
-==========================
+Lokke: Clojure for Guile
+========================
 
 [Lokke](#Lokke-Danish) intends to provide a full dialect of Clojure
 for Guile.  It also consists of a set of Guile modules providing some
