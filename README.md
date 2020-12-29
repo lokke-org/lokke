@@ -461,6 +461,10 @@ Additional differences from Clojure/JVM
 
 * Number is taken to mean <number> (i.e. objects satisfying `number?`).
 
+* Duplicate keys in map literals, e.g. `{:x 1 :x 2}` do not provoke an
+  error.  They just behave as if `(hash-map :x 1 :x 2)` had been
+  specified.
+
 * At the moment, various functions may handle Scheme vectors as they
   would Clojure vectors and Scheme lists as the would clojure lists,
   e.g. some collection and sequence operations, etc.
