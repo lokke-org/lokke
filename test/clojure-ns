@@ -7,7 +7,8 @@
 (ns test.clojure-ns
   (:require
    [clojure.string :as str]
-   [guile.guile :refer [module-public-interface module-variable]])
+   [guile.guile :refer [module-public-interface module-variable]]
+   [guile.lokke.exception :refer [ex-tag]])
   (:require
    [clojure.test :refer [begin-tests end-tests is testing]]))
 
@@ -17,6 +18,13 @@
 (is (= clojure.string/join str/join))
 (is (integer? (guile/current-time)))
 (is (-> (guile.srfi.srfi-4/make-u64vector 0) guile.srfi.srfi-4/u64vector?))
+
+(testing "x.y/z can't refer to private/unexported bindings"
+  (is (guile/module-ref (guile/resolve-module '(lokke reader)) 'expand-ref))
+  (try
+    (prn guile.lokke.reader/expand-ref)
+    (catch Error ex
+      (is (= 'unbound-variable (ex-tag ex))))))
 
 (ns test-ns-behavior-simple
   (:require

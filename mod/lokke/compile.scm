@@ -108,7 +108,7 @@ Clojure reference like clojure.string/join to the corresponding Guile
         (tree-il/make-module-ref (tree-il/toplevel-ref-src top)
                                  (resolved-ns-sym->mod-name ns-sym ns-aliases)
                                  (parsed-sym-ref parsed)
-                                 #f))))))
+                                 #t))))))
 
 (define il-count 0)
 
