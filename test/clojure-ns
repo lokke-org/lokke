@@ -23,8 +23,10 @@
   (is (guile/module-ref (guile/resolve-module '(lokke reader)) 'expand-ref))
   (try
     (prn guile.lokke.reader/expand-ref)
-    (catch Error ex
-      (is (= 'unbound-variable (ex-tag ex))))))
+    (catch Throwable ex
+      (if (> (guile/string->number (guile/major-version)) 2)
+        (is (= 'unbound-variable (ex-tag ex)))
+        (is (= 'misc-error (ex-tag ex)))))))
 
 (ns test-ns-behavior-simple
   (:require
