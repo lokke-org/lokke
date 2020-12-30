@@ -11,7 +11,8 @@
 (define (ensure-dir path)
   (catch 'system-error
     (lambda ()
-      (mkdir path)
+      (unless (zero? (status:exit-val (system* "mkdir" "-p" path)))
+        (error "Unable to create" path))
       path)
     (lambda (key fname fmt-pattern fmt-args info)
       (unless (= EEXIST (car info))
