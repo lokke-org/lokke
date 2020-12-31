@@ -37,7 +37,7 @@
                           seqable?
                           take-last
                           update))
-  #:use-module ((lokke compare) #:select (clj= compare))
+  #:use-module ((lokke compare) #:select (clj= compare hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (<hash-map>))
   #:use-module ((lokke metadata) #:select (meta with-meta))
@@ -93,7 +93,7 @@
                update)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply 'assoc)
+(re-export-and-replace! 'apply 'assoc 'hash)
 
 
 ;;; <lokke-vector>
@@ -108,6 +108,19 @@
 
 (define-method (with-meta (m <lokke-vector>) (mdata <hash-map>))
   (lokke-vector-with-meta m mdata))
+
+(define %lokke-vector-cached-hash
+  (@@ (lokke scm vector) %lokke-vector-cached-hash))
+(define %lokke-vector-set-cached-hash!
+  (@@ (lokke scm vector) %lokke-vector-set-cached-hash!))
+
+(define-method (hash (v <lokke-vector>))
+  (let ((h (%lokke-vector-cached-hash v)))
+    (if (zero? h)
+        (let ((h (next-method)))
+          (%lokke-vector-set-cached-hash! v h)
+          h)
+        h)))
 
 ;; Specialize this to bypass the generic <sequential> flavor
 (define-method (clj= (v1 <lokke-vector>) (v2 <lokke-vector>))

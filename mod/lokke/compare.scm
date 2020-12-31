@@ -65,5 +65,7 @@
 (define-method (compare (x <string>) (y <string>)) (string-compare-67 x y))
 (define-method (compare (x <vector>) (y <vector>)) (vector-compare compare x y))
 
+;; Our hashes are based on Guile's hashes, which are currently
+;; unsigned longs, from C, i.e. scm_ihash().
 (define-generic hash)
 (define-method (hash x) (srfi-hash x))

@@ -151,6 +151,12 @@
   (when (> (:major *clojure-version*) 2)
     ;; Unfortunately, guile-2.2 had a bug in the hash function.
     (is (not= (hash (atom nil)) (hash (atom nil))))
-    (is (not= (hash (promise)) (hash (promise))))))
+    (is (not= (hash (promise)) (hash (promise)))))
+
+  (testing "caching"
+    (is (not (zero? (hash [1 2 3]))))
+    (let [x (vector [1 2 3])]
+      (is (= (hash x) (hash x)))
+      (is (not (zero? (hash x)))))))
 
 (end-tests (ns-name *ns*) :exit? true)
