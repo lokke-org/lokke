@@ -47,17 +47,20 @@ provide a C backed implementation of Clojure's [persistent vectors](https://hypi
 Getting started
 ---------------
 
-Ensure that a version of [Guile](https://www.gnu.org/software/guile/)
-2.2 or 3.0 is available, preferring 3.0 which should perform notably
-better:
+To build Lokke, you'll need
 
-    $ guile --version
-    guile (GNU Guile) 3.0.4
-    Packaged by Debian (3.0.4-deb+3.0.4-3)
-    Copyright (C) 2020 Free Software Foundation, Inc.
-    ...
+  * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0 (preferring 3.0
+    recommended which should perform notably better)
+  * [PCRE2](https://www.pcre.org/)
+  * [libunistring](https://www.gnu.org/software/libunistring/)
+  * [GCC](https://www.gnu.org/software/gcc/)
+  * [GNU make](https://www.gnu.org/software/make/)
+  * [autoconf](https://www.gnu.org/software/autoconf/)
+  * [automake](https://www.gnu.org/software/automake/)
+  * [gettext](https://www.gnu.org/software/gettext/)
+  * [git](https://git-scm.com/)
 
-For Debian:
+Your system may already provide these.  For Debian, for example:
 
     # apt-get install autoconf automake libpcre2-dev libunistring-dev
     # apt-get install  make gettext gcc git
