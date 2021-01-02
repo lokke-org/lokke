@@ -2,6 +2,8 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke hash-set)
+  #:use-module ((ice-9 atomic)
+                #:select (atomic-box-ref atomic-box-set! make-atomic-box))
   #:use-module ((lokke fash)
                 #:select (make-fash
                           fash-fold
@@ -71,6 +73,7 @@
   (internals #:init-keyword #:internals)
   ;; FIXME: remove once fash supports disj
   (count #:init-keyword #:count)
+  (hash #:init-thunk (lambda () (make-atomic-box #nil)))
   (meta #:init-keyword #:meta))
 
 (define-inlinable (make-set fm n meta)
@@ -78,6 +81,7 @@
 
 (define-inlinable (set-fm s) (slot-ref s 'internals))
 (define-inlinable (set-count s) (slot-ref s 'count))
+(define-inlinable (set-hash m) (slot-ref m 'hash))
 (define-inlinable (set-meta s) (slot-ref s 'meta))
 
 (define-method (meta (s <hash-set>)) (set-meta s))
@@ -233,18 +237,23 @@
 ;; FIXME: depth diminishing tree-structured sampling like guile's hash.c?
 
 (define-method (hash (x <hash-set>))
-  (let* ((m (set-fm x))
-         (n (set-count x))
-         (hashes (make-vector n)))
-    (fash-fold (lambda (k v i)
-                 (unless (eq? v not-found)
-                   (vector-set! hashes i (hash k))
-                   (1+ i)))
-               m
-               0)
-    (vector-sort! < hashes)
-    (vector-fold (lambda (i result x) (logxor result (hash x)))
-                 (hash n)
-                 hashes)))
+  (let* ((box (set-hash x))
+         (h (atomic-box-ref box)))
+    (or h
+        (let* ((m (set-fm x))
+               (n (set-count x))
+               (hashes (make-vector n)))
+          (fash-fold (lambda (k v i)
+                       (unless (eq? v not-found)
+                         (vector-set! hashes i (hash k))
+                         (1+ i)))
+                     m
+                     0)
+          (vector-sort! < hashes)
+          (let ((h (vector-fold (lambda (i result x) (logxor result (hash x)))
+                                (hash n)
+                                hashes)))
+            (atomic-box-set! box h)
+            h)))))
 
 ;; FIXME: custom merge?
