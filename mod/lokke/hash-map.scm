@@ -7,6 +7,8 @@
 
 (define-module (lokke hash-map)
   ;; FIXME: first and second should be together
+  #:use-module ((ice-9 atomic)
+                #:select (atomic-box-ref atomic-box-set! make-atomic-box))
   #:use-module ((ice-9 control) #:select (call/ec))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base collection)
@@ -92,14 +94,16 @@
 (define-class <hash-map> (<map>)
   (internals #:init-keyword #:internals)
   (count #:init-keyword #:count)
+  (hash #:init-thunk (lambda () (make-atomic-box #nil)))
   (meta #:init-keyword #:meta))
 
 (define-syntax-rule (make-map fm n meta)
   (make <hash-map> #:internals fm #:count n #:meta meta))
 
-(define-syntax-rule (map-fm m) (slot-ref m 'internals))
-(define-syntax-rule (map-count m) (slot-ref m 'count))
-(define-syntax-rule (map-meta m) (slot-ref m 'meta))
+(define-inlinable (map-fm m) (slot-ref m 'internals))
+(define-inlinable (map-count m) (slot-ref m 'count))
+(define-inlinable (map-hash m) (slot-ref m 'hash))
+(define-inlinable (map-meta m) (slot-ref m 'meta))
 
 (define-method (meta (m <hash-map>)) (map-meta m))
 
@@ -301,18 +305,23 @@
              (empty-hash-map-w-meta (map-meta m))))
 
 (define-method (hash (x <hash-map>))
-  (let* ((m (map-fm x))
-         (n (map-count x))
-         (hashes (make-vector n)))
-    (fash-fold (lambda (k v i)
-                 (unless (eq? v not-found)
-                   (vector-set! hashes i (logxor (hash k) (hash v)))
-                   (1+ i)))
-               m
-               0)
-    (vector-sort! < hashes)
-    (vector-fold (lambda (i result x) (logxor result (hash x)))
-                 (hash n)
-                 hashes)))
+  (let* ((box (map-hash x))
+         (h (atomic-box-ref box)))
+    (or h
+        (let* ((m (map-fm x))
+               (n (map-count x))
+               (hashes (make-vector n)))
+          (fash-fold (lambda (k v i)
+                       (unless (eq? v not-found)
+                         (vector-set! hashes i (logxor (hash k) (hash v)))
+                         (1+ i)))
+                     m
+                     0)
+          (vector-sort! < hashes)
+          (let ((h (vector-fold (lambda (i result x) (logxor result (hash x)))
+                                (hash n)
+                                hashes)))
+            (atomic-box-set! box h)
+            h)))))
 
 ;; FIXME: custom merge?
