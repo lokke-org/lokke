@@ -82,10 +82,10 @@ and then:
     $ ./configure
     $ make check
 
-Hopefully the tests will pass.  If not, please report them to
-... (FIXME: list address).  Note that parallel builds are fully
-supported, so depending on the host, something like `make -j5 check`
-can be much faster.
+Hopefully the tests will pass.  If not, please report them to the <a
+href="mailto:~rlb/lokke@lists.sr.ht">Lokke list</a>.  Note that parallel
+builds are fully supported, so depending on the host, something like
+`make -j5 check` can be much faster.
 
 If you have more than one version of Guile installed, you may be able
 to select a particular version at configuration time like this:
@@ -598,6 +598,14 @@ tense **lokkede**, past participle **har lokket**)
 
 Definition provided by the [wiktionary](https://en.wiktionary.org/wiki/lokke).
 ([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
+
+Additional contacts
+-------------------
+
+* <a href="mailto:~rlb/lokke@lists.sr.ht">Mailing list</a>
+
+* [#lokke](https://webchat.freenode.net/?channels=lokke) on
+  [freenode](https://freenode.net/)
 
 License
 -------
