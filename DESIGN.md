@@ -222,10 +222,6 @@ TODO
 - Add `sorted-set-by` and `sorted-map-by` (and then update
   test/clojure-walk)..
 
-- Consider caching `hash` values for types like `hash-map` and
-  `hash-set`, and perhaps safely for vectors via `atomic_ulong` on the
-  C side.
-
 - Consider providing `hash` consistency across Clojure and Scheme
   collections, i.e. Scheme vector and Clojure vector, etc., which
   would also require consideration of Guile's tree-depth diminishing,

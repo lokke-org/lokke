@@ -448,9 +448,8 @@ Comparisons, hashing, and equality
   consistently right now, given the way seqs are implemented via
   Scheme `<pair>`s.
 
-* Currently, `hash` values are not cached.  At the moment, they're
-  recomputed in full whenever requested, though that's likely to
-  change for some types like `hash-map`, `hash-set`, and `vector`.
+* Currently, `hash` values are only cached for `hash-map`, `hash-set`,
+  and `vector`.
 
 * `compare` sorts all symbols lexically, without any special
   treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
