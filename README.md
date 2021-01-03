@@ -83,7 +83,9 @@ and then:
     $ make check
 
 Hopefully the tests will pass.  If not, please report them to
-... (FIXME: list address).
+... (FIXME: list address).  Note that parallel builds are fully
+supported, so depending on the host, something like `make -j5 check`
+can be much faster.
 
 If you have more than one version of Guile installed, you may be able
 to select a particular version at configuration time like this:
@@ -107,22 +109,13 @@ or run the REPL:
 Currently the Lokke REPL *is* the Guile REPL, with the initial
 language and environment set for Lokke, and so all of the Guile
 features should be available.  Though for now, `lokke` loads
-`~/.config/lokke/interactive.scm` (which must be Scheme code) rather
-than `~/.guile`.
+`$XDG_CONFIG_HOME/lokke/interactive.scm` if `$XDG_CACHE_HOME` is set,
+otherwise `~/.config/lokke/interactive.scm` rather than `~/.guile`.
 
 See `./lokke --help` or `man -l lokke.1` for additional information,
 or if `man -l` isn't available, perhaps something like `nroff -man
 lokke.1 | less`.  A [plain text version of the manual page](lokke.1.txt)
 is also available.
-
-Lokke expects all Clojure namespaces to be located in a lokke/ns/
-subdirectory of one of the directories specified by the Guile load
-path, and the path can be adjusted by setting `GUILE_LOAD_PATH` in the
-environment.  For example, since `./mod` is in `./lokke`'s default
-load path, Lokke will look for `clojure.string` in
-mod/lokke/ns/clojure/string.go (compiled version),
-mod/lokke/ns/clojure/string.clj, and mod/lokke/ns/clojure/string.clj
-in that order (namspaces can be implemented in Clojure or Scheme).
 
 Assuming your guile was compiled with readline support, it's likely
 you'll want to add something like this to
@@ -161,11 +154,19 @@ From `./guile`, you can switch to a Lokke REPL manually like this:
     lokke@(lokke user)> (inc 1)
     $1 = 2
 
-See the [DESIGN](DESIGN.md) document for an overview of the
-implementation.
+Lokke expects all Clojure namespaces to be located in a lokke/ns/
+subdirectory of one of the directories specified by the Guile
+[load path](https://www.gnu.org/software/guile/manual/html_node/Load-Paths.html).
+The path can be adjusted by setting `GUILE_LOAD_PATH` in the
+environment.  For example, since `./mod` is in `./lokke`'s default
+load path, Lokke will look for `clojure.string` in
+mod/lokke/ns/clojure/string.go (compiled version),
+mod/lokke/ns/clojure/string.clj, and mod/lokke/ns/clojure/string.scm
+in that order (namspaces can be implemented in Clojure or Scheme).
 
-Detailed information about Guile is available in the
-[Guile Reference Manual](https://www.gnu.org/software/guile/manual/guile.html)
+See the [DESIGN](DESIGN.md) document for an overview of the
+implementation, and detailed information about Guile is available in
+the [Guile Reference Manual](https://www.gnu.org/software/guile/manual/guile.html)
 which should also be available via `info guile` if installed.
 
 General comparison with Clojure/JVM
@@ -173,19 +174,22 @@ General comparison with Clojure/JVM
 
 * The implementation should be properly tail-recursive.
 
-* Argument evaluation order is unspecified.
+* Argument evaluation order is (currently) unspecified.
 
-* Clojure namespaces may be implemented in either Clojure (.clj) or
-  Scheme (.scm).
-
-* Clojure namespaces *are* Guile modules with the entire Clojure
-  namespace tree situated under `(lokke ns)` in the Guile module
-  tree.
+* Clojure namespaces may be implemented in either Clojure or Scheme,
+  and [Clojure namespaces *are* Guile modules](#clojure-namespaces-and-guile-modules)
+  with the entire Clojure namespace tree situated under `(lokke ns)`
+  in the Guile module tree.
 
 * Lokke's reader conditional identifier is `:cljl`, for example,
   `#?(:cljl x)`, and at the moment reader conditionals are always
-  supported by the reader functions and are not restricted to `.cljc`
-  files.
+  supported by the reader functions; they are not restricted to
+  `.cljc` files.
+
+* Symbols, like keywords, are unique and compare very efficiently.  On
+  the JVM, this is only promised for
+  [keywords](https://clojure.org/reference/data_structures#Keywords).
+  Symbols do not currently support metadata.
 
 * There are no agents or refs yet.
 
@@ -203,10 +207,14 @@ General comparison with Clojure/JVM
 * `lokke.io` is analogous `clojure.java.io`, and `lokke.shell` is
   analogous to `clojure.java.shell`.  At the moment, paths are
   generally only handled as (Unicode) strings.  We'll fix that once
-  Guile does.
+  Guile does.  As a workaround, you may be able to set the `LC_CTYPE`
+  to a locale that passes arbitrary bytes transparently,
+  e.g.`(guile/setlocale LC_CTYPE "en_US.iso88591")`, but note that
+  `setlocale` acts globally, not just with respect to the current
+  thread.
 
 * There is some experimental, rudimentary
-  [compability with Clojure/JVM exception handling](#exception-handling).
+  [compatibility with Clojure/JVM exception handling](#exception-handling).
 
 * Currently, a Lokke `future` is a Guile `<future>`, which means that
   it draws from a fixed-size thread pool of size `(dec
@@ -220,7 +228,7 @@ General comparison with Clojure/JVM
 * Persistent lists are currently not `counted?`, so `count` must
   traverse the list.
 
-* [Dynamic variables](#dynamic-variables-and-binding) and `binding`
+* [Dynamic variables and `binding`](#dynamic-variables-and-binding)
   behave a bit differently, and they must be defined via `defdyn`.
 
 * The numeric tower is
@@ -236,8 +244,9 @@ General comparison with Clojure/JVM
 * The integer syntax does not yet support BASErNUM bases over 16.
 
 * Rather than throwing an exception, the reader functions, `read`,
-  `read-string`, etc. return the rnrs end-of-file object, which can be
-  identified with `guile.guile/eof-object?`.
+  `read-string`, etc. return the
+  [rnrs end-of-file object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
+  which can be identified with `guile.guile/eof-object?`.
 
 * There are some differences and limitations with respect to the
   handling of [comparisons, hashes, and equality](#comparisons-hashing-and-equality).
@@ -293,7 +302,7 @@ On the Scheme side
 
 * For now, `bit-test` treats negative values as twos-complement.
 
-* We prefer to follow the Clojure convention of explcitly `#:select`ing
+* We prefer to follow the Clojure convention of explicitly `#:select`ing
   symbols for import most of the time.
 
 * We prefer to format module declarations along the same lines
@@ -304,7 +313,7 @@ Clojure namespaces and Guile modules
 ------------------------------------
 
 Clojure namespaces *are* Guile modules (which have very comparable
-semantics), and the entire Clojure namespace tree is situatied under
+semantics), and the entire Clojure namespace tree is situated under
 `(lokke ns)` in the Guile module tree, i.e. `clojure.string` is
 implemented by the `(lokke ns clojure string)` module, and
 `clojure.string/join` is exactly equivalent to a Guile reference to
@@ -322,14 +331,14 @@ not `(guile guile)`.  For example `(guile/current-time)` or
 
 In many cases, you may have `lokke` or `lok` handle the Guile
 `%load-path` for you via deps.edn `:paths`, but manual arrangements
-like this will also work just fine too:
+like this will also work fine:
 
     src/something/core.clj
     mod/lokke/ns -> ../../src
 
 and then:
 
-    $ GUILE_LOAD_PATH=$(pwd)/mod lok
+    $ GUILE_LOAD_PATH=$(pwd)/mod lok -e "(require '[something.core ...])" ...
 
 Namespace `(alias ...)` calls only take full effect at the end of the
 enclosing top level form (because at the moment, the compiler works
@@ -341,27 +350,27 @@ Exception handling
 There is experimental support for `try/catch/finally` which maps very
 closely to Guile's underlying `catch/throw`, meaning that in addition
 to catching an `ex-info` exception via `(catch ExceptionInfo ex ...)`,
-you can also catch Guile exceptions if you know the appropriate tag
+you can catch Guile exceptions if you know the appropriate tag
 (symbol) with `(catch 'something ex ...)`.
 
 When an exception is caught, `ex` will be bound a Scheme list of
 exactly the arguments that were passed to Guile's throw.  For
 `ex-info` exceptions, it will currently be a list starting with the
 (uninterned) tag that is bound to `ExceptionInfo`, which is why
-`(catch ExceptionInfo ex ...)` (no quote) works.  Access the elements
-of Lokke-specific exceptions via the normal accessors: `ex-message`,
-`ex-data`, etc.  The `lokke.exception` namespace also provides
-bindings like `ex-info?`, `ex-cause`, etc.
+`(catch ExceptionInfo ex ...)` works.  Access the elements of
+Lokke-specific exceptions via the normal accessors: `ex-message`,
+`ex-data`, etc., and the `lokke.exception` namespace provides
+additional bindings like `ex-info?`, and `ex-cause`.
 
 Note however, that
 [changes introduced in Guile 3.0](https://www.gnu.org/software/guile/manual/html_node/Exceptions.html#Exceptions)
-may prompt a rework, perhaps to based our exception handling on
+may prompt a rework, perhaps to base exception handling on
 `raise-exception`, `with-exception-handler`, and exception objects.
 Consider the current support very unstable.
 
 Guile exception keys that map to `&error` in Guile 3.0 and above are
-currently caught as `Error`s, even with Guile 2.2, and even though we
-don't use the newer style exception objects yet.
+currently caught as an `Error`, even with Guile 2.2, and even though
+we don't use the newer style exception objects yet.
 
 ### Exception suppression
 
@@ -370,22 +379,21 @@ experimental support for suppressing exceptions, a concept also found
 on the JVM and in Python, though the details vary.  If an exception is
 thrown from within a `finally` block, and there was a pending Lokke
 exception, the exception that was thrown from the `finally` block will
-be added to the exception as a suppressed exception, and the Lokke
-exception will be rethrown.  The collection of suppressed exceptions
-can be retrieved with the `ex-suppressed` function provided by
-`lokke.exception`.  A suppressed exception can be added to an
-`ex-info` exception using the `add-suppressed` function in that same
-namespace.  Note that `add-suppressed` is persistent, returning a new
-`ex-info` exception that may or may not share structure with the
-original, rather than mutating the original.
+be added to the pending exception as a suppressed exception, and the
+Lokke exception will be rethrown.  The collection of suppressed
+exceptions can be retrieved with `lokke.exception/ex-suppressed`, and
+a suppressed exception can be added to any Lokke exception with
+`lokke.exception/add-suppressed`.  Note that `add-suppressed` is
+persistent, returning a new `ex-info` exception that may or may not
+share structure with the original, rather than mutating the original.
 
 As an example:
 
 ```clojure
     (try
-      (print-masterpiece)  ; Throws lp0-on-fire
+      (print-masterpiece)  ; Throws (ex-info ... {:kind :lp0-on-fire})
       (finally
-        (turn-off-light)))  ; Throws switch-broken
+        (turn-off-light)))  ; Throws (ex-info ... {:kind :switch-broken})
 ```
 
 At this point, without suppression you'd know that you need to fix
@@ -394,15 +402,16 @@ with suppression, that information is preserved:
 
 ```clojure
     (try
-      (print-masterpiece)  ; Throws lp0-on-fire
+      (print-masterpiece)  ; Throws (ex-info ... {:kind :lp0-on-fire})
       (finally
-        (turn-off-light)))  ; Throws lp0-on-fire, with switch-broken
+        (turn-off-light)))  ; Rethrows lp0-on-fire exception, with switch-broken
                             ; available via (ex-suppressed lp0-on-fire).
 ```
 
-At least for now, if the pending exception is not a Lokke exception,
-then there will be no suppression, and the original exception will be
-lost (as is the case for Java and Clojure/JVM).
+At least for now, if the pending exception is a Guile specific
+exception like `'out-of-range`, rather than a Lokke exception like
+`(ex-info ...)` or `(Exception. ...)`, then there will be no
+suppression, and the original exception will be lost.
 
 The JVM provides a
 [related precedent](https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#addSuppressed-java.lang.Throwable-]),
@@ -413,7 +422,10 @@ See DESIGN for further details.
 ### with-final
 
 `with-final` is provided by `lokke.exception` for more flexible
-resource management.  For example:
+resource management.  You can specify final actions to take
+either`:always` or only if there's an `:error`.  The latter can be
+particularly useful in cases where normal cleanup must happen in a
+completely different scope.  For example:
 
 ```clojure
     (defn start-server [...]
@@ -430,14 +442,16 @@ resource management.  For example:
         true)
 ```
 
+`with-final` may be considered a generalization of `with-open`.
+
 Dynamic variables and binding
 -----------------------------
 
 At the moment, dynamic variables must be declared via `(defdyn name
 init-expr)` rather than via metadata, and they are always inherited by
-sub-threads, unlike on the JVM, where only some forms provide [binding
-conveyance](https://clojure.org/reference/vars#conveyance).  You can
-define dynamic variables without conveyance via `defdynloc`.
+sub-threads, unlike on the JVM, where only some forms provide
+[binding conveyance](https://clojure.org/reference/vars#conveyance).
+You can define dynamic variables without conveyance via `defdynloc`.
 
 Whether or not bindings are established in parallel is undefined.
 
@@ -454,12 +468,12 @@ Comparisons, hashing, and equality
 * Currently, `hash` values are only cached for `hash-map`, `hash-set`,
   and `vector`.
 
-* `compare` sorts all symbols lexically, without any special
-  treatment of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That
-  might eventually change for at least Clojure side.
+* `compare` sorts all symbols lexically, without any special treatment
+  of namepaces, i.e. `(compare 'z 'x/y)` is negative.  That might
+  eventually change for at least the Clojure side.
 
-* The `compare` ordering of refs is unspecified; it is not the order
-  of their creation.
+* The `compare` ordering of refs is unspecified, and is unlikely to be
+  the order of their creation.
 
 Additional differences from Clojure/JVM
 ---------------------------------------
@@ -514,7 +528,7 @@ Known issues
 - Some versions of Guile prior to 3.0 had a problem with the hash
   function that would cause it to produce a very poor distribution of
   values in some cases (e.g. for symbols and keywords), which is
-  likely to decrease performance.  We may attempt to addresss that,
+  likely to decrease performance.  We may attempt to address that,
   but for now, prefer Guile 3.0 or newer when possible.
 
 - The code has not been evaluated with respect to the need for
@@ -558,7 +572,10 @@ Additional tests
 You can run the *full* test suite (requires all changes in the working
 tree to be committed) like this:
 
-    make LOKKE_TEST_EXT_BEHAVIOR=true check
+    make check-everything
+
+Note that this may download and execute code (e.g. dependencies like
+tools.cli via `--deps`).  (The normal `make check` tests should not.)
 
 Lokke (Danish)
 --------------
@@ -587,7 +604,7 @@ License
 
 This project (Lokke) is free software; unless otherwise specified you
 can redistribute it and/or modify it under the terms of (at your
-option) either of the following two licences:
+option) either of the following two licenses:
 
   1) The GNU Lesser General Public License as published by the Free
      Software Foundation; either version 2.1, or (at your option) any
@@ -614,7 +631,7 @@ describing the applicable terms, including, but not limited to:
   - mod/lokke/ns/clojure/zip.clj
   - test/clojure-walk
 
-Copyright © 2015-2020 Rob Browning &lt;<rlb@defaultvalue.org>&gt;
+Copyright © 2015-2021 Rob Browning &lt;<rlb@defaultvalue.org>&gt;
 
 <!--
 Local Variables:
