@@ -824,7 +824,9 @@ init_pcre2()
     def_intmax_sym (PCRE2_ERROR_HEAPLIMIT);
     def_intmax_sym (PCRE2_ERROR_CONVERT_SYNTAX);
     def_intmax_sym (PCRE2_ERROR_INTERNAL_DUPMATCH);
+#ifdef PCRE2_ERROR_DFA_UINVALID_UTF
     def_intmax_sym (PCRE2_ERROR_DFA_UINVALID_UTF);
+#endif
 
     def_uintmax_sym (PCRE2_ZERO_TERMINATED);
     def_uintmax_sym (PCRE2_UNSET);
