@@ -477,6 +477,46 @@ Hacking
 - At the moment in some cases we treat keywords much like symbols.
   cf. the `(lokke symbol)` module.
 
+Sending patches to the list
+===========================
+
+As mentioned elsewhere, patches are also welcome on the
+<a href="mailto:~rlb/lokke@lists.sr.ht">mailing list</a> and must be
+["signed off" by the author](./README.md#contributing) before official
+inclusion.
+
+You can create a "signed off" set of patches in ./patches, ready for
+submission to the list, like this:
+
+    git format-patch -s -o patches origin/main
+
+which will include all of the patches since origin/main on your
+current branch.  Then you can send them to the list like this:
+
+    git send-email --to "~rlb/lokke@lists.sr.ht" --compose patches/*
+
+The use of `--compose` will cause git to ask you to edit a cover letter
+that will be sent as the first message.
+
+It's also possible to handle everything in one step:
+
+    git send-email -s --to "~rlb/lokke@lists.sr.ht" --compose origin/main
+
+and you can add `--annotate` if you'd like to review or edit each patch
+before it's sent.
+
+For single patches, this might be easier:
+
+    git send-email -s --to "~rlb/lokke@lists.sr.ht" --annotate -n1 HEAD
+
+which will send the top patch on the current branch, and will stop to
+allow you to add comments.  You can add comments to the section with
+the diffstat (below the "--" without affecting the commit message).
+
+Of course, unless your machine is set up to handle outgoing mail
+locally, you may need to configure git to be able to send mail.  See
+git-send-email(1) for further details.
+
 <!--
 Local Variables:
 mode: markdown

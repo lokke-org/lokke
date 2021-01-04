@@ -570,6 +570,13 @@ git can can add the appropriate pseudo-header for you via the
 Additional information, conventions, etc. may be found in the [Hacking
 section](DESIGN.md#hacking) in DESIGN.
 
+The <a href="mailto:~rlb/lokke@lists.sr.ht">mailing list</a> is
+available for broader, more general discussions, and patches are
+welcome there
+
+Please [send patches and problem reports to the list](DESIGN#sending-patches-to-the-list)
+or raise a pull request.  We may prefer the list for more involved discussions.
+
 Additional tests
 ----------------
 
