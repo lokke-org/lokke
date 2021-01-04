@@ -47,6 +47,10 @@ provide a C backed implementation of Clojure's [persistent vectors](https://hypi
 Getting started
 ---------------
 
+Currently Lokke can be found at
+[GitHub](https://github.com/lokke-org/lokke) and
+[sourcehut](https://sr.ht/~rlb/lokke).
+
 To build Lokke, you'll need
 
   * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0 (preferring 3.0
@@ -606,6 +610,13 @@ Additional contacts
 
 * [#lokke](https://webchat.freenode.net/?channels=lokke) on
   [freenode](https://freenode.net/)
+
+Thanks
+------
+
+Sincere thanks to Russell Mull, Ryan Senior, and Zak-Kent, for
+invaluable support and advice during the creation of the initial
+version.
 
 License
 -------
