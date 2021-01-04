@@ -49,7 +49,7 @@ Getting started
 
 Currently Lokke can be found at
 [GitHub](https://github.com/lokke-org/lokke) and
-[sourcehut](https://sr.ht/~rlb/lokke).
+[sourcehut](https://git.sr.ht/~rlb/lokke).
 
 To build Lokke, you'll need
 
