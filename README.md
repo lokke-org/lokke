@@ -86,10 +86,10 @@ and then:
     $ ./configure
     $ make check
 
-Hopefully the tests will pass.  If not, please report them to the <a
-href="mailto:~rlb/lokke@lists.sr.ht">Lokke list</a>.  Note that parallel
-builds are fully supported, so depending on the host, something like
-`make -j5 check` can be much faster.
+Hopefully the tests will pass.  If not, please report them to the
+[Lokke list](#additional-contacts).  Note that parallel builds are
+fully supported, so depending on the host, something like `make -j5
+check` can be much faster.
 
 If you have more than one version of Guile installed, you may be able
 to select a particular version at configuration time like this:
@@ -570,7 +570,7 @@ git can can add the appropriate pseudo-header for you via the
 Additional information, conventions, etc. may be found in the [Hacking
 section](DESIGN.md#hacking) in DESIGN.
 
-The <a href="mailto:~rlb/lokke@lists.sr.ht">mailing list</a> is
+The [mailing list](#additional-contacts) is
 available for broader, more general discussions, and patches are
 welcome there
 
@@ -613,7 +613,12 @@ Definition provided by the [wiktionary](https://en.wiktionary.org/wiki/lokke).
 Additional contacts
 -------------------
 
-* <a href="mailto:~rlb/lokke@lists.sr.ht">Mailing list</a>
+* The <a href="mailto:~rlb/lokke@lists.sr.ht">mailing list</a>, which
+  you can subscribe to by sending a message to
+  <a href="mailto:~rlb/lokke+subscribe@lists.sr.ht">~rlb/lokke+subscribe@lists.sr.ht</a>,
+  and unsubscribe with a message to
+  <a href="mailto:~rlb/lokke+unsubscribe@lists.sr.ht">~rlb/lokke+unsubscribe@lists.sr.ht</a>.
+  Additional information can be found [here](https://man.sr.ht/lists.sr.ht/).
 
 * [#lokke](https://webchat.freenode.net/?channels=lokke) on
   [freenode](https://freenode.net/)
