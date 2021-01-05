@@ -480,10 +480,10 @@ Hacking
 Sending patches to the list
 ===========================
 
-As mentioned elsewhere, patches are also welcome on the
-<a href="mailto:~rlb/lokke@lists.sr.ht">mailing list</a> and must be
-["signed off" by the author](./README.md#contributing) before official
-inclusion.
+As mentioned [elsewhere](README.md#contributing), patches are also
+welcome on the [mailing list](README.md#additional-contacts] and must
+be ["signed off" by the author](./README.md#contributing) before
+official inclusion.
 
 You can create a "signed off" set of patches in ./patches, ready for
 submission to the list, like this:
