@@ -47,5 +47,7 @@
 /mod/lokke/base/version.scm
 /stamp-h1
 /state/
+/test-suite.log
+/test.*.log
 /test/*.log
 /test/*.trs
