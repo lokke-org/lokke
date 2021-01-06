@@ -44,7 +44,9 @@
   (is (= {} (conj {} nil)))
   (is (= {1 2} (conj {} [1 2])))
   (is (= {1 2} (conj {} [1 2] nil)))
-  (is (= [{}] (conj nil {}))))
+  (is (= [{}] (conj nil {})))
+
+  (is (= '(1 2 3) (conj '(2 3) 1))))
 
 (testing "empty list/vector tests"
   (is (= () ()))
