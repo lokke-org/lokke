@@ -407,7 +407,7 @@
 (define-method (seqable? (x <pair>)) #t)
 (define-method (sequential? (x <pair>)) #t)
 
-(define-method (conj (p <list>) x) (cons x p))
+(define-method (conj (p <list>) x) (%scm-cons x p))
 
 ;;; <vector>
 
