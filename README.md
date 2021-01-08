@@ -67,7 +67,7 @@ To build Lokke, you'll need
 Your system may already provide these.  For Debian, for example:
 
     # apt-get install autoconf automake libpcre2-dev libunistring-dev
-    # apt-get install  make gettext gcc git
+    # apt-get install make gettext gcc git
 
 and then for Guile 3.0:
 
@@ -77,16 +77,17 @@ or for Guile 2.2:
 
     # apt-get install guile-2.2 guile-2.2-dev
 
-and then:
+See [INSTALL](INSTALL) for additional platform-specific information.
 
-    $ git clone ... lokke
+Once you have the dependencies installed, you should be able to build
+lokke like this:
+
+    $ git clone https://github.com/lokke-org/lokke
     $ cd lokke
     $ ./setup
     $ autoreconf -fi
     $ ./configure
     $ make check
-
-See [INSTALL](INSTALL) for Additional platform-specific information.
 
 Hopefully the tests will pass.  If not, please report them to the
 [Lokke list](#additional-contacts).  Note that parallel builds are
@@ -97,6 +98,9 @@ If you have more than one version of Guile installed, you may be able
 to select a particular version at configuration time like this:
 
     $ ./configure GUILE_EFFECTIVE_VERSION=3.0
+
+unless your platform requires other arrangements, which should be
+mentioned in the relevant section in [INSTALL](INSTALL).
 
 At this point you should be able to run a Clojure program like this:
 

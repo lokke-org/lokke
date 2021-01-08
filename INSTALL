@@ -29,6 +29,32 @@ See [`dev/prep-for-freebsd-build` ](dev/prep-for-freebsd-build) for a
 set up process that worked for at least FreeBSD 12.2, and please let
 us know if you encounter trouble.
 
+macOS
+-----
+
+For macOS you can use [Homebrew](https://brew.sh/) to install missing
+dependencies:
+
+    $ brew install autoconf automake pcre2 gettext git
+
+and then for Guile 3.0:
+
+    $ brew install guile
+
+or for Guile 2.2:
+
+    # Only if you have Guile 3.0 installed
+    $ brew unlink guile
+
+    $ brew install guile@2
+
+    # Setup environment variables as indicated after installation.
+    $ export PATH=/usr/local/opt/guile@2/bin:$PATH
+    $ export LDFLAGS=-L/usr/local/opt/guile@2/lib
+    $ export CPPFLAGS=-I/usr/local/opt/guile@2/include
+    $ export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
+    $ export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
+
 <!--
 Local Variables:
 mode: markdown
