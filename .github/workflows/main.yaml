@@ -27,3 +27,33 @@ jobs:
       - run: git config --global user.email "you@example.com"
       - run: git config --global user.name "Your Name"
       - run: make -j4 check-everything
+  macos-guile-2:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - run: brew unlink guile
+      - run: ./dev/prep-for-macos-build guile@2
+      - run: echo "/usr/local/opt/guile@2/bin" >> $GITHUB_PATH
+      - run: test 2 = $(guile -c '(display (major-version))')
+      - run: echo "LDFLAGS=-L/usr/local/opt/guile@2/lib" >> $GITHUB_ENV
+      - run: echo "CPPFLAGS=-I/usr/local/opt/guile@2/include" >> $GITHUB_ENV
+      - run: echo "PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig" >> $GITHUB_ENV
+      - run: echo "ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal" >> $GITHUB_ENV
+      - run: ./setup && autoreconf -fi && ./configure
+      - run: git config --global user.email "you@example.com"
+      - run: git config --global user.name "Your Name"
+      - run: make -j4 check-everything
+  macos-guile-3:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - run: ./dev/prep-for-macos-build guile
+      - run: test 3 = $(guile -c '(display (major-version))')
+      - run: ./setup && autoreconf -fi && ./configure
+      - run: git config --global user.email "you@example.com"
+      - run: git config --global user.name "Your Name"
+      - run: make -j4 check-everything
