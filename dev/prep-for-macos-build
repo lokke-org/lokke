@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+usage()
+{
+    echo "Usage: prep-for-macos-build [guile@2 | guile]"
+}
+
+guile="${1:-guile}"
+formulae='autoconf automake pcre2 gettext git'
+
+case "$guile" in
+    guile@2|guile)
+        brew install $formulae $guile
+        ;;
+    *)
+        usage 1>&2
+        exit 2
+        ;;
+esac

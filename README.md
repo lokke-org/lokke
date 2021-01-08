@@ -44,8 +44,8 @@ Scheme-friendly, and possibly more efficient interface -- think
 most notable existing module is `(lokke scm vector)` which intends to
 provide a C backed implementation of Clojure's [persistent vectors](https://hypirion.com/musings/understanding-persistent-vector-pt-1).
 
-Getting started
----------------
+Pre-requisites
+--------------
 
 Currently Lokke can be found at
 [GitHub](https://github.com/lokke-org/lokke) and
@@ -64,10 +64,12 @@ To build Lokke, you'll need
   * [gettext](https://www.gnu.org/software/gettext/)
   * [git](https://git-scm.com/)
 
+## GNU/Linux
+
 Your system may already provide these.  For Debian, for example:
 
     # apt-get install autoconf automake libpcre2-dev libunistring-dev
-    # apt-get install  make gettext gcc git
+    # apt-get install make gettext gcc git
 
 and then for Guile 3.0:
 
@@ -77,10 +79,36 @@ or for Guile 2.2:
 
     # apt-get install guile-2.2 guile-2.2-dev
 
-and then:
+## macOS
 
-    $ git clone ... lokke
-    $ cd lokke
+For macOS you can use [Homebrew](https://brew.sh/) to install missing
+dependencies:
+
+    $ brew install autoconf automake pcre2 gettext git
+
+and then for Guile 3.0:
+
+    $ brew install guile
+
+or for Guile 2.2:
+
+    # Only if you have Guile 3.0 installed
+    $ brew unlink guile
+
+    $ brew install guile@2
+
+    # Setup environment variables as indicated after installation.
+    $ export PATH=/usr/local/opt/guile@2/bin:$PATH
+    $ export LDFLAGS=-L/usr/local/opt/guile@2/lib
+    $ export CPPFLAGS=-I/usr/local/opt/guile@2/include
+    $ export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
+    $ export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
+
+Getting started
+---------------
+
+To build lokke follow these steps:
+
     $ ./setup
     $ autoreconf -fi
     $ ./configure
@@ -93,10 +121,9 @@ Hopefully the tests will pass.  If not, please report them to the
 fully supported, so depending on the host, something like `make -j5
 check` can be much faster.
 
-If you have more than one version of Guile installed, you may be able
-to select a particular version at configuration time like this:
-
-    $ ./configure GUILE_EFFECTIVE_VERSION=3.0
+If you have more than one version of Guile installed, we suggest to select it
+using your system tools (e.g. `update-alternatives` in Debian based systems or
+using the appropriate environment variables in macOS).
 
 At this point you should be able to run a Clojure program like this:
 
