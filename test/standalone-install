@@ -19,8 +19,8 @@ fi
 
 dirty_tree=$(git status --porcelain -uno)
 if test "$dirty_tree"; then
-    echo '1..0 # skipping standalone-install tests (uncommitted changes)'
-    exit 0
+    echo 'Bail out! standalone-install tests detected uncommitted changes'
+    exit 2
 fi
 
 echo '1..2'
