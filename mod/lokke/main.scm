@@ -293,19 +293,19 @@ terminator."
       (eval preamble preamble-mod))))
 
 (define (lok-main args)
-  (lokke-run (cdr args) lok-usage))
+  (exit (lokke-run (cdr args) lok-usage)))
 
 (define (lokke-main args)
-  (let* ((len (length args))
-         (args (if (< len 2) (cons* (car args) "run" (cdr args)) args))
-         (cmd (cadr args)))
-    (cond
-     ((member cmd '("-?" "-h" "--help" "help")) (quit (lokke-usage) 0))
-     ((string-prefix? "-0" cmd)
-      (unless (string=? "-0" cmd)
-        (quit-early "lokke: -0 must be the only #! argument\n"))
-      (run-script args lokke-usage))
-     ((string=? "run" cmd) (lokke-run (cddr args) lokke-usage))
-     (else
-      (display (lokke-usage) (err))
-      (quit-early "lokke: unrecognized subcommand ~s\n" cmd)))))
+  (exit (let* ((len (length args))
+               (args (if (< len 2) (cons* (car args) "run" (cdr args)) args))
+               (cmd (cadr args)))
+          (cond
+           ((member cmd '("-?" "-h" "--help" "help")) (quit (lokke-usage) 0))
+           ((string-prefix? "-0" cmd)
+            (unless (string=? "-0" cmd)
+              (quit-early "lokke: -0 must be the only #! argument\n"))
+            (run-script args lokke-usage))
+           ((string=? "run" cmd) (lokke-run (cddr args) lokke-usage))
+           (else
+            (display (lokke-usage) (err))
+            (quit-early "lokke: unrecognized subcommand ~s\n" cmd))))))

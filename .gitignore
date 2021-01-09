@@ -1,10 +1,14 @@
+# All ignores excepting (currently) empty directories like bin/
 *~
 .lokke
+/.deps/
 /Makefile
 /Makefile.am
 /Makefile.in
 /aclocal.m4
 /autom4te.cache/
+/bin_lok_0-lokke.o
+/bin_lokke_0-lokke.o
 /build-aux/ar-lib
 /build-aux/compile
 /build-aux/config.guess
@@ -31,9 +35,9 @@
 /lib/.libs/
 /libtool
 /lok
-/lok-[0-9]
+/lok-lokke.o
 /lokke
-/lokke-[0-9]
+/lokke-lokke.o
 /lokke.1
 /m4/lib-ld.m4
 /m4/lib-link.m4
