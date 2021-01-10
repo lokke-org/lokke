@@ -1,0 +1,36 @@
+
+Getting started
+===============
+
+In addition to the platform specific notes below, you may want to
+peruse the [`dev/prep-*` ](dev/) scripts in the source tree as a guide
+to the requirements on for any given platform.  Some are being used to
+prep the CI hosts, and those should be completely up-to-date.
+
+Platform specific notes
+=======================
+
+Debian (and some derivatives)
+-----------------------------
+
+Debian is covered in the [Getting started section of the
+README](README#getting-started), and that information may also suffice
+for many Debian derivatives like Ubuntu.
+
+FreeBSD
+-------
+
+The build requires GNU make (`pkg install gmake`), and so please
+substitute `gmake` for `make` in any of our build instructions, e.g.
+
+    gmake check
+
+See [`dev/prep-for-freebsd-build` ](dev/prep-for-freebsd-build) for a
+set up process that worked for at least FreeBSD 12.2, and please let
+us know if you encounter trouble.
+
+<!--
+Local Variables:
+mode: markdown
+End:
+-->

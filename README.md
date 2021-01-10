@@ -86,6 +86,8 @@ and then:
     $ ./configure
     $ make check
 
+See [INSTALL](INSTALL) for Additional platform-specific information.
+
 Hopefully the tests will pass.  If not, please report them to the
 [Lokke list](#additional-contacts).  Note that parallel builds are
 fully supported, so depending on the host, something like `make -j5
