@@ -15,8 +15,6 @@ AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ['$(top_srcdir)/guile.in'])
 # Checks for programs.
 AM_PROG_AR
 AC_PROG_CC
-gl_EARLY
-gl_INIT
 
 # Checks for libraries.
 
