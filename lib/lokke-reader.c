@@ -702,18 +702,6 @@ is_latin1_hex_digit(SCM c) {
   return 0;
 }
 
-static inline int
-is_latin1_plusminus(SCM c) {
-  switch (SCM_UNPACK(c))
-    {
-    case SCM_UNPACK(SCM_MAKE_CHAR ('+')):
-    case SCM_UNPACK(SCM_MAKE_CHAR ('-')):
-      return 1;
-    }
-  return 0;
-}
-
-
 static SCM
 radix_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
                                    int is_negative, SCM radix)
