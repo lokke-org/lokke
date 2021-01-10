@@ -26,7 +26,6 @@
 #include <unistd.h>
 #include <unicase.h>
 #include <unictype.h>
-#include <alloca.h>
 
 #include <libguile.h>
 
@@ -1076,43 +1075,6 @@ scm_read_semicolon_comment (int chr, SCM port)
 
   return SCM_UNSPECIFIED;
 }
-
-/* If the EXPECTED_CHARS are the next ones available from PORT, then
-   consume them and return 1.  Otherwise leave the port position where
-   it was and return 0.  EXPECTED_CHARS should be all lowercase, and
-   will be matched case-insensitively against the characters read from
-   PORT. */
-/* static int */
-/* try_read_ci_chars (SCM port, const char *expected_chars) */
-/* { */
-/*   int num_chars_wanted = strlen (expected_chars); */
-/*   int num_chars_read = 0; */
-/*   char *chars_read = alloca (num_chars_wanted); */
-/*   int c; */
-
-/*   while (num_chars_read < num_chars_wanted) */
-/*     { */
-/*       c = scm_getc (port); */
-/*       if (c == EOF) */
-/*         break; */
-/*       else if (c_tolower (c) != expected_chars[num_chars_read]) */
-/*         { */
-/*           scm_ungetc (c, port); */
-/*           break; */
-/*         } */
-/*       else */
-/*         chars_read[num_chars_read++] = c; */
-/*     } */
-
-/*   if (num_chars_read == num_chars_wanted) */
-/*     return 1; */
-/*   else */
-/*     { */
-/*       while (num_chars_read > 0) */
-/*         scm_ungetc (chars_read[--num_chars_read], port); */
-/*       return 0; */
-/*     } */
-/* } */
 
 
 /* Sharp readers, i.e. readers called after a `#' sign has been read.  */
