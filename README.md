@@ -118,10 +118,9 @@ features should be available.  Though for now, `lokke` loads
 `$XDG_CONFIG_HOME/lokke/interactive.scm` if `$XDG_CACHE_HOME` is set,
 otherwise `~/.config/lokke/interactive.scm` rather than `~/.guile`.
 
-See `./lokke --help` or `man -l lokke.1` for additional information,
-or if `man -l` isn't available, perhaps something like `nroff -man
-lokke.1 | less`.  A [plain text version of the manual page](lokke.1.txt)
-is also available.
+See `./lokke --help` or `man -M . lokke.1` for additional information.
+A [plain text version of the manual page](lokke.1.txt) is also
+available.
 
 Assuming your guile was compiled with readline support, it's likely
 you'll want to add something like this to
