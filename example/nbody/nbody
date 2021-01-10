@@ -1,4 +1,5 @@
-#!./lokke -0 ;; -*-clojure-*-
+#!./lokke -0
+;; -*-clojure-*-
 (apply run "-l" %0 "-a" "nbody/-main" "--" %&)
 !#
 

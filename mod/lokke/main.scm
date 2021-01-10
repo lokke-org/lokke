@@ -301,7 +301,10 @@ terminator."
          (cmd (cadr args)))
     (cond
      ((member cmd '("-?" "-h" "--help" "help")) (quit (lokke-usage) 0))
-     ((string-prefix? "-0" cmd) (run-script args lokke-usage))
+     ((string-prefix? "-0" cmd)
+      (unless (string=? "-0" cmd)
+        (quit-early "lokke: -0 must be the only #! argument\n"))
+      (run-script args lokke-usage))
      ((string=? "run" cmd) (lokke-run (cddr args) lokke-usage))
      (else
       (display (lokke-usage) (err))

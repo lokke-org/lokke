@@ -1,4 +1,5 @@
-#!./lokke -0 ;; -*-clojure-*-
+#!./lokke -0
+;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
