@@ -8,6 +8,7 @@
  ((lokke reader) #:prefix t/)
  ((lokke hash-map) #:select (clj= hash-map))
  ((lokke hash-set) #:select (hash-set))
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke scm vector)
   #:select (lokke-vec
@@ -18,13 +19,7 @@
  ((lokke vector) #:select ())  ;; load generics like with-meta
  ((rnrs io ports) #:select (eof-object))
  ((srfi srfi-64)
-  #:select (test-assert
-            test-begin
-            test-end
-            test-equal
-            test-group
-            test-runner-current
-            test-runner-fail-count))
+  #:select (test-assert test-begin test-equal test-group test-runner-current))
  ((srfi srfi-88) #:select (string->keyword)))
 
 (define (scm-read-string s)
@@ -270,7 +265,4 @@
  (test-equal '(re-pattern " \\d ") (t/read-string "#\" \\d \""))
  (test-equal '(re-pattern "\\\"x\\\"") (t/read-string "#\"\\\"x\\\"\"")))
 
-(test-end)
-
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

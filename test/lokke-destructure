@@ -5,6 +5,7 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke collection) #:select (clj= seq->scm-list))
  ((lokke base syntax) #:select ((let . let**)))
@@ -13,13 +14,10 @@
  ((srfi srfi-64)
   #:select (test-assert
             test-begin
-            test-end
             test-eq
             test-equal
-            test-eqv
             test-group
-            test-runner-current
-            test-runner-fail-count)))
+            test-runner-current)))
 
 (define /lokke/reader-hash-map (@ (lokke hash-map) hash-map))
 
@@ -112,7 +110,4 @@
            (let** ((/lokke/reader-hash-map #nil #:keys #(x) #:as all)
                    (hash-map #:x 1 #:y 2)) all))))
 
-(test-end)
-
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

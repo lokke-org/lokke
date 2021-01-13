@@ -5,12 +5,12 @@
   #:use-module ((lokke scm test-anything) #:select (tap-test-runner))
   #:use-module ((srfi srfi-64)
                 #:select (test-assert
-                             test-begin
-                           test-end
-                           test-equal
-                           test-group
-                           test-runner-current
-                           test-runner-fail-count))
+                          test-begin
+                          test-end
+                          test-equal
+                          test-group
+                          test-runner-current
+                          test-runner-fail-count))
   #:export (begin-tests
             deftest
             end-tests
@@ -37,15 +37,14 @@
     body ...))
 
 (define* (end-tests #:optional suite-name #:key exit?)
-  (if suite-name
-      (test-end (if (symbol? suite-name)
-                    (symbol->string suite-name)
-                    suite-name))
-      (test-end))
-  (when exit?
-    (exit (if (zero? (test-runner-fail-count (test-runner-current)))
-              0
-              2))))
+  (let ((failed (test-runner-fail-count (test-runner-current))))
+    (if suite-name
+        (test-end (if (symbol? suite-name)
+                      (symbol->string suite-name)
+                      suite-name))
+        (test-end))
+    (when exit?
+      (exit (if (zero? failed) 0 2)))))
 
 ;; For now just supports (is x) and (is (= x y)), since that's easy to
 ;; do with srfi-64, but this will almost certainly need an overhaul,

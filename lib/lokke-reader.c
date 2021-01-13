@@ -1280,7 +1280,7 @@ scm_read_sharp_extension (int chr, SCM port, scm_t_read_opts *opts)
   proc = scm_get_hash_procedure (chr);
   if (scm_is_true (scm_procedure_p (proc)))
     {
-      long line = scm_to_long (scm_port_line (port));
+      long line = scm_port_line (port);
       int column = scm_to_int (scm_port_column (port)) - 2;
       SCM got;
 
