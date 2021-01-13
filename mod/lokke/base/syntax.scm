@@ -35,6 +35,7 @@
                 #:select ((cons . clj-cons)
                           concat
                           first
+                          get
                           lazy-seq
                           rest
                           take-while
@@ -42,6 +43,7 @@
   #:use-module ((lokke base destructure) #:select (destructure-binding-syntax))
   #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
+  #:use-module ((lokke base metadata) #:select (alter-meta!))
   #:use-module ((lokke base util)
                 #:select (global-identifier?
                           map-tag?
