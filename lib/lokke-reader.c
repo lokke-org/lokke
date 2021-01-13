@@ -1280,16 +1280,24 @@ scm_read_sharp_extension (int chr, SCM port, scm_t_read_opts *opts)
   proc = scm_get_hash_procedure (chr);
   if (scm_is_true (scm_procedure_p (proc)))
     {
-      SCM line = scm_port_line (port);
-      SCM column = scm_difference (scm_port_column (port), SCM_I_MAKINUM (2));
+      long line = scm_to_long (scm_port_line (port));
+      int column = scm_to_int (scm_port_column (port)) - 2;
       SCM got;
 
       got = scm_call_2 (proc, SCM_MAKE_CHAR (chr), port);
 
       if (opts->record_positions_p && SCM_NIMP (got)
           && !scm_i_has_source_properties (got))
-        scm_i_set_source_properties_x (got, line, column, scm_port_filename (port));
-
+        // FIXME: scm_make_srcprops has been deprecated, so we'll need
+        // to switch to an alist, and if it's worth it, we could also
+        // pursue the optimization mentioned in the upstream
+        // scm_set_source_properties_x code upstream, i.e. internally
+        // detect line/col/file and replace with a srcprops object.
+        scm_set_source_properties_x (got,
+                                     scm_make_srcprops(line, column,
+                                                       scm_port_filename (port),
+                                                       SCM_UNDEFINED,
+                                                       SCM_EOL));
       return got;
     }
 
