@@ -41,7 +41,8 @@ lokke.1.txt: lokke.1
 CLEANFILES += lokke.1.txt.tmp
 
 AM_CFLAGS = \
-  -g -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
+  -g -Wall -Werror -Wno-error=deprecated-declarations \
+  -std=gnu11 -fdiagnostics-color=always \
   -fno-strict-aliasing
 
 vpkglibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)
