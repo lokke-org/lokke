@@ -50,8 +50,6 @@ or for Guile 2.2:
 
     # Setup environment variables as indicated after installation.
     $ export PATH=/usr/local/opt/guile@2/bin:$PATH
-    $ export LDFLAGS=-L/usr/local/opt/guile@2/lib
-    $ export CPPFLAGS=-I/usr/local/opt/guile@2/include
     $ export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
     $ export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
 
