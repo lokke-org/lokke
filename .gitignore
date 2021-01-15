@@ -26,6 +26,7 @@
 /config.status
 /configure
 /guile
+/guile-lokke.o
 /lib/*.la
 /lib/*.lo
 /lib/*.o
