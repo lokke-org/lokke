@@ -7,6 +7,13 @@ peruse the [`dev/prep-*` ](dev/) scripts in the source tree as a guide
 to the requirements on for any given platform.  Some are being used to
 prep the CI hosts, and those should be completely up-to-date.
 
+If you install Guile yourself via `./configure --prefix DIR ...` then
+you may be able to build against it after making arrangments like this:
+
+    export PATH=DIR/bin:"$PATH"
+    export PKG_CONFIG_PATH=DIR/lib/pkgconfig
+    export ACLOCAL_PATH=DIR/share/aclocal
+
 Platform specific notes
 =======================
 
