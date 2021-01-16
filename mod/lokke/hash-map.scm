@@ -97,7 +97,7 @@
   (hash #:init-thunk (lambda () (make-atomic-box #nil)))
   (meta #:init-keyword #:meta))
 
-(define-syntax-rule (make-map fm n meta)
+(define-inlinable (make-map fm n meta)
   (make <hash-map> #:internals fm #:count n #:meta meta))
 
 (define-inlinable (map-fm m) (slot-ref m 'internals))
