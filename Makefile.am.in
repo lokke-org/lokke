@@ -134,6 +134,7 @@ export LOKKE_TEST_PROTOCOL = tap
 TESTS = \
   test/equality \
   test/clojure-comparison \
+  test/clojure-concurrency \
   test/clojure-defmacro \
   test/clojure-dynamic \
   test/clojure-evaluation \

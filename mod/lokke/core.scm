@@ -64,6 +64,7 @@
                           atom
                           atom?
                           add-watch
+                          compare-and-set!
                           deliver
                           deref
                           future
@@ -265,6 +266,7 @@
                char?
                (class-of . class)
                (ver/version . clojure-version)
+               compare-and-set!
                (clj-cond . cond)
                cond->
                cond->>

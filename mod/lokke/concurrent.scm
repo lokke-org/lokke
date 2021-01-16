@@ -35,6 +35,7 @@
             alter-meta!
             atom?
             add-watch
+            compare-and-set!
             remove-watch
             deref
             future
@@ -63,7 +64,7 @@
     (lokke-vector prev new)))
 
 (define-method (compare-and-set! (a <atom>) oldval newval)
-  (apply atom-compare-and-set! a oldval newval))
+  (atom-compare-and-set! a oldval newval))
 
 (define-method (add-watch (a <atom>) key fn) (atom-add-watch a key fn))
 (define-method (remove-watch (a <atom>) key) (atom-remove-watch a key))
