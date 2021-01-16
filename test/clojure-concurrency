@@ -7,7 +7,9 @@
 
 (ns test.clojure-concurrency
   (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [guile.srfi.srfi-19
+    :refer [current-time time-difference time-monotonic time-second]]))
 
 (begin-tests (ns-name *ns*))
 
@@ -21,5 +23,17 @@
 (is (= 1 (deref (doto (atom 1) (compare-and-set! 3 2)))))
 
 (is (= 2 (swap! (atom 1) inc)))
+
+(is (= 1 (deref (future 1))))
+(is (= :yep (deref (future (guile/sleep 100)) 10 :yep)))
+(is (= 1 (deref (future-call (constantly 1)))))
+(is (= :yep (deref (future-call #(guile/sleep 100)) 10 :yep)))
+
+(testing "future thread count isn't restricted"
+  ;; Not conclusive, but certainly suggestive
+  (let [start (current-time time-monotonic)]
+    (dotimes [i 100] (future (guile/sleep 1000)))
+    (let [diff (time-difference (current-time time-monotonic) start)]
+      (is (< (time-second diff) 10)))))
 
 (end-tests (ns-name *ns*) :exit? true)

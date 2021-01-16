@@ -225,10 +225,8 @@ General comparison with Clojure/JVM
 * There is some experimental, rudimentary
   [compatibility with Clojure/JVM exception handling](#exception-handling).
 
-* Currently, a Lokke `future` is a Guile `<future>`, which means that
-  it draws from a fixed-size thread pool of size `(dec
-  (current-processor-count))` while recent versions of Clojure/JVM
-  have an unbounded pool.
+* Currently, `future` and `future-call` always create a new thread,
+  i.e. they do not cache/pool threads.
 
 * Metadata support is limited: vectors, hash-sets, and hash-maps,
   vars, namespaces, and atoms are supported, lists and symbols are
@@ -528,8 +526,6 @@ Known issues
         $2 = #t
 
   An exit back to the top-level prompt will restore the Lokke writer.
-
-- `deref` does not support a timeout for futures yet.
 
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
