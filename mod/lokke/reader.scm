@@ -24,8 +24,11 @@
                           with-reader-meta))
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
+  #:use-module ((lokke time)
+                #:select (instant? instant->tagged-data tagged-data->instant))
   #:use-module ((lokke transmogrify)
-                #:select (clj-instances->literals
+                #:select (add-tagged-element
+                          clj-instances->literals
                           literals->clj-instances
                           preserve-meta-if-new!
                           quote-empty-lists))
@@ -44,6 +47,8 @@
 (define debug-conditionals? (or debug-reader? #f))
 
 (load-extension "lokke-reader.so" "init_lokke_reader")
+
+(add-tagged-element 'inst instant? tagged-data->instant instant->tagged-data)
 
 (define (expand-@-refs expr)
   (define (expand-@-sym sym)
@@ -492,6 +497,8 @@
              (result (apply-internal-metadata result (hash-map)))
              (_ (when debug-reader?
                   (format (current-error-port) "reader finishing up: ~s\n" result)))
+             (_ (when debug-reader?
+                  (format (current-error-port) "reader pending meta: ~s\n" pending-meta)))
              (result (if (empty? pending-meta)
                          result
                          (if (supports-reader-meta? result)

@@ -1,7 +1,8 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke transmogrify)
+  #:use-module ((ice-9 match) #:select (match))
   #:use-module ((ice-9 pretty-print) #:select (pretty-print))
   #:use-module ((lokke reader literal)
                 #:select (reader-hash-map
@@ -10,6 +11,10 @@
                           reader-hash-set
                           reader-hash-set-elts
                           reader-hash-set-meta
+                          reader-tagged
+                          reader-tagged?
+                          reader-tagged-data
+                          reader-tagged-tag
                           reader-vector
                           reader-vector-elts
                           reader-vector-meta))
@@ -19,8 +24,13 @@
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke scm vector)
                 #:select (lokke-vec lokke-vector? lokke-vector->list))
+  #:use-module ((srfi srfi-1) #:select (find first second))
+  #:use-module ((srfi srfi-69)
+                #:select (hash-table-ref hash-table-set! make-hash-table))
   #:use-module (oop goops)
-  #:export (clj-instances->literals
+  #:export (add-tagged-element
+            clj-instances->literals
+            instantiate-tagged
             literals->clj-instances
             literals->scm-instances
             preserve-meta-if-new!
@@ -47,6 +57,31 @@
    ((null? (meta orig)) maybe-new)  ;; FIXME: do we want to include '()?
    (else ((@@ (lokke metadata) with-meta) maybe-new (meta orig)))))
 
+(define instantiators (make-fluid (make-hash-table eq?)))
+(define uninstantiators (make-fluid '()))
+
+(define (add-tagged-element tag pred instantiator uninstantiator)
+  (hash-table-set! (fluid-ref instantiators) tag instantiator)
+  (let* ((orig (fluid-ref uninstantiators))
+         (new (assoc-set! orig (cons tag pred) uninstantiator)))
+    (unless (eq? new orig)
+      (fluid-set! uninstantiators new))))
+
+(define (tag-instantiator tag)
+  (hash-table-ref (fluid-ref instantiators) tag (lambda () #f)))
+
+(define (instantiate-tagged tag data)
+  (let ((instantiate (tag-instantiator tag)))
+    (unless instantiate
+      (error (string-append "Unknown tagged element #" (symbol->string tag))))
+    (instantiate data)))
+
+(define (uninstantiator x)
+  ;; Traverse the uninstantiator info, checking (pred x) for a match
+  (let ((info (find (lambda (entry) ((second (first entry)) x))
+                    (fluid-ref uninstantiators))))
+    (and info info)))
+
 (define (literals->clj-instances expr)
   (define (convert expr)
     (preserve-meta-if-new!
@@ -64,6 +99,9 @@
          ((/lokke/reader-hash-set)
           (with-meta (set (map convert (reader-hash-set-elts expr)))
                      (convert (reader-hash-set-meta expr))))
+         ((/lokke/reader-tagged)
+          (instantiate-tagged (reader-tagged-tag expr)
+                              (convert (reader-tagged-data expr))))
          (else (map convert expr))))
       (else expr))))
   (convert expr))
@@ -82,6 +120,9 @@
           (items->alist (map convert (reader-hash-map-elts expr))))
          ((/lokke/reader-hash-set)  ;; list for srfi-1
           (list (map convert (reader-hash-set-elts expr))))
+         ((/lokke/reader-tagged)
+          (instantiate-tagged (reader-tagged-tag expr)
+                              (convert (reader-tagged-data expr))))
          (else (map convert expr))))
       (else expr))))
   (convert expr))
@@ -111,8 +152,11 @@
               (into '() (map convert expr))))
       ((seq? expr)
        (map convert (seq->scm-list expr)))
-      (else (error "Unexpected expression while uninstantiating literals:"
-                   expr (class-of expr) (list? expr))))))
+      (else
+       (match (uninstantiator expr)
+         ((tag . uninstantiate) (reader-tagged tag (uninstantiate expr)))
+         (_ (error "Unexpected expression while uninstantiating literals:"
+                   expr (class-of expr) (list? expr))))))))
   (when debug-transmogrify?
     (format (current-error-port) "uninstantiate:\n")
     (pretty-print expr (current-error-port)))

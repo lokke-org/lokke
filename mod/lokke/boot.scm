@@ -51,10 +51,12 @@
                 #:select (reader-hash-map-elts
                           reader-hash-set-elts
                           reader-vector-elts))
+  #:use-module ((lokke transmogrify) #:select (instantiate-tagged))
   #:use-module ((srfi srfi-1) #:select (append-map take))
   #:export (/lokke/reader-hash-map
             /lokke/reader-hash-set
             /lokke/reader-meta
+            /lokke/reader-tagged
             /lokke/reader-vector
             syntax-quote)
   #:re-export (ns)
@@ -108,6 +110,9 @@
 (define-syntax-rule (/lokke/reader-meta x ...)
   (warn (format #f "Ignoring metadata in unsupported position: ~s"
                 '(/lokke/reader-meta x ...))))
+
+(define-syntax-rule (/lokke/reader-tagged tag data)
+  ((@ (lokke transmogrify) instantiate-tagged) 'tag data))
 
 (define-syntax quote
   ;; Note that ~ and ~@ (i.e. unquote and unquote-splicing) still
