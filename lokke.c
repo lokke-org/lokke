@@ -72,7 +72,7 @@ main (int argc, char **argv)
 
   env = getenv ("GUILE_LOAD_COMPILED_PATH");
   if (!env)
-    setenv_or_die ("GUILE_LOAD_COMPILED_PATH", LOKKE_MODULE_ROOT);
+    setenv_or_die ("GUILE_LOAD_COMPILED_PATH", LOKKE_COMPILED_ROOT);
   else
     {
       char *path;
