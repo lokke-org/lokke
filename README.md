@@ -54,7 +54,7 @@ Currently Lokke can be found at
 To build Lokke, you'll need
 
   * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0 (preferring 3.0
-    recommended which should perform notably better)
+    which should perform notably better)
   * [PCRE2](https://www.pcre.org/)
   * [libunistring](https://www.gnu.org/software/libunistring/)
   * [GCC](https://www.gnu.org/software/gcc/)
