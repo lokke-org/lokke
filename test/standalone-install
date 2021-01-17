@@ -39,19 +39,20 @@ autoreconf -fi
 make -j2 install
 cd /
 
-i=0
+i=1
 
 check-cmd()
-(
+{
     result=$("$@")
     rc=$?
     if test $rc -eq 0 && test "$result" = ':howdy'; then
-        echo 'ok $i'
+        echo "ok $i"
     else
         echo "not ok $i ($rc) $@ => $result"
     fi
     ((i++)) || true
-)
+    echo i_f "$i"
+}
 
 check-cmd "$tmpdir/install/bin/lok" -e '(println :howdy)'
 check-cmd "$tmpdir/install/bin/lokke" run -e '(println :howdy)'
