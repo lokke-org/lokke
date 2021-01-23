@@ -239,6 +239,8 @@
                                           (guile.guile-user/inc ,foo-sym)))))
     (test-equal expected synquote)))
 
+(test-equal '(clojure.core/deref (atom 1)) (t/read-string "@(atom 1)"))
+
 (test-group
  "reader conditionals #?(...)"
  (test-equal (eof-object) (t/read-string "#?()"))

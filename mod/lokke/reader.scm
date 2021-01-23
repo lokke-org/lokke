@@ -50,28 +50,6 @@
 
 (add-tagged-element 'inst instant? tagged-data->instant instant->tagged-data)
 
-(define (expand-@-refs expr)
-  (define (expand-@-sym sym)
-    (let ((str (symbol->string sym)))
-      (if (string-prefix? "@" str)
-          (list 'clojure.core/deref (string->symbol (substring/read-only str 1)))
-          sym)))
-  (define (expand expr)
-    (cond
-     ((symbol? expr) (expand-@-sym expr))
-     ((keyword? expr) expr)
-     ((null? expr) expr)
-     ((list? expr) (map expand expr))
-     ((string? expr) expr)
-     ((number? expr) expr)
-     ((boolean? expr) expr)
-     ((char? expr) expr)
-     (else
-      (error
-       (format #f "Unexpected expression while expanding @ refs ~s:"
-               (class-of expr)) expr))))
-  (expand expr))
-
 (define (expand-ref sym env aliases)
   ;; foo -> some.where/foo
   ;; str/join -> clojure.string/join
@@ -480,9 +458,7 @@
           (error (format #f "Unexpected metadata type ~s for:" (class-of m))
                  m)))))
      (else  ;; Not (/lokke/reader-meta ...)
-      (let* ((_ (when debug-reader?
-                  (format (current-error-port) "reader expanding @refs: ~s\n" expr)))
-             (result (expand-@-refs expr))
+      (let* ((result expr)
              (_ (when debug-reader?
                   (format (current-error-port) "reader expanding syms/keys: ~s\n" result)))
              (result (expand-sym/key-aliases result env aliases))

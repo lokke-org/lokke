@@ -14,6 +14,7 @@
 (begin-tests (ns-name *ns*))
 
 (is (atom? (atom 1)))
+(is (= 1 @(atom 1)))
 (is (= 1 (deref (atom 1))))
 (is (= 2 (reset! (atom 1) 2)))
 

@@ -37,6 +37,7 @@ SCM_SYMBOL (lokke_sym_reader_hash_map, "/lokke/reader-hash-map");
 SCM_SYMBOL (lokke_sym_reader_hash_set, "/lokke/reader-hash-set");
 SCM_SYMBOL (lokke_sym_reader_vector, "/lokke/reader-vector");
 SCM_SYMBOL (lokke_sym_reader_tagged, "/lokke/reader-tagged");
+SCM_SYMBOL (sym_core_deref, "clojure.core/deref");
 SCM_SYMBOL (sym_re_pattern, "re-pattern");
 SCM_SYMBOL (sym_syntax_quote, "syntax-quote");
 SCM_SYMBOL (sym_var, "var");
@@ -1421,6 +1422,8 @@ read_inner_expression (SCM port, scm_t_read_opts *opts)
 	    else
 	      return result;
 	  }
+        case '@':
+          return scm_list_2 (sym_core_deref, scm_read_expression (port, opts));
         case '^':
           return scm_read_metadata (port, opts);
 	case ')':
