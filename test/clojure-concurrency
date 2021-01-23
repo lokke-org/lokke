@@ -37,4 +37,13 @@
     (let [diff (time-difference (current-time time-monotonic) start)]
       (is (< (time-second diff) 10)))))
 
+(testing "pmap"
+  (is (= [1 2 3] (pmap inc [0 1 2]))))
+
+(testing "pcalls"
+  (is (= [1 2 3] (pcalls #(+ 1) #(+ 2) #(+ 3)))))
+
+(testing "pvalues"
+  (is (= [1 2 3] (pvalues (+ 1) (+ 2) (+ 3)))))
+
 (end-tests (ns-name *ns*) :exit? true)
