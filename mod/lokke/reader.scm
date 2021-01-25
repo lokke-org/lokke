@@ -108,6 +108,8 @@
          (cons 'syntax-quote (map (lambda (x) (expand x #t)) (cdr expr))))
         ((unquote)
          (cons 'unquote (map (lambda (x) (expand x #f)) (cdr expr))))
+        ((unquote-splicing)
+         (cons 'unquote-splicing (map (lambda (x) (expand x #f)) (cdr expr))))
         (else
          (map (lambda (x) (expand x syntax-quoted?)) expr))))
      ((string? expr) expr)

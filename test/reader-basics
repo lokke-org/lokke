@@ -239,6 +239,10 @@
                                           (guile.guile-user/inc ,foo-sym)))))
     (test-equal expected synquote)))
 
+(test-equal '(syntax-quote
+              (guile.guile-user/foo (unquote-splicing (list bar))))
+  (t/read-string "`(foo ~@(list bar))"))
+
 (test-equal '(clojure.core/deref (atom 1)) (t/read-string "@(atom 1)"))
 
 (test-group
