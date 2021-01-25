@@ -106,7 +106,7 @@
   ;; succeed, but a second run (with a new heap) will crash looking
   ;; for the gensym-ish module name.  It would make sense that guile
   ;; might embed the module name in the compiled file for path lookup
-  ;; on the next run, so we'll just root everything at '(lokke user)
+  ;; on the next run, so we'll just root everything at '(lokke ns lokke user)
   ;; for now.  However, I'm not certain that other problems weren't
   ;; interfering, so if it matters, we might want to investigate
   ;; again.
@@ -114,7 +114,7 @@
   ;; As an alternative, could we just have separate bootstrap and user
   ;; modules, either both scm or one scm and one clj, and would that
   ;; be any better?
-  (resolve-module '(lokke user) #:ensure #f))
+  (resolve-module '(lokke ns lokke user) #:ensure #f))
 
 (define bootstrapped-compiler? #f)
 
