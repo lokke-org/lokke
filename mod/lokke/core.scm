@@ -5,6 +5,7 @@
   #:use-module ((guile)
                 #:select ((apply . %scm-apply)
                           (begin . %scm-begin)
+                          (if . %scm-if)
                           (let . %scm-let)
                           (format . %scm-format)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
@@ -53,6 +54,7 @@
                           when-let
                           when-not
                           when-some))
+  #:use-module ((lokke base util) #:select (map-tag? set-tag? vec-tag?))
   #:use-module ((lokke base version) #:prefix ver/)
   #:use-module ((lokke base quote) #:select (clj-quote))
   #:use-module (lokke collection)
@@ -212,7 +214,7 @@
             short
             time
             trampoline)
-  #:replace (= boolean? do instance?)
+  #:replace (= boolean? case do instance?)
   #:re-export (*
                *err*
                *in*
@@ -671,3 +673,28 @@
                                      "Wrong number of arguments" '() #f)
                           (cons (if (nil? (car args)) (car patches) (car args))
                                 (loop (cdr args) (cdr patches)))))))))))
+
+(define-syntax case
+  (lambda (x)
+    (syntax-case x ()
+      ((_ target () action exp ...) #'(case target exp ...))
+
+      ;; Literal adapter, so expressions like (quote x) and
+      ;; (/lokke/reader-vector #nil 1) aren't taken as multiple
+      ;; symbol selectors by (candidate ...)  below.
+      ((_ target (tag meta x ...) exp ...)
+       (or (eq? 'quote (syntax->datum #'tag))
+           (vec-tag? #'tag) (map-tag? #'tag) (set-tag? #'tag))
+       #'(case target ((tag meta x ...)) exp ...))
+
+      ((_ target-exp (candidate candidate* ...) action exp ...)
+       #'(%scm-let ((target target-exp))
+           (%scm-if (clj= (clj-quote candidate) target)
+                    action
+                    (case target (candidate* ...) action exp ...))))
+
+      ((_ target candidate action exp ...)
+       #'(case target (candidate) action exp ...))
+
+      ((_ target action) #'action)
+      ((_ target) #'(error "No matching clause for" target)))))

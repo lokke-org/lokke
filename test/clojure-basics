@@ -7,7 +7,8 @@
 
 (ns test.clojure-basics
   (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [lokke.exception :refer [ex-tag]]))
 
 (begin-tests (ns-name *ns*))
 
@@ -50,6 +51,37 @@
   (is (= :yep (as-> :yep x)))
   (is (= 1 (as-> 0 x (inc x))))
   (is (= "1" (as-> 0 x (inc x) (str x)))))
+
+(testing "case"
+  (try
+    (case :nope)
+    (catch Throwable ex
+      (is (= 'misc-error (ex-tag ex)))))
+  (is (= :nope (case :x :nope)))
+  (is (= :nope (case :x () :yep :nope)))
+  (is (= :nope (case :x :y :yep :nope)))
+  (is (= :nope (case :x (:y) :yep :nope)))
+  (is (= :nope (case :x (:y :z) :yep :nope)))
+  (is (= :nope (case :x :a :a (:y :z) :yep :nope)))
+  (is (= :nope (case :x (:y :z) :yep :a :a :nope)))
+  (is (= :nope (case :x :a :a (:y :z) :yep :a :a :nope)))
+  (is (= :yep (case :x :x :yep :nope)))
+  (is (= :yep (case :x (:x) :yep :nope)))
+  (is (= :yep (case :x (:x :y) :yep :nope)))
+  (is (= :yep (case :x (:y :x) :yep :nope)))
+  (is (= :yep (case :x :a :a (:y :x) :yep :nope)))
+  (is (= :yep (case :x (:y :x) :yep :a :a :nope)))
+  (is (= :yep (case :x :a :a (:y :x) :yep :a :a :nope)))
+  (is (= :yep (case 1 1 :yep)))
+  (is (= :yep (case 'x x :yep)))
+  (is (= :yep (case 'and and :yep)))
+  (is (= :yep (case 'and (and) :yep)))
+  (is (= :yep (case '+ + :yep)))
+  (is (= :yep (case '+ (+) :yep)))
+  (is (= :yep (case "x" "x" :yep)))
+  (is (= :yep (case [1] [1] :yep)))
+  (is (= :yep (case #{1} #{1} :yep)))
+  (is (= :yep (case {1 2} {1 2} :yep))))
 
 (testing "cond->"
   (is (= :yep (cond-> :yep)))

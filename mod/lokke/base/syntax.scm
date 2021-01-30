@@ -49,7 +49,10 @@
                           map-tag?
                           meta-tag?
                           pairify
+                          set-tag?
                           vec-tag?))
+  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke metadata) #:select (with-meta))
   #:use-module ((lokke reader literal)
                 #:select (reader-hash-map? reader-meta? reader-vector?))
   #:use-module (oop goops)
