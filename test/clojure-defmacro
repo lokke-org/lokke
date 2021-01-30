@@ -1,7 +1,8 @@
 #!./lokke -0
+;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019 2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-fn
@@ -23,5 +24,12 @@
 (is (= nil (deref q)))
 (ask)
 (is (= :shall-we-play-a-game? (deref q)))
+
+(testing "tagged literals"
+  ;; Make sure we can handle compilation of tagged literals, i.e. that
+  ;; we properly convert them back to literals for consumption by the
+  ;; macroexpander/compiler.
+  (defmacro test-inst-expansion [] #inst "1977-09-05T12:56:00Z")
+  (is (= #inst "1977-09-05T12:56:00Z" (test-inst-expansion))))
 
 (end-tests (ns-name *ns*) :exit? true)

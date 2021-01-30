@@ -1,7 +1,7 @@
 #!./lokke -0
-!#
+!# ;; -*-clojure-*-
 
-;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2020-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-evaluation

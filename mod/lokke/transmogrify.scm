@@ -78,7 +78,7 @@
 
 (define (uninstantiator x)
   ;; Traverse the uninstantiator info, checking (pred x) for a match
-  (let ((info (find (lambda (entry) ((second (first entry)) x))
+  (let ((info (find (lambda (entry) ((cdar entry) x))
                     (fluid-ref uninstantiators))))
     (and info info)))
 
@@ -154,7 +154,8 @@
        (map convert (seq->scm-list expr)))
       (else
        (match (uninstantiator expr)
-         ((tag . uninstantiate) (reader-tagged tag (uninstantiate expr)))
+         (((tag . pred) . uninstantiate)
+          (reader-tagged tag (uninstantiate expr)))
          (_ (error "Unexpected expression while uninstantiating literals:"
                    expr (class-of expr) (list? expr))))))))
   (when debug-transmogrify?
