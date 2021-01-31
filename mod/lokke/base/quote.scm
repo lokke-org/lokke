@@ -68,6 +68,10 @@
                     /lokke/reader-hash-set
                     /lokke/reader-vector)
 
+      ((_ (ref-scoped-sym sym ns name)) (eq? '/lokke/ref-scoped-sym-if-syntax
+                                             (syntax->datum #'ref-scoped-sym))
+       #'(quote sym))
+
       ((_ (/lokke/reader-vector meta exp ...))
        #`(/lokke/reader-vector #,@(map (lambda (e) #`(clj-quote #,e)) #'(meta exp ...))))
 

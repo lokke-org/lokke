@@ -15,11 +15,14 @@
                           synerr))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke ns) #:select (ns))
-  #:use-module ((lokke transmogrify) #:select (instantiate-tagged))
+  #:use-module ((lokke transmogrify)
+                #:select (/lokke/ref-scoped-sym-if-syntax
+                          instantiate-tagged))
   #:export (/lokke/reader-meta /lokke/reader-tagged)
   #:re-export (/lokke/reader-hash-map
                /lokke/reader-hash-set
                /lokke/reader-vector
+               /lokke/ref-scoped-sym-if-syntax
                ns)
   #:replace (unquote unquote-splicing)
   #:duplicates (merge-generics replace warn-override-core warn last))

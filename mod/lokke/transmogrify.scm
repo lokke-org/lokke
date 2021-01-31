@@ -23,13 +23,20 @@
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke hash-map) #:select (hash-map hash-map? kv-list))
   #:use-module ((lokke hash-set) #:select (hash-set? set))
+  #:use-module ((lokke ns) #:select (find-ns))
   #:use-module ((lokke scm vector)
                 #:select (lokke-vec lokke-vector? lokke-vector->list))
+  #:use-module ((lokke symbol)
+                #:select (ns-sym->mod-name
+                          parse-symbol
+                          parsed-sym-ns
+                          parsed-sym-ref))
   #:use-module ((srfi srfi-1) #:select (find first second))
   #:use-module ((srfi srfi-69)
                 #:select (hash-table-ref hash-table-set! make-hash-table))
   #:use-module (oop goops)
-  #:export (add-tagged-element
+  #:export (/lokke/ref-scoped-sym-if-syntax
+            add-tagged-element
             clj-instances->literals
             instantiate-tagged
             literals->clj-instances
@@ -83,6 +90,33 @@
                     (fluid-ref uninstantiators))))
     (and info info)))
 
+
+(define-syntax /lokke/ref-scoped-sym-if-syntax
+  (lambda (x)
+    (syntax-case x ()
+      ((_ sym ns-sym ref-sym)
+       (let* ((ns-d (syntax->datum #'ns-sym))
+              (n (find-ns ns-d)))
+         (if n
+             (let* ((v (module-variable n (syntax->datum #'ref-sym))))
+               (if v
+                   (if (macro? (variable-ref v))
+                       (let* ((mod (ns-sym->mod-name ns-d))
+                              (mod (datum->syntax #'sym mod)))
+                         #`(@ #,mod ref-sym))
+                       #'sym)
+                   #'sym))
+             #'sym))))))
+
+(define (expose-scoped-refs-to-expander s)
+  ;; cf. (lokke boot)
+  (let* ((p (parse-symbol s))
+         (n (parsed-sym-ns p))
+         (r (parsed-sym-ref p)))
+    (if (and n r)
+        (list '/lokke/ref-scoped-sym-if-syntax s n r)
+        s)))
+
 (define (literals->clj-instances expr)
   (define (convert expr)
     (preserve-meta-if-new!
@@ -91,6 +125,7 @@
       ((null? expr) expr)
       ((list? expr)
        (case (car expr)
+         ((/lokke/ref-scoped-sym-if-syntax) (cadr expr))
          ((/lokke/reader-vector)
           (with-meta (lokke-vec (map convert (reader-vector-elts expr)))
                      (convert (reader-vector-meta expr))))
@@ -134,14 +169,16 @@
     (preserve-meta-if-new!
      expr
      (cond
-      ((symbol? expr) expr)
+      ((symbol? expr) (expose-scoped-refs-to-expander expr))
       ((null? expr) expr)
       ((string? expr) expr)
       ((number? expr) expr)
       ((keyword? expr) expr)
       ((boolean? expr) expr)
-      ((pair? expr) (cons (convert (car expr)) (convert (cdr expr))))
-      ;;((list? expr) (map convert expr))
+      ((pair? expr)
+       (if (eq? (car expr) '/lokke/ref-scoped-sym-if-syntax)
+           expr
+           (cons (convert (car expr)) (convert (cdr expr)))))
       ((lokke-vector? expr)
        (apply reader-vector (convert (meta expr))
               (map convert (lokke-vector->list expr))))
