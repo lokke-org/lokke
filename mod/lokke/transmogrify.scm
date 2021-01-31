@@ -19,6 +19,7 @@
                           reader-vector-elts
                           reader-vector-meta))
   #:use-module ((lokke base collection) #:select (seq seq? seq->scm-list))
+  #:use-module ((lokke base map-entry) #:select (key map-entry? val))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke hash-map) #:select (hash-map hash-map? kv-list))
   #:use-module ((lokke hash-set) #:select (hash-set? set))
@@ -147,6 +148,10 @@
       ((hash-map? expr)
        (apply reader-hash-map (convert (meta expr))
               (map convert (kv-list expr))))
+      ((map-entry? expr)
+       (reader-vector (convert (meta expr))
+                      (convert (key expr))
+                      (convert (val expr))))
       ((hash-set? expr)
        (apply reader-hash-set (convert (meta expr))
               (map convert (seq->scm-list (seq expr)))))
