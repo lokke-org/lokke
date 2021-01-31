@@ -18,10 +18,10 @@
                           reader-vector
                           reader-vector-elts
                           reader-vector-meta))
-  #:use-module ((lokke base collection) #:select (seq? seq->scm-list))
-  #:use-module ((lokke hash-map) #:select (hash-map hash-map? kv-list))
-  #:use-module ((lokke hash-set) #:select (hash-set? into set))
+  #:use-module ((lokke base collection) #:select (seq seq? seq->scm-list))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
+  #:use-module ((lokke hash-map) #:select (hash-map hash-map? kv-list))
+  #:use-module ((lokke hash-set) #:select (hash-set? set))
   #:use-module ((lokke scm vector)
                 #:select (lokke-vec lokke-vector? lokke-vector->list))
   #:use-module ((srfi srfi-1) #:select (find first second))
@@ -149,7 +149,7 @@
               (map convert (kv-list expr))))
       ((hash-set? expr)
        (apply reader-hash-set (convert (meta expr))
-              (into '() (map convert expr))))
+              (map convert (seq->scm-list (seq expr)))))
       ((seq? expr)
        (map convert (seq->scm-list expr)))
       (else

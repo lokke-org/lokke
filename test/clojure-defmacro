@@ -25,6 +25,17 @@
 (ask)
 (is (= :shall-we-play-a-game? (deref q)))
 
+(testing "literals"
+  ;; Make sure we can handle compilation of literals, i.e. that we
+  ;; properly convert the clojure instances back to their "literal
+  ;; form" for consumption by the macroexpander/compiler.
+  (defmacro test-map-expansion [] {1 2})
+  (is (= {1 2} (test-map-expansion)))
+  (defmacro test-set-expansion [] #{1})
+  (is (= #{1} (test-set-expansion)))
+  (defmacro test-vec-expansion [] [1])
+  (is (= [1] (test-vec-expansion))))
+
 (testing "tagged literals"
   ;; Make sure we can handle compilation of tagged literals, i.e. that
   ;; we properly convert them back to literals for consumption by the
