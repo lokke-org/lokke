@@ -65,12 +65,10 @@
     (let* ((tm (gmtime s))
            (off (tm:gmtoff tm)))
       (string-append
-       "\""
        (strftime "%FT%T" tm)
        (if (zero? ns) "" (format #f ".~d" ns))
        (if (zero? off) "Z" (let-values (((h s) (truncate/ off (* 60 60))))
-                             (format #f "~d:~d" h (/ (abs s) 60))))
-       "\""))))
+                             (format #f "~d:~d" h (/ (abs s) 60))))))))
 
 (define-method (write (inst <instant>) port)
   (format port "#<~s ~x " (class-name (class-of inst)) (object-address inst))
@@ -78,7 +76,7 @@
   (display ">" port))
 
 (define-method (to-string (inst <instant>))
-  (string-append "#inst " (instant->tagged-data inst)))
+  (string-append "#inst \"" (instant->tagged-data inst) "\""))
 
 (define-method (pr-readable (inst <instant>) port)
   (display (to-string inst) port))
