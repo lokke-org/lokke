@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; This is the lowest level, supporting *everything*, including
@@ -7,43 +7,6 @@
 ;; clojure.core, i.e. (lokke ns clojure core).
 
 (define-module (lokke boot)
-  ;; To avoid unquote and unquote-splicing, which when available,
-  ;; break the syntax-quote syntax, and might not be terrible for
-  ;; this particular module to be pure anyway.
-  #:pure
-  #:use-module ((guile)
-                #:select (@
-                          car
-                          case
-                          cddr
-                          cdr
-                          cond
-                          cond-expand
-                          cons
-                          cons*
-                          datum->syntax
-                          define
-                          define-syntax
-                          define-syntax-rule
-                          eq?
-                          error
-                          format
-                          lambda
-                          let
-                          list
-                          list?
-                          map
-                          null?
-                          quasisyntax
-                          quote
-                          syntax
-                          syntax->datum
-                          syntax-case
-                          syntax-error
-                          syntax-rules
-                          unsyntax
-                          unsyntax-splicing
-                          use-modules))
   #:use-module ((lokke base quote)
                 #:select (/lokke/reader-hash-map
                           /lokke/reader-hash-set
@@ -53,8 +16,7 @@
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke ns) #:select (ns))
   #:use-module ((lokke transmogrify) #:select (instantiate-tagged))
-  #:use-module ((srfi srfi-1) #:select (append-map take))
-  #:export (/lokke/reader-meta /lokke/reader-tagged syntax-quote)
+  #:export (/lokke/reader-meta /lokke/reader-tagged)
   #:re-export (/lokke/reader-hash-map
                /lokke/reader-hash-set
                /lokke/reader-vector
@@ -79,146 +41,3 @@
 
 (define-syntax-rule (/lokke/reader-tagged tag data)
   ((@ (lokke transmogrify) instantiate-tagged) 'tag data))
-
-(define-syntax unquote
-  (syntax-rules ()
-    ((_ x ...) (syntax-error "invocation outside syntax-quote"))))
-
-(define-syntax unquote-splicing
-  (syntax-rules ()
-    ((_ x ...) (syntax-error "invocation outside syntax-quote"))))
-
-
-(define (pairify-map-entries ctx exps)
-  ;; (a b c d) -> ((/lokke/reader-vector a b) ...)
-  (let ((rvec-syn (datum->syntax ctx '/lokke/reader-vector)))
-    (let loop ((rest exps))
-      (cond
-       ((null? rest) '())
-       ((null? (cdr rest)) (error "Can't pairify odd length list" exps))
-       (else (cons (cons* rvec-syn #nil (take rest 2))
-                   (loop (cddr rest))))))))
-
-(define-syntax syntax-quote
-  ;; FIXME: could perhaps rewrite to scan, and just %scm-quote the whole value
-  ;; if the form really is "const", i.e. has no internal maps/sets/vectors.
-
-  ;; FIXME:? the jvm checks for even number of hash-map forms, but
-  ;; then writes code that would allow an odd number at runtime,
-  ;; e.g. `{~@(list 1 2)} is rejected, but `{~@(list 1) ~@(list 2 3)}
-  ;; is not, but of course crashes later.
-
-  (lambda (x)
-    (define (synquote sub-syn)
-      (syntax-case sub-syn (/lokke/reader-hash-map
-                            /lokke/reader-hash-set
-                            /lokke/reader-vector
-                            unquote
-                            unquote-splicing)
-
-        ((unquote) (synerr "unquote" x "no arguments"))
-        ((unquote exp) #'(exp))
-
-        ((unquote-splicing) (synerr "unquote-splicing" x "no arguments"))
-
-        ((unquote-splicing (/lokke/reader-vector meta exp ...)) #'(exp ...))
-
-        ((unquote-splicing (/lokke/reader-hash-map meta exp ...))
-         (pairify-map-entries #'sub-syn #'(exp ...)))
-
-        ((unquote-splicing (/lokke/reader-hash-set meta exp ...)) #'(exp ...))
-
-        ((unquote-splicing exp) #'(exp))
-
-
-        ((/lokke/reader-vector nil exp ...) (eq? #nil (syntax->datum #'nil))
-         #`(/lokke/reader-vector
-            #nil
-            #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'(exp ...))))
-
-        ((/lokke/reader-vector (/lokke/reader-hash-map kvs ...) exp ...)
-         #`(/lokke/reader-vector
-            #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'((/lokke/reader-hash-map kvs ...) exp ...))))
-
-        ((/lokke/reader-vector)
-         (synerr "syntax-quote" x
-                 "internal error, reader vector missing argument"))
-
-
-        ((/lokke/reader-hash-map nil exp ...) (eq? #nil (syntax->datum #'nil))
-         #`(/lokke/reader-hash-map
-            #nil
-            #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'(exp ...))))
-
-        ((/lokke/reader-hash-map (/lokke/reader-hash-map kvs ...) exp ...)
-         #`(/lokke/reader-hash-map
-            #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'((/lokke/reader-hash-map kvs ...) exp ...))))
-
-        ((/lokke/reader-hash-map)
-         (synerr "syntax-quote" x
-                 "internal error, reader hash-map missing argument"))
-
-
-        ((/lokke/reader-hash-set nil exp ...) (eq? #nil (syntax->datum #'nil))
-         #`(/lokke/reader-hash-set
-            #nil
-            #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'(exp ...))))
-
-        ((/lokke/reader-hash-set (/lokke/reader-hash-map kvs ...) exp ...)
-         #`(/lokke/reader-hash-set
-            #,@(map (lambda (e) #`(syntax-quote #,e))
-                    #'((/lokke/reader-hash-map kvs ...) exp ...))))
-
-        ((/lokke/reader-hash-set)
-         (synerr "syntax-quote" x
-                 "internal error, reader hash-set missing argument"))
-
-
-        ;; Explicitly match #nil, so it doesn't match (exp ...) below.
-        (nil (eq? #nil (syntax->datum #'nil))
-         (list #nil))
-
-        ((exp ...)
-         #`((list
-             #,@(map (lambda (e) #`(syntax-quote #,e))
-                     #'(exp ...)))))
-
-        ;; "leaf" value, including ()
-        (x #'((clj-quote x)))))
-
-    (syntax-case x (/lokke/reader-hash-map
-                    /lokke/reader-hash-set
-                    /lokke/reader-vector
-                    unquote
-                    unquote-splicing)
-
-      ((_ (unquote)) (synerr "unquote" x "no arguments"))
-      ((_ (unquote exp)) #'exp)
-
-      ((_ (unquote-splicing)) (synerr "unquotes-splicing" x "no arguments"))
-      ((_ (unquote-splicing exp ...))
-       (synerr "unquote-splicing" x "not inside list"))
-
-      ((_ (/lokke/reader-vector exp ...))
-       #`(/lokke/reader-vector #,@(append-map synquote #'(exp ...))))
-
-      ((_ (/lokke/reader-hash-map exp ...))
-       #`(/lokke/reader-hash-map #,@(append-map synquote #'(exp ...))))
-
-      ((_ (/lokke/reader-hash-set exp ...))
-       #`(/lokke/reader-hash-set #,@(append-map synquote #'(exp ...))))
-
-      ;; Explicitly match #nil, so it doesn't match (exp ...) below.
-      ((_ nil) (eq? #nil (syntax->datum #'nil))
-       #nil)
-
-      ((_ (exp ...))
-       #`(list #,@(append-map synquote #'(exp ...))))
-
-      ;; "leaf" value, including ()
-      ((_ x) #'(clj-quote x)))))
