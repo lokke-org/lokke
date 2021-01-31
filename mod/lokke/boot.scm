@@ -12,8 +12,7 @@
   ;; this particular module to be pure anyway.
   #:pure
   #:use-module ((guile)
-                #:select ((quote . %scm-quote)
-                          @
+                #:select (@
                           car
                           case
                           cddr
@@ -35,8 +34,8 @@
                           list?
                           map
                           null?
-                          null?
                           quasisyntax
+                          quote
                           syntax
                           syntax->datum
                           syntax-case
@@ -45,23 +44,25 @@
                           unsyntax
                           unsyntax-splicing
                           use-modules))
+  #:use-module ((lokke base quote)
+                #:select (/lokke/reader-hash-map
+                          /lokke/reader-hash-set
+                          /lokke/reader-vector
+                          clj-quote
+                          synerr))
+  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke ns) #:select (ns))
-  #:use-module ((lokke metadata) #:select (with-meta))
-  #:use-module ((lokke reader literal)
-                #:select (reader-hash-map-elts
-                          reader-hash-set-elts
-                          reader-vector-elts))
   #:use-module ((lokke transmogrify) #:select (instantiate-tagged))
   #:use-module ((srfi srfi-1) #:select (append-map take))
-  #:export (/lokke/reader-hash-map
-            /lokke/reader-hash-set
-            /lokke/reader-meta
-            /lokke/reader-tagged
-            /lokke/reader-vector
-            syntax-quote)
-  #:re-export (ns)
-  #:replace (quote unquote unquote-splicing)
+  #:export (/lokke/reader-meta /lokke/reader-tagged syntax-quote)
+  #:re-export (/lokke/reader-hash-map
+               /lokke/reader-hash-set
+               /lokke/reader-vector
+               ns)
+  #:replace (unquote unquote-splicing)
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(re-export-and-replace! '(clj-quote . quote))
 
 ;; 3.0 requires this, but it can't go in the (guile) #:select above
 ;; because *that* crashes 2.2
@@ -72,85 +73,12 @@
   (else))
 
 
-(define (convert-for-public-message expr)
-  (define (convert expr)
-    (cond
-     ((null? expr) expr)
-     ((list? expr)
-      (case (car expr)
-        ((/lokke/reader-vector)
-         (cons (%scm-quote vector) (map convert (reader-vector-elts expr))))
-        ((/lokke/reader-hash-map)
-         (cons (%scm-quote hash-map) (map convert (reader-hash-map-elts expr))))
-        ((/lokke/reader-hash-set)
-         (cons (%scm-quote hash-set) (map convert (reader-hash-set-elts expr))))
-        (else (map convert-for-public-message expr))))
-     (else expr)))
-  (convert expr))
-
-(define-syntax synerr
-  (syntax-rules ()
-    ((_ name exp msg)
-     (error (format #f "~s: ~a in form ~s" name msg
-                    (convert-for-public-message (syntax->datum exp)))))))
-
-;; If we eventually have a lower-level module for vector, hash-map,
-;; and hash-set (to avoid circular references via ns, etc.), we could
-;; just use-module above and avoid needing the direct @ refs here.
-
-(define-syntax-rule (/lokke/reader-hash-map meta exp ...)
-  (with-meta ((@ (lokke hash-map) hash-map) exp ...) meta))
-
-(define-syntax-rule (/lokke/reader-hash-set meta exp ...)
-  (with-meta ((@ (lokke hash-set) hash-set) exp ...) meta))
-
-(define-syntax-rule (/lokke/reader-vector meta exp ...)
-  (with-meta ((@ (lokke vector) vector) exp ...) meta))
-
 (define-syntax-rule (/lokke/reader-meta x ...)
   (warn (format #f "Ignoring metadata in unsupported position: ~s"
                 '(/lokke/reader-meta x ...))))
 
 (define-syntax-rule (/lokke/reader-tagged tag data)
   ((@ (lokke transmogrify) instantiate-tagged) 'tag data))
-
-(define-syntax quote
-  ;; Note that ~ and ~@ (i.e. unquote and unquote-splicing) still
-  ;; expand symbols inside quoted forms, matching the JVM, but that's
-  ;; handled by the reader.
-  ;;
-  ;; FIXME: could perhaps rewrite to scan, and just %scm-quote the whole value
-  ;; if the form really is "const", i.e. has no internal maps/sets/vectors.
-  (lambda (x)
-    (syntax-case x (/lokke/reader-hash-map
-                    /lokke/reader-hash-set
-                    /lokke/reader-vector)
-
-      ((_ (/lokke/reader-vector meta exp ...))
-       #`(/lokke/reader-vector #,@(map (lambda (e) #`(quote #,e)) #'(meta exp ...))))
-
-      ((_ (/lokke/reader-hash-map meta exp ...))
-       #`(/lokke/reader-hash-map #,@(map (lambda (e) #`(quote #,e)) #'(meta exp ...))))
-
-      ((_ (/lokke/reader-hash-set meta exp ...))
-       #`(/lokke/reader-hash-set #,@(map (lambda (e) #`(quote #,e)) #'(meta exp ...))))
-
-      ((_ (/lokke/reader-vector))
-       (synerr "quote" x "internal error, reader vector missing argument"))
-      ((_ (/lokke/reader-hash-map))
-       (synerr "quote" x "internal error, reader hash-map missing argument"))
-      ((_ (/lokke/reader-hash-set))
-       (synerr "quote" x "internal error, reader hash-set missing argument"))
-
-      ;; Explicitly match #nil, so it doesn't match (exp ...) below.
-      ((_ nil) (eq? #nil (syntax->datum #'nil))
-       #nil)
-
-      ((_ (exp ...)) #`(list #,@(map (lambda (e) #`(quote #,e)) #'(exp ...))))
-
-      ;; "leaf" value, including ()
-      ((_ x) #'(%scm-quote x)))))
-
 
 (define-syntax unquote
   (syntax-rules ()
@@ -261,7 +189,7 @@
                      #'(exp ...)))))
 
         ;; "leaf" value, including ()
-        (x #'((quote x)))))
+        (x #'((clj-quote x)))))
 
     (syntax-case x (/lokke/reader-hash-map
                     /lokke/reader-hash-set
@@ -293,4 +221,4 @@
        #`(list #,@(append-map synquote #'(exp ...))))
 
       ;; "leaf" value, including ()
-      ((_ x) #'(quote x)))))
+      ((_ x) #'(clj-quote x)))))

@@ -54,7 +54,7 @@
                           when-not
                           when-some))
   #:use-module ((lokke base version) #:prefix ver/)
-  #:use-module ((lokke boot) #:select (quote))
+  #:use-module ((lokke base quote) #:select (clj-quote))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -499,7 +499,7 @@
                         'newline
                         'nil?
                         'peek
-                        'quote
+                        '(clj-quote . quote)
                         'read
                         'set!
                         'sort)
