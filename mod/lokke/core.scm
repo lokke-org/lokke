@@ -125,7 +125,7 @@
                           str
                           with-out-str))
   #:use-module ((lokke reader) #:select (read read-string))
-  #:use-module ((lokke set) #:select (<set>))
+  #:use-module ((lokke set) #:select (<set> set?))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
                 #:select (*print-meta* alter-meta! meta vary-meta with-meta))
@@ -443,6 +443,7 @@
                sequential?
                set
                set-validator!
+               set?
                shuffle
                slurp
                spit
