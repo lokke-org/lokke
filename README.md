@@ -53,8 +53,9 @@ Currently Lokke can be found at
 
 To build Lokke, you'll need
 
-  * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0 (preferring 3.0
-    which should perform notably better)
+  * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0
+    (preferring 3.0 which should perform notably better and allows
+    interleaving expressions with `def` and `defn`).
   * [PCRE2](https://www.pcre.org/)
   * [libunistring](https://www.gnu.org/software/libunistring/)
   * [GCC](https://www.gnu.org/software/gcc/)
@@ -509,6 +510,9 @@ Known issues
 ------------
 
 - *Many* things are still broken or incomplete.
+
+- When built against Guile 2.2, `def` and `defn` statements cannot
+  currently be interleaved with other expressions.
 
 - When an error occurs in the REPL, a
   [new (recursive) prompt is created](https://www.gnu.org/software/guile/manual/html_node/Error-Handling.html).
