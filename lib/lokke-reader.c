@@ -495,9 +495,6 @@ skip_intraline_whitespace (SCM port)
   scm_ungetc (c, port);
 }
 
-/* Read either a double-quoted string or an R7RS-style symbol delimited
-   by vertical lines, depending on the value of 'chr' ('"' or '|').
-   Regardless, the result is always returned as a string.  */
 static SCM
 scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
 #define FUNC_NAME "scm_lreadr"
@@ -518,10 +515,7 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
       if (c == EOF)
         {
         str_eof:
-          scm_i_input_error (FUNC_NAME, port,
-                             (chr == '|'
-                              ? "end of file in symbol"
-                              : "end of file in string constant"),
+          scm_i_input_error (FUNC_NAME, port, "end of file in string constant",
                              SCM_EOL);
         }
 
@@ -537,7 +531,6 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
             {
             case EOF:
               goto str_eof;
-            case '|':
             case '\\':
             case '(':  /* Accept "\(" for use at the beginning of lines
 			  in multiline strings to avoid confusing emacs
@@ -1403,8 +1396,6 @@ read_inner_expression (SCM port, scm_t_read_opts *opts)
           return scm_read_sexp (chr, 0, port, opts);
 	case '"':
 	  return scm_read_string (chr, port, opts);
-        case '|':
-          return scm_read_mixed_case_symbol (chr, port, opts);
 	case '\\':
           return scm_read_character (chr, port, opts);
 	case '\'':
