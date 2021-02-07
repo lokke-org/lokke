@@ -11,8 +11,7 @@
   #:use-module ((srfi srfi-43) #:select (reverse-list->vector))
   #:use-module ((srfi srfi-88) #:select (string->keyword))
   ;; Expect imports to use a #:prefix edn/ or similar
-  #:export (read constructors reader read-string string-reader)
-  #:declarative? #t)
+  #:export (read constructors reader read-string string-reader))
 
 ;; Aside from the exceptions specifically mentioned below and in the
 ;; test suite, we intend to match the edn specification:
