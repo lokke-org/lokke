@@ -154,6 +154,7 @@ TESTS = \
   test/lokke-ns \
   test/lokke-pr \
   test/lokke-scm-atom \
+  test/lokke-scm-edn \
   test/lokke-scm-promise \
   test/lokke-scm-vector \
   test/lokke-symbol \

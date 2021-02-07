@@ -1,0 +1,179 @@
+#!./guile
+;; -*-scheme-*-
+!#
+
+;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+(use-modules
+ ((lokke scm edn) #:prefix t/)
+ ((lokke scm test) #:select (test-end-and-exit))
+ ((lokke scm test-anything) #:select (tap-test-runner))
+ ((rnrs io ports) #:select (eof-object))
+ ((srfi srfi-64)
+  #:select (test-assert
+            test-begin
+            test-equal
+            test-error
+            test-group
+            test-runner-current)))
+
+(when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
+  (test-runner-current (tap-test-runner)))
+
+(test-begin (basename (car (program-arguments))))
+
+;; FIXME: test more error cases, string, eof, etc.
+;; FIXME: catch more specific errors
+
+(test-group
+ "blank space"
+ (test-equal #nil (t/read-string " nil"))
+ (test-equal #nil (t/read-string "nil "))
+ (test-equal #nil (t/read-string " nil "))
+ (test-equal #nil (t/read-string ",nil "))
+ (test-equal #nil (t/read-string ",nil,"))
+ (test-equal #nil (t/read-string ",nil,true")))
+
+(test-group
+ "trailing delimiter"
+ (test-equal #nil (t/read-string "nil("))
+ (test-equal #nil (t/read-string "nil)"))
+ (test-equal #nil (t/read-string "nil["))
+ (test-equal #nil (t/read-string "nil]"))
+ (test-equal #nil (t/read-string "nil{"))
+ (test-equal #nil (t/read-string "nil}")))
+
+(test-group
+ "literal"
+ (test-equal #nil (t/read-string "nil"))
+ (test-equal #t (t/read-string "true"))
+ (test-equal #f (t/read-string "false")))
+
+(test-group
+ "character"
+ (test-equal #\x (t/read-string "\\x"))
+ (test-equal #\newline (t/read-string "\\newline"))
+ (test-equal #\return (t/read-string "\\return"))
+ (test-equal #\space (t/read-string "\\space"))
+ (test-equal #\tab (t/read-string "\\tab"))
+ (test-equal #\x0020 (t/read-string "\\u0020")))
+
+(test-group
+ "string"
+ (test-equal "" (t/read-string "\"\""))
+ (test-equal "xy" (t/read-string "\"xy\""))
+ (test-equal "\n" (t/read-string "\"\\n\""))
+ (test-equal "\t" (t/read-string "\"\\t\""))
+ (test-equal "\r" (t/read-string "\"\\r\""))
+ (test-equal "\\" (t/read-string "\"\\\\\""))
+ (test-equal "\"" (t/read-string "\"\\\"\"")))
+
+(test-group
+ "symbol"
+ (test-equal 'x (t/read-string "x"))
+ (test-equal 'λ (t/read-string "λ"))
+ (test-equal 'xy (t/read-string "xy"))
+ (test-equal '.x (t/read-string ".x"))
+ (test-equal '.0 (t/read-string ".0")) 
+ (test-equal 'x/y (t/read-string "x/y"))
+ (test-equal '/ (t/read-string "/"))
+ (test-error #t (t/read-string "//"))
+ (test-error #t (t/read-string "/x"))
+ (test-error #t (t/read-string "x/"))
+ (test-error #t (t/read-string "x/y/z")))
+
+(test-group
+ "keyword"
+ (test-equal #:x (t/read-string ":x"))
+ (test-equal #:λ (t/read-string ":λ"))
+ (test-equal #:xy (t/read-string ":xy"))
+ (test-equal #:.x (t/read-string ":.x"))
+ (test-equal #:x/y (t/read-string ":x/y"))
+ (test-error #t (t/read-string ":/"))
+ (test-error #t (t/read-string "::"))
+ (test-error #t (t/read-string "://"))
+ (test-error #t (t/read-string ":/x"))
+ (test-error #t (t/read-string ":x/"))
+ (test-error #t (t/read-string ":x/y/z")))
+
+;; FIXME: test N
+(test-group
+ "integer"
+ (test-equal 0 (t/read-string "0"))
+ (test-equal 1 (t/read-string "1"))
+ (test-equal 1 (t/read-string "+1"))
+ (test-equal 11 (t/read-string "+11"))
+ (test-equal -1 (t/read-string "-1"))
+ (test-equal -11 (t/read-string "-11"))
+  ;; Non [0-9] digits rejected as number, matching JVM
+ (test-error #t (t/read-string (string #\x0660)))
+ (test-error #t (t/read-string (string #\1 #\x0660)))
+ ;; These are forbidden by the edn spec, but for now we match the
+ ;; JVM's behvavior.
+ (test-equal #o052 (t/read-string "052"))
+ (test-equal #o052 (t/read-string "+052"))
+ (test-equal #o-052 (t/read-string "-052")))
+
+(test-group
+ "float"
+ (test-equal 1 (t/read-string "1M"))
+ (test-equal 1. (t/read-string "1."))
+ (test-equal 1. (t/read-string "+1."))
+ (test-equal -1. (t/read-string "-1."))
+ (test-equal 1.1 (t/read-string "1.1"))
+ (test-equal -1.1 (t/read-string "-1.1"))
+ (test-equal 11/10 (t/read-string "1.1M"))
+ (test-equal 100.0 (t/read-string "1e2"))
+ (test-equal 100.0 (t/read-string "1e+2"))
+ (test-equal 0.01 (t/read-string "1e-2"))
+ (test-equal 1/100 (t/read-string "1e-2M")))
+
+(test-group
+ "vector"
+ (test-equal #() (t/read-string "[]"))
+ (test-equal #(1) (t/read-string "[1]"))
+ (test-equal #(x 1) (t/read-string "[x 1]")))
+
+(test-group
+ "list"
+ (test-equal '() (t/read-string "()"))
+ (test-equal '(1) (t/read-string "(1)"))
+ (test-equal '(x 1) (t/read-string "(x 1)")))
+
+(test-group
+ "map"
+ (test-equal '() (t/read-string "{}"))
+ (test-equal '((1 . 2)) (t/read-string "{1 2}"))
+ (test-equal '((y . 2) (x . 1)) (t/read-string "{x 1 y 2}")))
+
+(test-group
+ "set"
+ (test-equal '() (t/read-string "#{}"))
+ (test-equal '(1) (t/read-string "#{1}"))
+ (test-equal '(x 1) (t/read-string "#{x 1}"))
+ (test-equal '(1 x) (t/read-string "#{1 x 1}")))
+
+(test-group
+ "discard"
+ (test-equal 2 (t/read-string "#_1 2"))
+ (test-equal 5 (t/read-string "#_{1 2} #_[3 4] 5")))
+
+(test-group
+ "#inst"
+ (test-error #t (t/read-string "#inst \"1977-09-05T12:56:00Z\"")))
+
+(test-group
+ "#uuid"
+ (test-error #t (t/read-string "#uuid \"7cdc9411-b908-4867-9801-11760e6a3585\"")))
+
+(test-group
+ "multiple reads"
+ (call-with-input-string "1 \"two\" [:three]"
+   (lambda (p)
+     (test-equal 1 (t/read p))
+     (test-equal "two" (t/read p))
+     (test-equal #(#:three) (t/read p))
+     (test-equal (eof-object) (t/read p)))))
+
+(test-end-and-exit 2)
