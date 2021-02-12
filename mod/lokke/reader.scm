@@ -32,6 +32,8 @@
                           literals->clj-instances
                           preserve-meta-if-new!
                           quote-empty-lists))
+  #:use-module ((lokke uuid)
+                #:select (uuid? uuid->tagged-data tagged-data->uuid))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (concatenate iota fold))
   #:export (read-for-compiler read-string read-string-for-compiler)
@@ -49,6 +51,7 @@
 (load-extension "lokke-reader.so" "init_lokke_reader")
 
 (add-tagged-element 'inst instant? tagged-data->instant instant->tagged-data)
+(add-tagged-element 'uuid uuid? tagged-data->uuid uuid->tagged-data)
 
 (define (expand-ref sym env aliases)
   ;; foo -> some.where/foo

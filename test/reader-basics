@@ -17,6 +17,7 @@
             lokke-vector-length
             lokke-vector-ref))
  ((lokke time) #:select (instant))
+ ((lokke uuid) #:select (uuid->integer))
  ((lokke vector) #:select ())  ;; load generics like with-meta
  ((rnrs io ports) #:select (eof-object))
  ((srfi srfi-64)
@@ -280,7 +281,11 @@
    (t/read-string "#inst \"1977-09-05T12:56:00.0Z\""))
  (test-equal (instant (* 242312160 1000000))
    (t/read-string "#inst \"1977-09-05T12:56:00+00:00\""))
-  (test-equal (instant (* 242312160 1000000))
-    (t/read-string "#inst \"1977-09-05T12:56:00-00:00\"")))
+ (test-equal (instant (* 242312160 1000000))
+   (t/read-string "#inst \"1977-09-05T12:56:00-00:00\""))
+ ;; FIXME: test error cases
+ (test-equal 208697526932167446277510606439038568476
+   (uuid->integer
+    (t/read-string "#uuid \"9d01ae80-35a4-423e-afb5-f841fbdfc81c\""))))
 
 (test-end-and-exit 2)

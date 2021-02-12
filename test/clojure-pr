@@ -36,6 +36,11 @@
   (let [inst (guile.lokke.time/instant (* 242312160 1000000))]
     (is (= "#inst \"1977-09-05T12:56:00Z\"" (pr-str inst)))
     (is (= "#inst \"1977-09-05T12:56:00Z\"" (print-str inst)))
-    (is (= "#inst \"1977-09-05T12:56:00Z\"" (guile.lokke.pr/to-string inst)))))
+    (is (= "#inst \"1977-09-05T12:56:00Z\"" (guile.lokke.pr/to-string inst))))
+  (let [u #uuid "9d01ae80-35a4-423e-afb5-f841fbdfc81c"
+        us "#uuid \"9d01ae80-35a4-423e-afb5-f841fbdfc81c\""]
+    (is (= us (pr-str u)))
+    (is (= us (print-str u)))
+    (is (= us (guile.lokke.pr/to-string u)))))
 
 (end-tests (ns-name *ns*) :exit? true)
