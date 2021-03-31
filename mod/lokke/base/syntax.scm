@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; Commonly useful code, including most notably, destructuring let and
@@ -438,8 +438,8 @@
         (if (null? body)
             (make-fn args body)
             (with-syntax ((recur (datum->syntax context 'recur)))
-              #`(letrec ((#,name (lambda args (apply recur args)))
-                         (recur #,(make-fn args body)))
+              #`(letrec ((recur #,(make-fn args body))
+                         (#,name recur))
                   recur))))
       (syntax-case args (&)
         ((vec-tag meta arg ... & rst) (vec-tag? #'vec-tag)
@@ -465,8 +465,8 @@
              (method-adder #'recur #'(arg ... . rst) #'(body ...)))
             ((#(arg ...) body ...)
              (method-adder #'recur #'(arg ...) #'(body ...)))))
-        #`(letrec ((#,name (lambda args (apply recur args)))
-                   (recur (make-generic)))
+        #`(letrec ((recur (make-generic))
+                   (#,name recur))
             #,@(map add-method-for-arity arities)
             recur)))
     (define (multi-arity template arities)
