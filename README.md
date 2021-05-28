@@ -625,8 +625,9 @@ Additional contacts
   <a href="mailto:~rlb/lokke+unsubscribe@lists.sr.ht">~rlb/lokke+unsubscribe@lists.sr.ht</a>.
   Additional information can be found [here](https://man.sr.ht/lists.sr.ht/).
 
-* [#lokke](https://webchat.freenode.net/?channels=lokke) on
-  [freenode](https://freenode.net/)
+* The \#lokke IRC channel at ircs://irc.libera.chat:6697/lokke on the
+  [libera.chat](https://libera.chat/) network, which is also available
+  [on the web](https://web.libera.chat/?channels=lokke).
 
 Thanks
 ------
