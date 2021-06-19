@@ -50,6 +50,13 @@
   #:re-export (atom atom? promise (promise-deliver . deliver))
   #:duplicates (merge-generics replace warn-override-core warn last))
 
+(define-generic deref)
+
+;; GOOPS doesn't define <variable>
+(define var-class (class-of (module-variable (current-module) 'define)))
+
+(define-method (deref (x var-class)) (variable-ref x))
+
 ;; For now, this <atom> is a class, while (lokke scm atom) <atom> is a record.
 (define <atom> (class-of (atom #t)))
 

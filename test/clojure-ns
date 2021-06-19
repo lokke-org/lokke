@@ -17,6 +17,7 @@
 
 (is (= 'test.clojure-ns (ns-name *ns*)))
 (is (= clojure.string/join str/join))
+(is (= seq (deref (find-var 'clojure.core/seq))))
 (is (integer? (guile/current-time)))
 (is (-> (guile.srfi.srfi-4/make-u64vector 0) guile.srfi.srfi-4/u64vector?))
 

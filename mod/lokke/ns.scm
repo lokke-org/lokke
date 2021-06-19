@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;;; Namespace underpinnings
@@ -13,6 +13,7 @@
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
   #:use-module ((lokke symbol)
                 #:select (ns-sym->mod-name
+                          parse-symbol
                           parsed-sym-ns
                           parsed-sym-ref
                           require-ns-sym))
@@ -29,6 +30,7 @@
             create-ns
             default-environment
             find-ns
+            find-var
             fix-let
             in-ns
             ns
@@ -204,6 +206,17 @@
   (let ((ns (maybe-resolve-ns-module (ns-sym->mod-name ns-sym))))
     (if ns ns #nil)))
 
+(define (find-var var-sym)
+  (let* ((parsed (parse-symbol var-sym))
+         (ns (parsed-sym-ns parsed))
+         (ref (parsed-sym-ref parsed))
+         (_ (unless (and ns ref)
+              (error "Symbol does not include ns and name:" var-sym)))
+         (m (find-ns ns))
+         (_ (unless m
+              (error (format #f "Unable to find ns ~s for symbol" ns) var-sym)))
+         (v (module-variable m ref)))
+    (if v v #nil)))
 
 ;; FIXME: add warning on collisions?  Docs claim exception will be
 ;; thrown, but jvm doesn't, just warns.

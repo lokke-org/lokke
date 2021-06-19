@@ -101,6 +101,7 @@
                 #:select (*ns*
                           alias
                           find-ns
+                          find-var
                           in-ns
                           ns
                           ns-aliases
@@ -324,6 +325,7 @@
                filterv
                find
                find-ns
+               find-var
                first
                float
                float?
