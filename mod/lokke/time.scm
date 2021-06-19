@@ -14,8 +14,7 @@
             instant->tagged-data
             instant-ns
             normalize-ts
-            tagged-data->instant
-            write-instant)
+            tagged-data->instant)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-inlinable (normalize-ts s us)
