@@ -555,23 +555,23 @@
                  (constructors scheme-constructors)
                  (fixed? #t))
   (if fixed?
-      (letrec ((read (case-lambda
-                       (()
-                        (read-top (current-input-port) on-eof
-                                  tag-reader default-tag-reader
-                                  constructors))
-                       ((port)
-                        (read-top port on-eof
-                                  tag-reader default-tag-reader
-                                  constructors)))))
-        (lambda* (#:optional
-                  (port (current-input-port))
-                  #:key
-                  (on-eof on-eof)
-                  (tag-reader tag-reader)
-                  (default-tag-reader default-tag-reader)
-                  (constructors constructors))
-          (read-top port on-eof tag-reader default-tag-reader constructors)))))
+      (case-lambda
+        (()
+         (read-top (current-input-port) on-eof
+                   tag-reader default-tag-reader
+                   constructors))
+        ((port)
+         (read-top port on-eof
+                   tag-reader default-tag-reader
+                   constructors)))
+      (lambda* (#:optional
+                (port (current-input-port))
+                #:key
+                (on-eof on-eof)
+                (tag-reader tag-reader)
+                (default-tag-reader default-tag-reader)
+                (constructors constructors))
+        (read-top port on-eof tag-reader default-tag-reader constructors))))
 
 (define (string-reader . args)
   (let ((read (apply reader args)))
