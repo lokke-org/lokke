@@ -9,6 +9,8 @@
  ((lokke scm edn) #:prefix t/)
  ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
+ ((lokke time) #:select (instant?))
+ ((lokke uuid) #:select (uuid?))
  ((rnrs io ports) #:select (eof-object))
  ((srfi srfi-64)
   #:select (test-assert
@@ -159,13 +161,18 @@
  (test-equal 2 (t/read-string "#_1 2"))
  (test-equal 5 (t/read-string "#_{1 2} #_[3 4] 5")))
 
+;; For now, we assume that these tagged literals are handled by the
+;; same element readers that the normal reader uses, and that those
+;; are tested elsewhere.
+
 (test-group
  "#inst"
- (test-error #t (t/read-string "#inst \"1977-09-05T12:56:00Z\"")))
+ (test-assert (instant? (t/read-string "#inst \"1977-09-05T12:56:00Z\""))))
 
 (test-group
  "#uuid"
- (test-error #t (t/read-string "#uuid \"7cdc9411-b908-4867-9801-11760e6a3585\"")))
+ (test-assert
+     (uuid? (t/read-string "#uuid \"7cdc9411-b908-4867-9801-11760e6a3585\""))))
 
 (test-group
  "multiple reads"

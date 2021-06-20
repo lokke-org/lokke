@@ -4,6 +4,8 @@
 (define-module (lokke scm edn)
   ;; We could replace this with lookahead-char for full scheme compliance
   #:use-module ((ice-9 textual-ports) #:select (unget-char))
+  #:use-module ((lokke time) #:select (tagged-data->instant))
+  #:use-module ((lokke uuid) #:select (tagged-data->uuid))
   #:use-module ((rnrs io ports)
                 #:select (eof-object get-char get-string-n lookahead-char))
   #:use-module ((srfi srfi-1) #:select (delete-duplicates!))
@@ -71,8 +73,8 @@
 
 (define (scheme-tagged-element-readers tag)
   (case tag
-    ((inst uuid)
-     (error (format #f "Unsupported edn tagged element type: #~s" tag)))
+    ((inst) (lambda (tag data) (tagged-data->instant data)))
+    ((uuid) (lambda (tag data) (tagged-data->uuid data)))
     (else #f)))
 
 (define (strbuf . xs)
