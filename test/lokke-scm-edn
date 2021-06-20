@@ -50,7 +50,11 @@
  "literal"
  (test-equal #nil (t/read-string "nil"))
  (test-equal #t (t/read-string "true"))
- (test-equal #f (t/read-string "false")))
+ (test-equal #f (t/read-string "false"))
+ ;; Not (yet?) in the edn specification, but supported by clj/jvm
+ (test-equal +inf.0 (t/read-string "##Inf"))
+ (test-equal -inf.0 (t/read-string "##-Inf"))
+ (test-equal +nan.0 (t/read-string "##NaN")))
 
 (test-group
  "character"

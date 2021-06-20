@@ -464,6 +464,19 @@
                                  tag-rdr default-tag-rdr constructors
                                  (set-add constructors)
                                  (set-finish constructors)))
+        ;; Match the (1.9+) JVM behavior, even though these are not
+        ;; (yet?) in the spec.
+        ((#\#)
+         (let ((x (read* port tag-rdr default-tag-rdr constructors)))
+           (unless (symbol? x)
+             (error "Value read after ## was not a symbol:" x))
+           (case x
+             ((Inf) +inf.0)
+             ((-Inf) -inf.0)
+             ((NaN) +nan.0)
+             (else
+              (error "Unrecognized ## literal:"
+                     (string-append "##" (symbol->string x)))))))
         ((#\_)
          (read* port tag-rdr default-tag-rdr constructors)
          (read* port tag-rdr default-tag-rdr constructors))
