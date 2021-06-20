@@ -77,11 +77,6 @@
     ((uuid) (lambda (tag data) (tagged-data->uuid data)))
     (else #f)))
 
-(define (strbuf . xs)
-  (let ((b (open-output-string)))
-    (for-each (lambda (x) (display x b)) xs)
-    b))
-
 (define edn-digit-set (char-set #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
 (define edn-blank-set (char-set-adjoin char-set:whitespace #\,))
 (define edn-nosep-delimiter-set (char-set #\( #\) #\[ #\] #\{ #\}))
@@ -147,27 +142,17 @@
      ((eof-object? c) (error "Unexpected end of file while reading edn string"))
      (backslashed?
       (case c
-        ((#\n)
-         (display #\newline pending)
-         (read-string-remainder port pending #f))
-        ((#\" #\\)
-         (display c pending)
-         (read-string-remainder port pending #f))
-        ((#\t)
-         (display #\tab pending)
-         (read-string-remainder port pending #f))
-        ((#\r)
-         (display #\return pending)
-         (read-string-remainder port pending #f))
+        ((#\n) (read-string-remainder port (cons #\newline pending) #f))
+        ((#\" #\\) (read-string-remainder port (cons c pending) #f))
+        ((#\t) (read-string-remainder port (cons #\tab pending) #f))
+        ((#\r) (read-string-remainder port (cons #\return pending) #f))
         (else
          (error "Invalid edn string escape:" (string #\\ c)))))
      (else
       (case c
-        ((#\") (get-output-string pending))
+        ((#\") (reverse-list->string pending))
         ((#\\) (read-string-remainder port pending #t))
-        (else
-         (display c pending)
-         (read-string-remainder port pending #f)))))))
+        (else (read-string-remainder port (cons c pending) #f)))))))
 
 (define (read-symbolic-str-remainder port pending name slash?)
   ;; By this point, we know it can't be a number, and has at least one char
@@ -182,30 +167,27 @@
   (let ((c (get-char port)))
     (cond
      ((or (eof-object? c) (blank? c))
-      (validate-symbol-name (get-output-string pending) slash?))
+      (validate-symbol-name (reverse-list->string pending) slash?))
      ((delimiter? c)
       (unget-char port c)
-      (validate-symbol-name (get-output-string pending) slash?))
+      (validate-symbol-name (reverse-list->string pending) slash?))
      ((char-set-contains? char-set:letter+digit c)
-      (display c pending)
-      (read-symbolic-str-remainder port pending name slash?))
+      (read-symbolic-str-remainder port (cons c pending) name slash?))
      (else
       (case c
         ((#\/)
-         (display c pending)
-         (when slash?
-           (error (string-append "Encountered multiple / characters in edn "
-                                 name ":")
-                  (get-output-string pending)))
-         (read-symbolic-str-remainder port pending name #t))
+         (let ((pending (cons c pending)))
+           (when slash?
+             (error (string-append "Encountered multiple / characters in edn "
+                                   name ":")
+                    (reverse-list->string pending)))
+           (read-symbolic-str-remainder port pending name #t)))
         ;; Assumes that : and # were already forbidden as the first character
         ((#\. #\* #\+ #\! #\- #\_ #\? #\$ #\% #\& #\= #\< #\> #\# #\:)
-         (display c pending)
-         (read-symbolic-str-remainder port pending name slash?))
+         (read-symbolic-str-remainder port (cons c pending) name slash?))
         (else
-         (display c pending)
          (error (string-append "Invalid " name " prefix:")
-                (get-output-string pending))))))))
+                (reverse-list->string (cons c pending)))))))))
 
 (define-inlinable (read-symbolic-remainder port pending name slash?)
   (let ((x (read-symbolic-str-remainder port pending name slash?)))
@@ -213,34 +195,35 @@
         (string->symbol x)
         x)))
 
-(define (read-symbol-or-literal-remainder port pending i expect literal)
+(define (read-symbol-or-literal-remainder port pending expect literal)
   ;; Try to match the given literal, and at the first mismatched char,
   ;; defer to the normal symbol reader.
-  (let ((c (get-char port)))
-    (cond
-     ((or (eof-object? c) (blank? c))
-      (let ((s (get-output-string pending)))
+
+  (let loop ((pending pending)
+             (i (1- (vector-length expect))))
+    (let ((c (get-char port)))
+      (cond
+       ((or (eof-object? c) (blank? c))
+        (let ((s (reverse-list->string pending)))
+          (if (= -1 i)
+              literal
+              ;; Must be a prefix of one of the literals, which is a valid symbol
+              (string->symbol (reverse-list->string pending)))))
+       ((delimiter? c)
+        (unget-char port c)
         (if (= -1 i)
             literal
             ;; Must be a prefix of one of the literals, which is a valid symbol
-            (string->symbol (get-output-string pending)))))
-     ((delimiter? c)
-      (unget-char port c)
-      (if (= -1 i)
-          literal
-          ;; Must be a prefix of one of the literals, which is a valid symbol
-          (string->symbol (get-output-string pending))))
-     ((>= i 0)
-      (if (eqv? c (vector-ref expect i))
-          (begin
-            (display c pending)
-            (read-symbol-or-literal-remainder port pending (1- i) expect literal))
-          (begin
-            (unget-char port c)
-            (read-symbolic-remainder port pending "symbol" #f))))
-     (else
-      (unget-char port c)
-      (read-symbolic-remainder port pending "symbol" #f)))))
+            (string->symbol (reverse-list->string pending))))
+       ((>= i 0)
+        (if (eqv? c (vector-ref expect i))
+            (loop (cons c pending) (1- i))
+            (begin
+              (unget-char port c)
+              (read-symbolic-remainder port pending "symbol" #f))))
+       (else
+        (unget-char port c)
+        (read-symbolic-remainder port pending "symbol" #f))))))
 
 (define (parse-float s)
   (let ((n (string->number s)))
@@ -253,37 +236,35 @@
     (cond
      ((eof-object? c)
       (unless valid?
-        (error "Invalid edn floating point syntax" (get-output-string pending)))
-      (parse-float (get-output-string pending)))
+        (error "Invalid edn floating point syntax" (reverse-list->string pending)))
+      (parse-float (reverse-list->string pending)))
      ((char-set-contains? edn-digit-set c)
-      (display c pending)
-      (read-exp-magnitude port pending #t))
+      (read-exp-magnitude port (cons c pending) #t))
      ((or (blank? c) (delimiter? c))
       (unless valid?
-        (error "Invalid edn floating point syntax" (get-output-string pending)))
-      (parse-float (get-output-string pending)))
+        (error "Invalid edn floating point syntax" (reverse-list->string pending)))
+      (parse-float (reverse-list->string pending)))
      ((eqv? c #\M)
       (unless valid?
         (error (string-append "Invalid edn floating point syntax")
-               (get-output-string pending) "M"))
+               (reverse-list->string pending) "M"))
       (must-end port
                 (lambda (c)
                   (format #f "Invalid edn floating point syntax ~aM~a..."
-                          (get-output-string pending) c)))
-      (parse-float (string-append "#e" (get-output-string pending))))
+                          (reverse-list->string pending) c)))
+      (parse-float (string-append "#e" (reverse-list->string pending))))
      (else
-      (display c pending)
       (error "Invalid edn floating point syntax"
-             (get-output-string pending))))))
+             (reverse-list->string (cons c pending)))))))
 
 (define (read-exp-remainder port pending)
   (let ((c (get-char port)))
     (cond
      ((eof-object? c)
-      (error "Invalid edn floating point syntax" (get-output-string pending)))
+      (error "Invalid edn floating point syntax" (reverse-list->string pending)))
      (else
       (case c
-        ((#\- #\+) (display c pending) (read-exp-magnitude port pending #f))
+        ((#\- #\+) (read-exp-magnitude port (cons c pending) #f))
         (else
          (unget-char port c)
          (read-exp-magnitude port pending #f)))))))
@@ -299,80 +280,74 @@
   (let ((c (get-char port)))
     (cond
      ((or (eof-object? c) (blank? c) (delimiter? c))
-      (parse-float (get-output-string pending)))
+      (parse-float (reverse-list->string pending)))
      ((char-set-contains? edn-digit-set c)
-      (display c pending)
-      (read-float-remainder port pending dot?))
+      (read-float-remainder port (cons c pending) dot?))
      (else
       (case c
         ((#\.)
-         (display c pending)
-         (when dot?
-           (error "Invalid edn floating point syntax"
-                  (get-output-string pending)))
-         (read-float-remainder port pending #t))
+         (let ((pending (cons c pending)))
+           (when dot?
+             (error "Invalid edn floating point syntax"
+                    (reverse-list->string pending)))
+           (read-float-remainder port pending #t)))
         ((#\e #\E)
-         (display c pending)
-         (read-exp-remainder port pending))
+         (read-exp-remainder port (cons c pending)))
         ((#\M)
          (must-end port
                    (lambda (c)
                      (format #f "Invalid edn floating point syntax ~aM~a..."
-                             (get-output-string pending) c)))
-         (parse-float (string-append "#e" (get-output-string pending))))
+                             (reverse-list->string pending) c)))
+         (parse-float (string-append "#e" (reverse-list->string pending))))
         (else
-         (display c pending)
          (error "Invalid edn floating point syntax"
-                (get-output-string pending))))))))
+                (reverse-list->string (cons c pending)))))))))
 
 (define (read-numeric-remainder port pending n?)
   ;; pending already has at least one [0-9]
   (let ((c (get-char port)))
     (cond
      ((or (eof-object? c) (blank? c)) ;; could only be integer
-      (let ((s (get-output-string pending)))
+      (let ((s (reverse-list->string pending)))
         ;; Treat leading zero as octal for now, matching the JVM, even
         ;; though the edn spec forbids it.
         (case (string-ref s 0)
           ((#\- #\+) (case (string-ref s 1)
-                       ((#\0) (string->number (get-output-string pending) 8))
-                       (else (string->number (get-output-string pending)))))
-          ((#\0) (string->number (get-output-string pending) 8))
-          (else (string->number (get-output-string pending))))))
+                       ((#\0) (string->number (reverse-list->string pending) 8))
+                       (else (string->number (reverse-list->string pending)))))
+          ((#\0) (string->number (reverse-list->string pending) 8))
+          (else (string->number (reverse-list->string pending))))))
      ((delimiter? c) ;; could only be integer
       (unget-char port c)
-      (string->number (get-output-string pending)))
+      (string->number (reverse-list->string pending)))
      ((char-set-contains? edn-digit-set c)
-      (display c pending)
-      (read-numeric-remainder port pending n?))
+      (read-numeric-remainder port (cons c pending) n?))
      ((eqv? c #\.)
-      (when n?
-        (display c pending)
-        (error "Invalid edn number prefix:" (get-output-string pending)))
-      (display c pending)
-      (read-float-remainder port pending #t))
+      (let ((pending (cons c pending)))
+        (when n?
+          (error "Invalid edn number prefix:" (reverse-list->string pending)))
+        (read-float-remainder port pending #t)))
      ;; char set?
      ((memv c '(#\e #\E))
-      (when n?
-        (display c pending)
-        (error "Invalid edn number prefix:" (get-output-string pending)))
-      (display c pending)
-      (read-exp-remainder port pending))
+      (let ((pending (cons c pending)))
+        (when n?
+          (error "Invalid edn number prefix:" (reverse-list->string pending)))
+        (read-exp-remainder port pending)))
      ((eqv? c #\N)
       (when n?
-        (display c pending)
-        (error "Invalid edn number prefix:" (get-output-string pending)))
+        (error "Invalid edn number prefix:"
+               (reverse-list->string (cons c pending))))
       (read-numeric-remainder port pending #t))
      ((eqv? c #\M)
       (must-end port
                 (lambda (c)
                   (format #f "Invalid edn nummeric syntax ~aM~a..."
-                          (get-output-string pending) c)))
-      (string->number (get-output-string pending)))
+                          (reverse-list->string pending) c)))
+      (string->number (reverse-list->string pending)))
      ((char-set-contains? char-set:digit c)
       (error "Invalid edn numeric digit" c))
      (else
-      (error "Invalid edn numeric prefix:" (get-output-string pending))))))
+      (error "Invalid edn numeric prefix:" (reverse-list->string pending))))))
 
 (define (read-symbol-or-number port pending frac?)
   ;; The JVM implementation treats anything starting with a "digit"
@@ -382,29 +357,25 @@
   (let ((c (get-char port)))
     (cond
      ((or (eof-object? c) (blank? c))  ;; must be + - .
-      (string->symbol (get-output-string pending)))
+      (string->symbol (reverse-list->string pending)))
      ((delimiter? c)  ;; must be + - .
       (unget-char port c)
-      (string->symbol (get-output-string pending)))
+      (string->symbol (reverse-list->string pending)))
      ((char-set-contains? edn-digit-set c)
-      (display c pending)
-      (if frac?
-          (read-float-remainder port pending #t)
-          (read-numeric-remainder port pending #f)))
+      (let ((pending (cons c pending)))
+        (if frac?
+            (read-float-remainder port pending #t)
+            (read-numeric-remainder port pending #f))))
      ((char-set-contains? char-set:letter c)
-      (display c pending)
-      (read-symbolic-remainder port pending "symbol" #f))
+      (read-symbolic-remainder port (cons c pending) "symbol" #f))
      ((char-set-contains? symbol-set c)
-      (display c pending)
-      (read-symbolic-remainder port pending "symbol" #f))
+      (read-symbolic-remainder port (cons c pending) "symbol" #f))
      ((eqv? c #\/)
-      (display c pending)
-      (read-symbolic-remainder port pending "symbol" #t))
+      (read-symbolic-remainder port (cons c pending) "symbol" #t))
      ((char-set-contains? char-set:digit c) ; Should only match non [0-9] digits
-      (display c pending)
-      (read-symbolic-remainder port pending "symbol" #f))
+      (read-symbolic-remainder port (cons c pending) "symbol" #f))
      (else
-      (error "Invalid edn element prefix:" (get-output-string pending))))))
+      (error "Invalid edn element prefix:" (reverse-list->string pending))))))
 
 (define (read-keyword-remainder port)
   (let ((c (get-char port)))
@@ -418,7 +389,7 @@
                      (string c))))
      ((eqv? c #\:) (error "Read :: at start of edn keyword"))
      (else
-      (let ((s (read-symbolic-str-remainder port (strbuf c) "keyword"
+      (let ((s (read-symbolic-str-remainder port (list c) "keyword"
                                             (eqv? c #\/))))
         (if (equal? s "/")
             (error "Invalid edn keyword :/")
@@ -514,30 +485,27 @@
                                        (vector-add constructors)
                                        (vector-finish constructors)))
         ((#\{) (read-map-content port '() tag-rdr default-tag-rdr constructors))
-        ((#\") (read-string-remainder port (strbuf) #f))
+        ((#\") (read-string-remainder port '() #f))
         ((#\:) (read-keyword-remainder port))
-        ((#\n)
-         (read-symbol-or-literal-remainder port (strbuf c) 1 #(#\l #\i) #nil))
-        ((#\t)
-         (read-symbol-or-literal-remainder port (strbuf c) 2 #(#\e #\u #\r) #t))
-        ((#\f)
-         (read-symbol-or-literal-remainder port (strbuf c) 3 #(#\e #\s #\l #\a) #f))
-        ((#\-) (read-symbol-or-number port (strbuf c) #f))
+        ((#\n) (read-symbol-or-literal-remainder port (list c) #(#\l #\i) #nil))
+        ((#\t) (read-symbol-or-literal-remainder port (list c) #(#\e #\u #\r) #t))
+        ((#\f) (read-symbol-or-literal-remainder port (list c) #(#\e #\s #\l #\a) #f))
+        ((#\-) (read-symbol-or-number port (list c) #f))
         ((#\\) (read-character-remainder port))
-        ((#\.) (read-symbol-or-number port (strbuf c) #t))
-        ((#\+) (read-symbol-or-number port (strbuf c) #f))
+        ((#\.) (read-symbol-or-number port (list c) #t))
+        ((#\+) (read-symbol-or-number port (list c) #f))
         ((#\#) (read-#-remainder port tag-rdr default-tag-rdr constructors))
         (else
          (cond
           ((char-set-contains? edn-digit-set c)
-           (read-numeric-remainder port (strbuf c) #f))
-          ((eqv? c #\/) (read-symbolic-remainder port (strbuf c) "symbol" #t))
+           (read-numeric-remainder port (list c) #f))
+          ((eqv? c #\/) (read-symbolic-remainder port (list c) "symbol" #t))
           ((char-set-contains? symbol-first-set c)
-           (read-symbolic-remainder port (strbuf c) "symbol" #f))
+           (read-symbolic-remainder port (list c) "symbol" #f))
           ((char-set-contains? maybe-likely-symbol-letter-set c)
-           (read-symbolic-remainder port (strbuf c) "symbol" #f))
+           (read-symbolic-remainder port (list c) "symbol" #f))
           ((char-set-contains? remaining-symbol-letter-set c)
-           (read-symbolic-remainder port (strbuf c) "symbol" #f))
+           (read-symbolic-remainder port (list c) "symbol" #f))
           ((char-set-contains? char-set:digit c)
            ;; Match the JVM reader for now
            (error "Number begins with digit other than 0-9" c))
