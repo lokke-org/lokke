@@ -214,7 +214,7 @@ General comparison with Clojure/JVM
   time.  That is, they are not compiled at read time, and so are
   re-evaluated.
 
-* `lokke.io` is analogous `clojure.java.io`, and `lokke.shell` is
+* `lokke.io` is analogous to `clojure.java.io`, and `lokke.shell` is
   analogous to `clojure.java.shell`.  At the moment, paths are
   generally only handled as (Unicode) strings.  We'll fix that once
   Guile does.  As a workaround, you may be able to set the `LC_CTYPE`
@@ -496,7 +496,8 @@ Additional differences from Clojure/JVM
 
 * Many of the coercions haven't been included: `float` `double` ...
 
-* Number is taken to mean <number> (i.e. objects satisfying `number?`).
+* Number is taken to mean the GOOPS `<number>` class (i.e. objects
+  satisfying `number?`).
 
 * Duplicate keys in map and set literals, e.g. `{:x 1 :x 2}` do not
   provoke an error.  They just behave as if `(hash-map :x 1 :x 2)` had
