@@ -111,6 +111,7 @@ guile_DEPENDENCIES = Makefile
 BUILT_SOURCES = guile lok lokke \
   lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x lokke.1 \
   mod/lokke/base/version.scm
+CLEANFILES += $(BUILT_SOURCES)
 
 # FIXME: see guile's am/guilec for a way to order the install wrt timestamps
 
