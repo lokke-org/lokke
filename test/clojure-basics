@@ -85,19 +85,23 @@
 
 (testing "cond->"
   (is (= :yep (cond-> :yep)))
-  (is (= :yep (cond-> :yep string? name)))
-  (is (= "yep" (cond-> :yep keyword? name)))
-  (is (= :yep (cond-> :yep keyword? name string? keyword)))
-  (is (= "yep" (cond-> :yep keyword? name keyword? keyword)))
-  (is (= "yep!" (cond-> "yep" string? (str "!")))))
+  (is (= :yep (cond-> :yep (nil? :x) name)))
+  (is (= "yep" (cond-> :yep (nil? nil) name)))
+  (is (= 'yep (cond-> :yep (nil? :x) name (nil? nil) symbol)))
+  (is (= "yep" (cond-> :yep (nil? nil) name (nil? :x) symbol)))
+  (is (= 'yep (cond-> :yep (nil? nil) name (nil? nil) symbol)))
+  (is (= "yep!" (cond-> "yep" (nil? nil) (str "!"))))
+  (is (= "yep!?" (cond->> "yep" (nil? nil) (str "!") (nil? nil) (str "?")))))
 
 (testing "cond->>"
   (is (= :yep (cond->> :yep)))
-  (is (= :yep (cond->> :yep string? name)))
-  (is (= "yep" (cond->> :yep keyword? name)))
-  (is (= :yep (cond->> :yep keyword? name string? keyword)))
-  (is (= "yep" (cond->> :yep keyword? name keyword? keyword)))
-  (is (= "...yep" (cond->> "yep" string? (str "...")))))
+  (is (= :yep (cond->> :yep (nil? :x) name)))
+  (is (= "yep" (cond->> :yep (nil? nil) name)))
+  (is (= 'yep (cond->> :yep (nil? :x) name (nil? nil) symbol)))
+  (is (= "yep" (cond->> :yep (nil? nil) name (nil? :x) symbol)))
+  (is (= 'yep (cond->> :yep (nil? nil) name (nil? nil) symbol)))
+  (is (= "!yep" (cond->> "yep" (nil? nil) (str "!"))))
+  (is (= "?!yep" (cond->> "yep" (nil? nil) (str "!") (nil? nil) (str "?")))))
 
 (testing "condp"
   (is (= :yep (condp < 0 -1 :yep)))

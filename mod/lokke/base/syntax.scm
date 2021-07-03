@@ -675,7 +675,7 @@
   (syntax-rules ()
     ((_ x) x)
     ((_ x pred exp exp* ...)
-     (%scm-if (pred x)
+     (%scm-if pred
               (cond-> (-> x exp) exp* ...)
               (cond-> x exp* ...)))))
 
@@ -683,7 +683,7 @@
   (syntax-rules ()
     ((_ x) x)
     ((_ x pred exp exp* ...)
-     (%scm-if (pred x)
+     (%scm-if pred
               (cond->> (->> x exp) exp* ...)
               (cond->> x exp* ...)))))
 
