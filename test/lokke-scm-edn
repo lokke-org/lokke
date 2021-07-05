@@ -81,7 +81,7 @@
  (test-equal 'λ (t/read-string "λ"))
  (test-equal 'xy (t/read-string "xy"))
  (test-equal '.x (t/read-string ".x"))
- (test-equal '.0 (t/read-string ".0")) 
+ (test-equal '.0 (t/read-string ".0"))
  (test-equal 'x/y (t/read-string "x/y"))
  (test-equal '/ (t/read-string "/"))
  (test-error #t (t/read-string "//"))
