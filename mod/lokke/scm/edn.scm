@@ -443,13 +443,13 @@
      ((not (symbol? tag))
       (error "Found non-symbol at start of edn tagged element:" tag))
      (else
-      (let ((read-elt (or (and tag-rdr (tag-rdr tag))
-                          (and default-tag-rdr (default-tag-rdr tag)))))
-        (unless read-elt
-          (error "Unrecognized edn tagged element type:" tag))
-        (let ((data (read* port tag-rdr default-tag-rdr constructors)))
-          (when (eof-object? data)
-            (error "End of file in edn tagged element data" tag))
+      (let ((data (read* port tag-rdr default-tag-rdr constructors)))
+        (when (eof-object? data)
+          (error "End of file in edn tagged element data" tag))
+        (let ((read-elt (or (and tag-rdr (tag-rdr tag))
+                            default-tag-rdr)))
+          (unless read-elt
+            (error "Unrecognized edn tagged element type:" tag))
           (read-elt tag data)))))))
 
 (define (read-#-remainder port tag-rdr default-tag-rdr constructors)
