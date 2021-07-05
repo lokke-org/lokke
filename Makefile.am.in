@@ -138,6 +138,7 @@ TESTS = \
   test/clojure-concurrency \
   test/clojure-defmacro \
   test/clojure-dynamic \
+  test/clojure-edn \
   test/clojure-evaluation \
   test/clojure-exceptions \
   test/clojure-metadata \

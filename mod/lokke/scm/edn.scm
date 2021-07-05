@@ -53,6 +53,7 @@
   (map-add map-add)
   (map-finish map-finish))
 
+;; Keep clojure.edn in mind whenever changing any of these
 (define* (constructors #:key
                        (list-init list)
                        (list-add cons)

@@ -1,0 +1,54 @@
+#!./lokke -0
+;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+(ns test.clojure-edn
+  (:require
+   [clojure.edn :as edn]
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [guile.rnrs.io.ports :refer [eof-object]]))
+
+(begin-tests (ns-name *ns*))
+
+;; These tests assume much more thorough testing in lokke-scm-edn
+
+(testing "read basics"
+  (is (= nil (edn/read-string "nil")))
+  (is (= true (edn/read-string "true")))
+  (is (= [1 2 3] (edn/read-string "[1 2 3]")))
+  (is (= #{1 2} (edn/read-string "#{1 2}")))
+  (is (= {:x 1 :y 2} (edn/read-string "{:x 1 :y 2}"))))
+
+(testing "eof"
+  (is (= (eof-object) (edn/read-string "")))
+  (is (= :eof (edn/read-string {:eof :eof} "")))
+
+  (with-in-str "" (is (= (eof-object) (edn/read))))
+  (with-in-str "" (is (= :eof (edn/read {:eof :eof} *in*))))
+  (with-in-str ":x"
+    (is (= :x (edn/read)))
+    (is (= (eof-object) (edn/read)))))
+
+(testing "tag :readers customization"
+  (letfn [(read-weather [tag data]
+            (is (= 'weather tag))
+            {:weather data})]
+    (is (= {:weather :stormy}
+           (edn/read-string {:readers {'weather read-weather}}
+                            "#weather :stormy")))
+    (with-in-str "#weather :stormy"
+      (is (= {:weather :stormy}
+             (edn/read {:readers {'weather read-weather}} *in*))))))
+
+(testing ":default tag reader customization"
+  (letfn [(read-tag [tag data] [tag data])]
+    (is (= '[super exciting]
+           (edn/read-string {:default read-tag} "#super exciting")))
+    (with-in-str "#super exciting"
+      (is (= '[super exciting]
+             (edn/read {:default read-tag} *in*))))))
+
+(end-tests (ns-name *ns*) :exit? true)
