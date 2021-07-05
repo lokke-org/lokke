@@ -563,9 +563,9 @@
 
 (define (string-reader . args)
   (let ((read (apply reader args)))
-    (lambda (s)
+    (lambda (s . opts)
       (call-with-input-string s
-        (lambda (port) (read port))))))
+        (lambda (port) (apply read port opts))))))
 
 (define read (reader))
 (define read-string (string-reader))
