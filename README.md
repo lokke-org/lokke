@@ -148,7 +148,7 @@ Scheme specific facilities:
     $ ./guile
     ...
     scheme@(guile-user)> (use-modules (lokke core))
-    scheme@(guile-user) [1]> (take 3 (repeat "?"))
+    scheme@(guile-user)> (take 3 (repeat "?"))
     $1 = #<<class> <lazy-seq> 55bdaff362c0 ("?" "?" "?")>
 
 As you can see, seqs are not written like lists.  Currently the Scheme
@@ -251,9 +251,9 @@ General comparison with Clojure/JVM
 
 * The integer syntax does not yet support BASErNUM bases over 16.
 
-* Rather than throwing an exception, the reader functions, `read`,
-  `read-string`, etc. return the
-  [rnrs end-of-file object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
+* Rather than throwing an exception, the Clojure and edn reader
+  functions, `read`, `read-string`, etc. return the [rnrs end-of-file
+  object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
   which can be identified with `guile.guile/eof-object?`.
 
 * There are some differences and limitations with respect to the
@@ -301,9 +301,8 @@ On the Scheme side
 * In the `(lokke scm)` apis, Scheme vectors are referred to as vector,
   Clojure's as lokke-vector.
 
-* The `num` method can be used to convert characters or any
-    <number> to a number.  Characters are converted via Guile's
-    `char->integer`.
+* The `num` method can be used to convert characters or any <number>
+  to a number.  Characters are converted via Guile's `char->integer`.
 
 * The `integer` method is effectively `(truncate (num x))`, using
   Guile's `truncate`.
