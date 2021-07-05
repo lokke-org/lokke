@@ -27,10 +27,8 @@
 
 ;; FIXME: see FIXMEs in test suite
 ;; FIXME: support rnrs exceptions
-;; FIXME: add scheme instant and uuid support
 ;; FIXME: improve eof messages (include file/line and/or partial content)
 ;; FIXME: forbid unscoped user tags somewhere?
-;; FIXME: check performance, and are string ports fine, or warrant improvement?
 ;; FIXME: add strict roundtripping string and port writer functions
 ;; FIXME: if we add print-length, make sure it's always avoidable for data writes
 ;; FIXME: ensure any writers always generate valid output or crash
