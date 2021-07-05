@@ -235,6 +235,7 @@
     (cond
      ((proper-list? x) x)
      ((lokke-vector? x) (lokke-vector->list x))
+     ((vector? x) (vector->list x))
      (else #f)))
 
 (define (strip-reader-vec x)
