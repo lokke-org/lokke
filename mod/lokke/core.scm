@@ -126,6 +126,7 @@
                           println
                           prn
                           str
+                          with-in-str
                           with-out-str))
   #:use-module ((lokke reader) #:select (read read-string))
   #:use-module ((lokke set) #:select (<set> set?))
@@ -487,6 +488,7 @@
                when-not
                when-some
                with-open
+               with-in-str
                with-out-str
                with-meta
                zero?

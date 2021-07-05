@@ -5,10 +5,11 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
+ ((lokke reader) #:prefix reader/)
  ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke pr) #:prefix t/)
- ((lokke pr) #:select (*out*))
+ ((lokke pr) #:select (*in* *out*))
  ((lokke collection) #:prefix coll/)  ;; For '(1 2 3) print specialization
  ((lokke compare) #:prefix c/)
  ((lokke vector) #:select (vector))
@@ -41,5 +42,7 @@
 (test-group
  "test collection printing"
  (test-equal "(1 2 3)" (t/print-str '(1 2 3))))
+
+(test-equal 42 (t/with-in-str "42" (reader/read *in*)))
 
 (test-end-and-exit 2)
