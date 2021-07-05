@@ -501,7 +501,8 @@
                                        tag-rdr default-tag-rdr constructors
                                        (vector-add constructors)
                                        (vector-finish constructors)))
-        ((#\{) (read-map-content port '() tag-rdr default-tag-rdr constructors))
+        ((#\{) (read-map-content port ((map-init constructors))
+                                 tag-rdr default-tag-rdr constructors))
         ((#\") (read-string-remainder port '() #f))
         ((#\:) (read-keyword-remainder port))
         ((#\n) (read-symbol-or-literal-remainder port (list c) #(#\l #\i) #nil))
