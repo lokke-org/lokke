@@ -145,6 +145,7 @@ TESTS = \
   test/clojure-metadata \
   test/clojure-ns \
   test/clojure-string \
+  test/clojure-test \
   test/clojure-vector \
   test/clojure-pr \
   test/lokke-comparison \
