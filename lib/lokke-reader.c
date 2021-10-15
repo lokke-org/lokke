@@ -164,18 +164,10 @@ scm_i_input_error (char const *function,
 /* The maximum size of reader directive names.  */
 #define READER_DIRECTIVE_NAME_MAX_SIZE 50
 
-
 /* `isblank' is only in C99.  */
-#define CHAR_IS_BLANK_(_chr)					\
+#define CHAR_IS_BLANK(_chr)					\
   (((_chr) == ' ') || ((_chr) == '\t') || ((_chr) == '\n')	\
    || ((_chr) == '\f') || ((_chr) == '\r'))
-
-#ifdef MSDOS
-# define CHAR_IS_BLANK(_chr)			\
-  ((CHAR_IS_BLANK_ (chr)) || ((_chr) == 26))
-#else
-# define CHAR_IS_BLANK CHAR_IS_BLANK_
-#endif
 
 #define CHAR_IS_DELIMITER(c)                                    \
   (CHAR_IS_BLANK (c)						\
