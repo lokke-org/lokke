@@ -63,31 +63,11 @@ static struct char_and_c_name_t aliased_characters[] =
    {0, 0}
 };
 
-scm_t_option scm_read_opts[] =
-  {
-    { SCM_OPTION_BOOLEAN, "copy", 0,
-      "Copy source code expressions." },
-    { SCM_OPTION_BOOLEAN, "positions", 1,
-      "Record positions of source code expressions." },
-    { SCM_OPTION_BOOLEAN, "hungry-eol-escapes", 0,
-      "In strings, consume leading whitespace after an escaped end-of-line."},
-    { 0, },
-  };
-
-/* Internal read options structure.  This is initialized by 'scm_read'
-   from the global and per-port read options, and a pointer is passed
-   down to all helper functions. */
-
-struct t_read_opts
+typedef struct
 {
   unsigned int copy_source_p        : 1;
   unsigned int record_positions_p   : 1;
-  unsigned int case_insensitive_p   : 1;
-  unsigned int hungry_eol_escapes_p : 1;
-};
-
-typedef struct t_read_opts scm_t_read_opts;
-
+} lokke_read_opts_t;
 
 /*
   Give meaningful error messages for errors
@@ -130,22 +110,6 @@ scm_i_input_error (char const *function,
 }
 
 
-/* SCM_DEFINE (scm_read_options, "read-options-interface", 0, 1, 0,  */
-/*             (SCM setting), */
-/* 	    "Option interface for the read options. Instead of using\n" */
-/* 	    "this procedure directly, use the procedures @code{read-enable},\n" */
-/* 	    "@code{read-disable}, @code{read-set!} and @code{read-options}.") */
-/* #define FUNC_NAME s_scm_read_options */
-/* { */
-/*   SCM ans = scm_options (setting, */
-/* 			 scm_read_opts, */
-/* 			 FUNC_NAME); */
-/*   if (SCM_COPY_SOURCE_P) */
-/*     SCM_RECORD_POSITIONS_P = 1; */
-/*   return ans; */
-/* } */
-/* #undef FUNC_NAME */
-
 
 /* Token readers.  */
 
@@ -180,15 +144,14 @@ scm_i_input_error (char const *function,
 
 /* Read an SCSH block comment.  */
 static SCM scm_read_scsh_block_comment (scm_t_wchar, SCM);
-static SCM scm_read_commented_expression (scm_t_wchar, SCM, scm_t_read_opts *);
-static SCM scm_read_shebang (scm_t_wchar, SCM, scm_t_read_opts *);
+static SCM scm_read_commented_expression (scm_t_wchar, SCM, lokke_read_opts_t *);
 
 /* Read from PORT until a delimiter (e.g., a whitespace) is read.  Put the
    result in the pre-allocated buffer BUF.  Return zero if the whole token has
    fewer than BUF_SIZE bytes, non-zero otherwise. READ will be set the number of
    bytes actually read.  */
 static int
-read_token (SCM port, scm_t_read_opts *opts,
+read_token (SCM port, lokke_read_opts_t *opts,
             char *buf, size_t buf_size, size_t *read)
 {
    *read = 0;
@@ -219,7 +182,7 @@ read_token (SCM port, scm_t_read_opts *opts,
 /* Like `read_token', but return either BUFFER, or a GC-allocated buffer
    if the token doesn't fit in BUFFER_SIZE bytes.  */
 static char *
-read_complete_token (SCM port, scm_t_read_opts *opts,
+read_complete_token (SCM port, lokke_read_opts_t *opts,
                      char *buffer, size_t buffer_size, size_t *read)
 {
   int overflow = 0;
@@ -265,7 +228,7 @@ read_complete_token (SCM port, scm_t_read_opts *opts,
 /* Skip whitespace from PORT and return the first non-whitespace character
    read.  Raise an error on end-of-file.  */
 static int
-flush_ws (SCM port, scm_t_read_opts *opts, const char *eoferr)
+flush_ws (SCM port, lokke_read_opts_t *opts, const char *eoferr)
 {
   scm_t_wchar c;
   while (1)
@@ -302,7 +265,7 @@ flush_ws (SCM port, scm_t_read_opts *opts, const char *eoferr)
 	    eoferr = "read_sharp";
 	    goto goteof;
 	  case '!':
-	    scm_read_shebang (c, port, opts);
+            scm_read_scsh_block_comment (c, port);
 	    break;
 	  case ';':
 	    scm_read_commented_expression (c, port, opts);
@@ -330,13 +293,13 @@ flush_ws (SCM port, scm_t_read_opts *opts, const char *eoferr)
 
 /* Token readers.  */
 
-static SCM scm_read_expression (SCM port, scm_t_read_opts *opts);
-static SCM scm_read_sharp (int chr, SCM port, scm_t_read_opts *opts,
+static SCM scm_read_expression (SCM port, lokke_read_opts_t *opts);
+static SCM scm_read_sharp (int chr, SCM port, lokke_read_opts_t *opts,
                            long line, int column);
 
 
 static SCM
-maybe_annotate_source (SCM x, SCM port, scm_t_read_opts *opts,
+maybe_annotate_source (SCM x, SCM port, lokke_read_opts_t *opts,
                        long line, int column)
 {
   /* This condition can be caused by a user calling
@@ -344,7 +307,7 @@ maybe_annotate_source (SCM x, SCM port, scm_t_read_opts *opts,
   if (line < 0 || column < 0)
     return x;
 
-  // Just making SCM_COPY_SOURC_P true for now...
+  // Just making SCM_COPY_SOURCE_P true for now...
   if (opts->record_positions_p)
     scm_set_source_properties_x(x, scm_make_srcprops(line, column, scm_port_filename (port),
                                                      scm_copy_tree(x),
@@ -353,7 +316,7 @@ maybe_annotate_source (SCM x, SCM port, scm_t_read_opts *opts,
 }
 
 static SCM
-scm_read_sexp (scm_t_wchar chr, int list_for_curly, SCM port, scm_t_read_opts *opts)
+scm_read_sexp (scm_t_wchar chr, int list_for_curly, SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "scm_i_lreadparen"
 {
   int c;
@@ -471,24 +434,8 @@ scm_read_sexp (scm_t_wchar chr, int list_for_curly, SCM port, scm_t_read_opts *o
         }                                                          \
     } while (0)
 
-static void
-skip_intraline_whitespace (SCM port)
-{
-  scm_t_wchar c;
-
-  do
-    {
-      c = scm_getc (port);
-      if (c == EOF)
-        return;
-    }
-  while (c == '\t' || uc_is_general_category (c, UC_SPACE_SEPARATOR));
-
-  scm_ungetc (c, port);
-}
-
 static SCM
-scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
+scm_read_string_like_syntax (int chr, SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "scm_lreadr"
 {
   /* For strings smaller than C_STR, this function creates only one Scheme
@@ -529,8 +476,6 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
 			  lisp modes.  */
               break;
             case '\n':
-              if (opts->hungry_eol_escapes_p)
-                skip_intraline_whitespace (port);
               continue;
             case '0':
               c = '\0';
@@ -590,7 +535,7 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
 
 
 static SCM
-lokke_read_regex_literal (SCM port, scm_t_read_opts *opts)
+lokke_read_regex_literal (SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "lokke_read_regex_literal"
 {
   // Assumes the leading " has already been read
@@ -636,7 +581,7 @@ lokke_read_regex_literal (SCM port, scm_t_read_opts *opts)
 
 
 static SCM
-scm_read_string (int chr, SCM port, scm_t_read_opts *opts)
+scm_read_string (int chr, SCM port, lokke_read_opts_t *opts)
 {
   return scm_read_string_like_syntax (chr, port, opts);
 }
@@ -893,7 +838,7 @@ SCM_DEFINE (cljg_string_to_rational, "string->rational", 1, 0, 0,
 #undef FUNC_NAME
 
 static SCM
-scm_read_number (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
+scm_read_number (scm_t_wchar chr, SCM port, lokke_read_opts_t *opts)
 {
   SCM result, str = SCM_EOL;
   char local_buffer[READER_BUFFER_SIZE], *buffer;
@@ -916,12 +861,8 @@ scm_read_number (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
   if (scm_is_false (result))
     result = cljg_string_to_rational(str);
   if (scm_is_false (result))
-    {
-      /* Return a symbol instead of a number */
-      if (opts->case_insensitive_p)
-        str = scm_string_downcase_x (str);
-      result = scm_string_to_symbol (str);
-    }
+    /* Return a symbol instead of a number */
+    result = scm_string_to_symbol (str);
   else if (SCM_NIMP (result))
     result = maybe_annotate_source (result, port, opts, line, column);
 
@@ -936,7 +877,7 @@ static SCM lokke_false;
 static SCM lokke_nil;
 
 static SCM
-scm_read_mixed_case_symbol (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
+scm_read_mixed_case_symbol (scm_t_wchar chr, SCM port, lokke_read_opts_t *opts)
 {
   SCM result;
   size_t bytes_read;
@@ -948,9 +889,6 @@ scm_read_mixed_case_symbol (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
 				&bytes_read);
 
   str = scm_from_port_stringn (buffer, bytes_read, port);
-
-  if (opts->case_insensitive_p)
-    str = scm_string_downcase_x (str);
 
   if (scm_is_true (scm_equal_p (str, lokke_true)))
       result = SCM_BOOL_T;
@@ -968,7 +906,7 @@ scm_read_mixed_case_symbol (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
 }
 
 static SCM
-scm_read_quote (int chr, SCM port, scm_t_read_opts *opts)
+scm_read_quote (int chr, SCM port, lokke_read_opts_t *opts)
 {
   SCM p;
   long line = scm_to_long (scm_port_line (port));
@@ -1010,7 +948,7 @@ scm_read_quote (int chr, SCM port, scm_t_read_opts *opts)
 }
 
 static SCM
-scm_read_metadata (SCM port, scm_t_read_opts *opts)
+scm_read_metadata (SCM port, lokke_read_opts_t *opts)
 {
   long line = scm_to_long (scm_port_line (port));
   int column = scm_to_int (scm_port_column (port)) - 1;
@@ -1038,7 +976,7 @@ scm_read_semicolon_comment (int chr, SCM port)
 /* Sharp readers, i.e. readers called after a `#' sign has been read.  */
 
 static SCM
-scm_read_character (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
+scm_read_character (scm_t_wchar chr, SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "scm_lreadr"
 {
   char buffer[READER_CHAR_NAME_MAX_SIZE];
@@ -1141,7 +1079,7 @@ scm_read_character (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
 
 // FIXME: make this stricter?
 static SCM
-scm_read_keyword (int chr, SCM port, scm_t_read_opts *opts)
+scm_read_keyword (int chr, SCM port, lokke_read_opts_t *opts)
 {
   /* Read the symbol that comprises the keyword.
      XXX: This implementation allows sloppy syntaxes like `#:  key'.  */
@@ -1181,52 +1119,9 @@ scm_read_scsh_block_comment (scm_t_wchar chr, SCM port)
   return SCM_UNSPECIFIED;
 }
 
-static void set_port_case_insensitive_p (SCM port, scm_t_read_opts *opts,
-                                         int value);
-/* static void set_port_hungry_eol_escapes_p (SCM port, scm_t_read_opts *opts, */
-/*                                            int value); */
-
-static SCM
-scm_read_shebang (scm_t_wchar chr, SCM port, scm_t_read_opts *opts)
-{
-  char name[READER_DIRECTIVE_NAME_MAX_SIZE + 1];
-  int c;
-  int i = 0;
-
-  while (i <= READER_DIRECTIVE_NAME_MAX_SIZE)
-    {
-      c = scm_getc (port);
-      if (c == EOF)
-	scm_i_input_error ("skip_block_comment", port,
-			   "unterminated `#! ... !#' comment", SCM_EOL);
-      else if (('a' <= c && c <= 'z') || ('0' <= c && c <= '9') || c == '-')
-        name[i++] = c;
-      else if (CHAR_IS_DELIMITER (c))
-        {
-          scm_ungetc (c, port);
-          name[i] = '\0';
-          if (0 == strcmp ("fold-case", name))
-            set_port_case_insensitive_p (port, opts, 1);
-          else if (0 == strcmp ("no-fold-case", name))
-            set_port_case_insensitive_p (port, opts, 0);
-          else
-            break;
-          return SCM_UNSPECIFIED;
-        }
-      else
-        {
-          scm_ungetc (c, port);
-          break;
-        }
-    }
-  while (i > 0)
-    scm_ungetc (name[--i], port);
-  return scm_read_scsh_block_comment (chr, port);
-}
-
 static SCM
 scm_read_commented_expression (scm_t_wchar chr, SCM port,
-                               scm_t_read_opts *opts)
+                               lokke_read_opts_t *opts)
 {
   scm_t_wchar c;
 
@@ -1243,7 +1138,7 @@ scm_read_commented_expression (scm_t_wchar chr, SCM port,
 /* Top-level token readers, i.e., dispatchers.  */
 
 static SCM
-scm_read_sharp_sharp(SCM port, scm_t_read_opts *opts)
+scm_read_sharp_sharp(SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "read"
 {
   char buffer[READER_SHARP_SHARP_NAME_MAX_SIZE];
@@ -1265,7 +1160,7 @@ scm_read_sharp_sharp(SCM port, scm_t_read_opts *opts)
 }
 
 static SCM
-scm_read_reader_conditional(SCM port, scm_t_read_opts *opts)
+scm_read_reader_conditional(SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "read"
 {
   // We've already read the initial #?
@@ -1298,7 +1193,7 @@ scm_read_reader_conditional(SCM port, scm_t_read_opts *opts)
 /* The reader for the sharp `#' character.  It basically dispatches reads
    among the above token readers.   */
 static SCM
-scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
+scm_read_sharp (scm_t_wchar chr, SCM port, lokke_read_opts_t *opts,
                 long line, int column)
 #define FUNC_NAME "scm_lreadr"
 {
@@ -1319,7 +1214,7 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
       return  scm_list_2 (sym_re_pattern,
                           lokke_read_regex_literal (port, opts));
     case '!':
-      return (scm_read_shebang (chr, port, opts));
+      return scm_read_scsh_block_comment (chr, port);
     case '_':
       return (scm_read_commented_expression (chr, port, opts));
     case '#':
@@ -1363,7 +1258,7 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
 #undef FUNC_NAME
 
 static SCM
-read_inner_expression (SCM port, scm_t_read_opts *opts)
+read_inner_expression (SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "read_inner_expression"
 {
   while (1)
@@ -1434,7 +1329,7 @@ read_inner_expression (SCM port, scm_t_read_opts *opts)
 #undef FUNC_NAME
 
 static SCM
-scm_read_expression (SCM port, scm_t_read_opts *opts)
+scm_read_expression (SCM port, lokke_read_opts_t *opts)
 #define FUNC_NAME "scm_read_expression"
 {
   return read_inner_expression (port, opts);
@@ -1451,10 +1346,10 @@ SCM_DEFINE (cljg_read, "read-primitively", 0, 1, 0,
 	    "Any whitespace before the next token is discarded.")
 #define FUNC_NAME s_cljg_read
 {
-  scm_t_read_opts opts = {.copy_source_p = 1,
-                          .record_positions_p = 1,
-                          .case_insensitive_p = 0,
-                          .hungry_eol_escapes_p = 0 };
+  lokke_read_opts_t opts = {
+    .copy_source_p = 1,
+    .record_positions_p = 1
+  };
   if (SCM_UNBNDP (port))
     port = scm_current_input_port ();
   SCM_VALIDATE_OPINPORT (1, port);
@@ -1470,81 +1365,12 @@ SCM_DEFINE (cljg_read, "read-primitively", 0, 1, 0,
 
 
 
-/* Per-port read options.
-
-   We store per-port read options in the 'port-read-options' port
-   property, which is stored in the internal port structure.  The value
-   stored is a single integer that contains a two-bit field for each
-   read option.
-
-   If a bit field contains READ_OPTION_INHERIT (3), that indicates that
-   the applicable value should be inherited from the corresponding
-   global read option.  Otherwise, the bit field contains the value of
-   the read option.  For boolean read options that have been set
-   per-port, the possible values are 0 or 1. */
-
-/* Key to read options in port properties. */
-SCM_SYMBOL (sym_port_read_options, "port-read-options");
-
-/* Offsets of bit fields for each per-port override */
-#define READ_OPTION_COPY_SOURCE_P          0
-#define READ_OPTION_RECORD_POSITIONS_P     2
-#define READ_OPTION_CASE_INSENSITIVE_P     4
-#define READ_OPTION_HUNGRY_EOL_ESCAPES_P   6
-
-/* The total width in bits of the per-port overrides */
-#define READ_OPTIONS_NUM_BITS              6
-
-#define READ_OPTIONS_INHERIT_ALL  ((1UL << READ_OPTIONS_NUM_BITS) - 1)
-#define READ_OPTIONS_MAX_VALUE    READ_OPTIONS_INHERIT_ALL
-
-#define READ_OPTION_MASK     3
-#define READ_OPTION_INHERIT  3
-
-static void
-set_port_read_option (SCM port, int option, int new_value)
-{
-  SCM scm_read_options;
-  unsigned int read_options;
-
-  new_value &= READ_OPTION_MASK;
-
-  scm_read_options = scm_i_port_property (port, sym_port_read_options);
-  if (scm_is_unsigned_integer (scm_read_options, 0, READ_OPTIONS_MAX_VALUE))
-    read_options = scm_to_uint (scm_read_options);
-  else
-    read_options = READ_OPTIONS_INHERIT_ALL;
-  read_options &= ~(READ_OPTION_MASK << option);
-  read_options |= new_value << option;
-  scm_read_options = scm_from_uint (read_options);
-  scm_i_set_port_property_x (port, sym_port_read_options, scm_read_options);
-}
-
-/* Set OPTS and PORT's case-insensitivity according to VALUE. */
-static void
-set_port_case_insensitive_p (SCM port, scm_t_read_opts *opts, int value)
-{
-  value = !!value;
-  opts->case_insensitive_p = value;
-  set_port_read_option (port, READ_OPTION_CASE_INSENSITIVE_P, value);
-}
-
-/* static void */
-/* set_port_hungry_eol_escapes_p (SCM port, scm_t_read_opts *opts, int value) */
-/* { */
-/*   value = !!value; */
-/*   opts->hungry_eol_escapes_p = value; */
-/*   set_port_read_option (port, READ_OPTION_HUNGRY_EOL_ESCAPES_P, value); */
-/* } */
-
 void
 init_lokke_reader ()
 {
   sym_quote = scm_from_utf8_symbol("quote");
   sym_unquote = scm_from_utf8_symbol("unquote");
   sym_uq_splicing = scm_from_utf8_symbol("unquote-splicing");
-
-  scm_init_opts (scm_read_options, scm_read_opts);
 
   lokke_true = scm_permanent_object (scm_from_latin1_string ("true"));
   lokke_false = scm_permanent_object (scm_from_latin1_string ("false"));
