@@ -12,6 +12,7 @@
                           get
                           seq))
   #:use-module ((lokke base invoke) #:select (apply invoke))
+  #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
@@ -64,3 +65,56 @@
   (match args
     (((item)) (get s item))
     ((item (not-found)) (get s item not-found))))
+
+(define-method (union (s <set>)) s)
+
+(define-method (union (s1 <set>) (s2 <set>) . more)
+  (apply union (union s1 s2) more))
+
+(define-method (intersection (s <set>)) s)
+
+(define-method (intersection (s1 <set>) (s2 <set>) . more)
+  (apply intersection (intersection s1 s2) more))
+
+(define-method (difference (s <set>)) s)
+
+(define-method (difference (s1 <set>) (s2 <set>) . more)
+  (apply difference (difference s1 s2) more))
+
+;; nil
+
+(define-method (union (b <boolean>)) (require-nil 'union b) #nil)
+(define-method (union (b <boolean>) (s <set>)) (require-nil 'union b) s)
+(define-method (union (s <set>) (b <boolean>)) (require-nil 'union b) s)
+(define-method (union (b1 <boolean>) (b2 <boolean>))
+  (require-nil 'union b1)
+  (require-nil 'union b2)
+  #nil)
+
+
+(define-method (intersection (b <boolean>) (s <set>))
+  (require-nil 'intersection b)
+  #nil)
+
+(define-method (intersection (s <set>) (b <boolean>))
+  (require-nil 'intersection b)
+  #nil)
+
+(define-method (intersection (b1 <boolean>) (b2 <boolean>))
+  (require-nil 'intersection b1)
+  (require-nil 'intersection b2)
+  #nil)
+
+
+(define-method (difference (b <boolean>) (s <set>))
+  (require-nil 'difference b)
+  #nil)
+
+(define-method (difference (s <set>) (b <boolean>))
+  (require-nil 'difference b)
+  s)
+
+(define-method (difference (b1 <boolean>) (b2 <boolean>))
+  (require-nil 'difference b1)
+  (require-nil 'difference b2)
+  #nil)

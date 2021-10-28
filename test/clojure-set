@@ -1,0 +1,52 @@
+#!./lokke -0
+;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+(ns test.clojure-set
+  (:require
+   [clojure.set :as set]
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+;; clj/jvm allows nil and lists, but gives odd results for lists.  For
+;; now, ignore those types.
+
+(is (= nil (set/union nil)))
+(is (= nil (set/union nil nil)))
+(is (= #{1} (set/union nil #{1})))
+(is (= #{1} (set/union #{1} nil)))
+
+(is (= #{} (set/union)))
+(is (= #{} (set/union #{})))
+(is (= #{1} (set/union #{1})))
+(is (= #{1 2} (set/union #{1} #{2})))
+(is (= #{1 2 3 4 5} (set/union #{1} #{2} #{3 4 5})))
+
+(is (= nil (set/intersection nil nil)))
+(is (= nil (set/intersection nil #{1})))
+(is (= nil (set/intersection #{1} nil)))
+
+(is (= #{} (set/intersection #{})))
+(is (= #{1} (set/intersection #{1})))
+(is (= #{1} (set/intersection #{1} #{1})))
+(is (= #{1} (set/intersection #{1 2} #{1})))
+(is (= #{1} (set/intersection #{1} #{1 2})))
+(is (= #{1 2 3} (set/intersection #{1 2 3 4 5} #{-3 -2 -1  0 1 2 3})))
+(is (= #{1 2} (set/intersection #{1 2 3} #{1 2 4} #{1 2 5})))
+
+(is (= nil (set/difference nil nil)))
+(is (= nil (set/difference nil #{1})))
+(is (= #{1} (set/difference #{1} nil)))
+
+(is (= #{} (set/difference #{})))
+(is (= #{1} (set/difference #{1})))
+(is (= #{1} (set/difference #{1} #{})))
+(is (= #{} (set/difference #{1} #{1})))
+(is (= #{1 3} (set/difference #{1 2 3} #{2})))
+(is (= #{1 3 5} (set/difference #{1 2 3 4 5} #{2} #{4})))
+
+(end-tests (ns-name *ns*) :exit? true)

@@ -144,6 +144,7 @@ TESTS = \
   test/clojure-exceptions \
   test/clojure-metadata \
   test/clojure-ns \
+  test/clojure-set \
   test/clojure-string \
   test/clojure-test \
   test/clojure-vector \
