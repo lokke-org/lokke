@@ -91,7 +91,7 @@
   (is (= "yep" (cond-> :yep (nil? nil) name (nil? :x) symbol)))
   (is (= 'yep (cond-> :yep (nil? nil) name (nil? nil) symbol)))
   (is (= "yep!" (cond-> "yep" (nil? nil) (str "!"))))
-  (is (= "yep!?" (cond->> "yep" (nil? nil) (str "!") (nil? nil) (str "?")))))
+  (is (= "yep!?" (cond-> "yep" (nil? nil) (str "!") (nil? nil) (str "?")))))
 
 (testing "cond->>"
   (is (= :yep (cond->> :yep)))
