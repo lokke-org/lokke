@@ -464,7 +464,7 @@
       (- (get-count (slot-ref x 'items))
          (slot-ref x 'i)))
 
-    (define-method (const-nth (x name)) #t)
+    (define-method (const-nth? (x name)) #t)
 
     (define-method (nth (x name) (i <integer>))
       (when (negative? i)

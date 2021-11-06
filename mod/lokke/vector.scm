@@ -367,7 +367,7 @@
                   #:length (+ 1 (subvec-length v) (length xs))
                   #:vec vec)))
 
-;; ;; FIXME: vec/subvec, etc.?  Do we have/need a generic clj=-like const-nth fallback?
+;; ;; FIXME: vec/subvec, etc.?  Do we have/need a generic clj=-like const-nth? fallback?
 ;; (define-method (compare (v1 <subvec>) (v2 <subvec>))
 ;;   (vector-compare compare v1 v2 subvec-length subvec-nth))
 
