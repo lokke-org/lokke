@@ -11,6 +11,34 @@
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
+  #:use-module ((lokke array)
+                #:select (aclone
+                          aget
+                          aget-boolean
+                          aget-byte
+                          aget-double
+                          aget-float
+                          aget-int
+                          aget-long
+                          aget-short
+                          alength
+                          amap
+                          areduce
+                          aset
+                          aset-boolean
+                          aset-byte
+                          aset-double
+                          aset-float
+                          aset-int
+                          aset-long
+                          aset-short
+                          boolean-array
+                          byte-array
+                          double-array
+                          float-array
+                          int-array
+                          long-array
+                          short-array))
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base dynamic) #:select (set!))
@@ -246,11 +274,31 @@
                ExceptionInfo
                Throwable
                Throwable.
-               as->
+               aclone
                add-watch
+               aget
+               aget-boolean
+               aget-byte
+               aget-double
+               aget-float
+               aget-int
+               aget-long
+               aget-short
+               alength
                alias
                alter-meta!
+               amap
                and
+               areduce
+               as->
+               aset
+               aset-boolean
+               aset-byte
+               aset-double
+               aset-float
+               aset-int
+               aset-long
+               aset-short
                assoc-in
                atom
                atom?
@@ -265,8 +313,10 @@
                bit-set
                bit-test
                bit-xor
+               boolean-array
                bounded-count
                butlast
+               byte-array
                char?
                (class-of . class)
                (ver/version . clojure-version)
@@ -308,6 +358,7 @@
                dotimes
                doto
                double
+               double-array
                double?
                drop
                drop-last
@@ -329,6 +380,7 @@
                find-var
                first
                float
+               float-array
                float?
                flush
                fn
@@ -353,6 +405,7 @@
                in-ns
                inc
                inc'
+               int-array
                int?
                integer?
                interleave
@@ -372,8 +425,10 @@
                line-seq
                list*
                load-file
+               long-array
                loop
                macroexpand
+               make-array
                map?
                map-entry
                map-entry?
@@ -449,6 +504,7 @@
                set
                set-validator!
                set?
+               short-array
                shuffle
                slurp
                spit

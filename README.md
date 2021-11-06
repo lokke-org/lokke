@@ -223,6 +223,18 @@ General comparison with Clojure/JVM
   `setlocale` acts globally, not just with respect to the current
   thread.
 
+* Arrays (`byte-array`, `aref`, `aset`, etc.) are implemented using
+  Guile's [SRFI-4 homogeneous vectors](https://www.gnu.org/software/guile/manual/guile.html#SRFI_002d4),
+  and so should behave fairly similarly to JVM arrays (constant time
+  access, compact storage, etc.).  The support is imcomplete,
+  currently omitting `object` arrays, support for multidimensional
+  arrays (including `make-array`), and casts like `bytes`, for
+  example.
+
+  Boolean arrays are implemented as
+  [Guile bit vectors](https://www.gnu.org/software/guile/manual/html_node/Bit-Vectors.html),
+  and so are "packed", but consider the type subject to change.
+
 * There is some experimental, rudimentary
   [compatibility with Clojure/JVM exception handling](#exception-handling).
 

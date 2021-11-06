@@ -1,0 +1,90 @@
+#!./lokke -0
+;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+(ns test.clojure-array
+  (:require
+   [clojure.test :refer [begin-tests deftest end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+;; FIXME: test error handling
+
+(def flavors
+  {:boolean {:make boolean-array :aget aget-boolean :aset aset-boolean
+             :default false :vals [false true]}
+   :byte {:make byte-array :aget aget-byte :aset aset-byte
+          :default 0 :vals [-128 127]}
+   :short {:make short-array :aget aget-short :aset aset-short
+           :default 0 :vals [-32768 32767]}
+   :int {:make int-array :aget aget-int :aset aset-int
+         :default 0 :vals [-2147483648 2147483647]}
+   :long {:make long-array :aget aget-long :aset aset-long
+          :default 0 :vals [-9223372036854775808 9223372036854775807]}
+   :float {:make float-array :aget aget-float :aset aset-float
+           :default 0.0 :vals [-1.0 0.0 1.0 ##Inf ##-Inf]}
+   :double {:make double-array :aget aget-double :aset aset-double
+            :default 0.0 :vals [-1.0 0.0 1.0 ##Inf ##-Inf]}})
+
+(deftest array-basics
+  (doseq [[kind {make-x :make aset-x :aset aget-x :aget
+                 vs :vals default :default}]
+          flavors]
+    (testing (str (name kind) "-array behavior")
+      (is (= (repeat 3 default) (seq (make-x 3))))
+      (is (= vs (seq (make-x vs))))
+      (is (= (repeat 3 (first vs)) (seq (make-x 3 (first vs))))))
+    (testing (str (name kind) " array alength")
+      (is (= (count vs) (alength (make-x vs)))))
+    (testing (str (name kind) " array count")
+      (is (= (count vs) (count (make-x vs)))))
+    (testing (str (name kind) " array aget-" (name kind) ", aget, and nth")
+      (let [a (make-x vs)]
+        (doseq [i (range (count a))]
+          (is (= (nth vs i) (aget-x a i)))
+          (is (= (nth vs i) (aget a i)))
+          (is (= (nth vs i) (nth a i))))))
+    (testing (str (name kind) " array aset-" (name kind) " and aset")
+      (let [a (make-x (count vs) 42)]
+        (doseq [i (range (count a))]
+          (aset-x a i (nth vs i)))
+        (doseq [i (range (count a))
+                :let [exp (nth vs i)]]
+          (is (= exp (aget-x a i)))
+          (is (= exp (aget a i))))))
+    (testing (str (name kind) " array aclone")
+      (let [a (make-x 3 42)
+            clone (aclone a)]
+        (is (not (identical? clone a)))
+        (is (= a clone))))
+    (testing (str (name kind) " array empty?")
+      (is (empty? (make-x 0)))
+      (is (not (empty? (make-x 1)))))
+    (testing (str (name kind) " array counted? seqable? sequential?")
+      (let [a (make-x 0)]
+        (is (counted? (make-x 0)))
+        (is (seqable? (make-x 0)))
+        (is (sequential? (make-x 0)))))
+    (testing (str (name kind) " array first rest")
+      (let [[v] vs
+            a (make-x 3 v)]
+        (is (= v (first a)))
+        (is (= [v v] (rest a)))))
+    (testing (str (name kind) " array amap")
+      (is (= vs
+             (seq (amap (make-x (count vs))
+                        i
+                        result
+                        (nth vs i))))))
+    (testing (str (name kind) " array areduce")
+      (is (= vs
+             (seq (areduce (make-x (count vs))
+                           i
+                           result
+                           []
+                           (conj result (nth vs i)))))))))
+
+(end-tests (ns-name *ns*) :exit? true)
