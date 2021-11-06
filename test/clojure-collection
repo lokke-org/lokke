@@ -290,6 +290,9 @@
 (testing "assoc"
   (is (= {:x 1} (assoc nil :x 1))))
 
+(testing "dissoc"
+  (is (= nil (dissoc nil :x 1))))
+
 (testing "assoc-in"
   (is (= {:x 1} (assoc-in {} [:x] 1)))
   (is (= {:x {:y 1}} (assoc-in {} [:x :y] 1)))

@@ -647,6 +647,10 @@
         (assoc associative k (apply update-in (get associative k) ks f args))
         (assoc associative k (apply f (get associative k) args)))))
 
+(define-method (dissoc (b <boolean>) . ks)
+  (require-nil 'empty? b)
+  #nil)
+
 ;; Generic implementation -- may be able to do better for any given
 ;; class.
 
