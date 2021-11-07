@@ -35,7 +35,6 @@
             short-array)
   #:re-export ((array-copy . aclone)
                (array-ref . aget)
-               (bitvector-bit-set? . aget-boolean)
                (s8vector-ref . aget-byte)
                (s16vector-ref . aget-short)
                (s32vector-ref . aget-int)
@@ -59,6 +58,15 @@
                seq
                seqable?
                sequential?))
+
+(cond-expand
+  (guile-3
+   (re-export (bitvector-bit-set? . aget-boolean)))
+  (guile-2.2
+   (define bitvector-bit-set? bitvector-ref)
+   (define (bitvector-set-bit! vec i) (bitvector-set! vec i #t))
+   (define (bitvector-clear-bit! vec i) (bitvector-set! vec i #f))
+   (export (bitvector-bit-set? . aget-boolean))))
 
 (define (aset array idx v)
   (array-set! array v idx))
