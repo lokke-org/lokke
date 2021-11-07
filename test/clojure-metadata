@@ -53,8 +53,9 @@
   (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} #{})))
   (is (= {:w :x} (meta ^{:w :x} ^{:w :z} #{}))))
 
+(def meta-test-var nil)
+
 (testing "variables"
-  (def meta-test-var nil)
   (is (= nil (meta #'meta-test-var)))
 
   (alter-meta! #'meta-test-var assoc :x 1)
