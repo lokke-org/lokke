@@ -15,6 +15,7 @@
                           seq
                           seqable?
                           sequential?))
+  #:use-module ((lokke compat) #:select (if-at-least-guile-version))
   #:use-module ((ice-9 arrays) #:select (array-copy))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
@@ -59,10 +60,10 @@
                seqable?
                sequential?))
 
-(cond-expand
-  (guile-3
-   (re-export (bitvector-bit-set? . aget-boolean)))
-  (guile-2.2
+(if-at-least-guile-version
+ (3 0 3)
+ (re-export (bitvector-bit-set? . aget-boolean))
+ (begin
    (define bitvector-bit-set? bitvector-ref)
    (define (bitvector-set-bit! vec i) (bitvector-set! vec i #t))
    (define (bitvector-clear-bit! vec i) (bitvector-set! vec i #f))
