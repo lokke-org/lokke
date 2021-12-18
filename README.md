@@ -113,7 +113,7 @@ or run the REPL:
 
     $ ./lok
     ...
-    lokke@(lokke user)>
+    lokke@lokke.user>
 
 `./lok ...` is equivalent to `./lokke run ...`.
 
@@ -158,10 +158,10 @@ representation.
 
 From `./guile`, you can switch to a Lokke REPL manually like this:
 
-    scheme@(guile-user)> ,module (lokke user)
-    scheme@(lokke user)> ,language lokke
+    scheme@(guile-user)> ,module (lokke ns lokke user)
+    scheme@(lokke ns lokke user)> ,language lokke
     Happy hacking with Lokke, a Clojure dialect!  To switch back, type `,L scheme'.
-    lokke@(lokke user)> (inc 1)
+    lokke@(lokke ns lokke user)> (inc 1)
     $1 = 2
 
 Lokke expects all Clojure namespaces to be located in a lokke/ns/
@@ -531,17 +531,18 @@ Known issues
   At the moment, the new prompt will use the Guile printer instead of
   Lokke's.  For example:
 
-        lokke@(lokke user)> true
+        lokke@lokke.user> true
         $1 = true
-        lokke@(lokke user)> (/ :x)
+        lokke@lokke.user> (/ :x)
         ice-9/boot-9.scm:1669:16: In procedure raise-exception:
         In procedure /: Wrong type argument in position 1: #:x
 
         Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
-        lokke@(lokke user) [1]> true
+        lokke@(lokke ns lokke user) [1]> true
         $2 = #t
 
-  An exit back to the top-level prompt will restore the Lokke writer.
+  An exit back to the top-level prompt via `,q` will restore the Lokke
+  writer.
 
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
