@@ -3,6 +3,8 @@
 
 # Makefile.am is automatically generated from Makefile.am.in via ./gen-makefile
 
+DISTCHECK_CONFIGURE_FLAGS = --enable-error-on-warning
+
 CLEANFILES =
 lokke_clean =
 lokke_uninstall =
