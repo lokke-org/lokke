@@ -6,4 +6,4 @@
 ;; that you can more easily switch to lokke from the guile repl.  See
 ;; the README for details.
 
-((@@ (lokke ns) ns) guile.lokke.user)
+((@@ (lokke ns) ns) lokke.user)

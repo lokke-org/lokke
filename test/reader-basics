@@ -1,13 +1,14 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
  ((lokke reader) #:prefix t/)
  ((lokke hash-map) #:select (clj= hash-map))
  ((lokke hash-set) #:select (hash-set))
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke scm vector)
   #:select (lokke-vec
@@ -15,16 +16,12 @@
             lokke-vector?
             lokke-vector-length
             lokke-vector-ref))
+ ((lokke time) #:select (instant))
+ ((lokke uuid) #:select (uuid->integer))
  ((lokke vector) #:select ())  ;; load generics like with-meta
  ((rnrs io ports) #:select (eof-object))
  ((srfi srfi-64)
-  #:select (test-assert
-            test-begin
-            test-end
-            test-equal
-            test-group
-            test-runner-current
-            test-runner-fail-count))
+  #:select (test-assert test-begin test-equal test-group test-runner-current))
  ((srfi srfi-88) #:select (string->keyword)))
 
 (define (scm-read-string s)
@@ -243,6 +240,12 @@
                                           (guile.guile-user/inc ,foo-sym)))))
     (test-equal expected synquote)))
 
+(test-equal '(syntax-quote
+              (guile.guile-user/foo (unquote-splicing (list bar))))
+  (t/read-string "`(foo ~@(list bar))"))
+
+(test-equal '(clojure.core/deref (atom 1)) (t/read-string "@(atom 1)"))
+
 (test-group
  "reader conditionals #?(...)"
  (test-equal (eof-object) (t/read-string "#?()"))
@@ -270,7 +273,19 @@
  (test-equal '(re-pattern " \\d ") (t/read-string "#\" \\d \""))
  (test-equal '(re-pattern "\\\"x\\\"") (t/read-string "#\"\\\"x\\\"\"")))
 
-(test-end)
+(test-group
+ "tagged literals"
+ (test-equal (instant (* 242312160 1000000))
+   (t/read-string "#inst \"1977-09-05T12:56:00Z\""))
+ (test-equal (instant (* 242312160 1000000))
+   (t/read-string "#inst \"1977-09-05T12:56:00.0Z\""))
+ (test-equal (instant (* 242312160 1000000))
+   (t/read-string "#inst \"1977-09-05T12:56:00+00:00\""))
+ (test-equal (instant (* 242312160 1000000))
+   (t/read-string "#inst \"1977-09-05T12:56:00-00:00\""))
+ ;; FIXME: test error cases
+ (test-equal 208697526932167446277510606439038568476
+   (uuid->integer
+    (t/read-string "#uuid \"9d01ae80-35a4-423e-afb5-f841fbdfc81c\""))))
 
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

@@ -1,4 +1,5 @@
-#!./lokke -0 ;; -*-clojure-*-
+#!./lokke -0
+;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
@@ -6,7 +7,8 @@
 
 (ns test.clojure-basics
   (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [lokke.exception :refer [ex-tag]]))
 
 (begin-tests (ns-name *ns*))
 
@@ -50,21 +52,56 @@
   (is (= 1 (as-> 0 x (inc x))))
   (is (= "1" (as-> 0 x (inc x) (str x)))))
 
+(testing "case"
+  (try
+    (case :nope)
+    (catch Throwable ex
+      (is (= 'misc-error (ex-tag ex)))))
+  (is (= :nope (case :x :nope)))
+  (is (= :nope (case :x () :yep :nope)))
+  (is (= :nope (case :x :y :yep :nope)))
+  (is (= :nope (case :x (:y) :yep :nope)))
+  (is (= :nope (case :x (:y :z) :yep :nope)))
+  (is (= :nope (case :x :a :a (:y :z) :yep :nope)))
+  (is (= :nope (case :x (:y :z) :yep :a :a :nope)))
+  (is (= :nope (case :x :a :a (:y :z) :yep :a :a :nope)))
+  (is (= :yep (case :x :x :yep :nope)))
+  (is (= :yep (case :x (:x) :yep :nope)))
+  (is (= :yep (case :x (:x :y) :yep :nope)))
+  (is (= :yep (case :x (:y :x) :yep :nope)))
+  (is (= :yep (case :x :a :a (:y :x) :yep :nope)))
+  (is (= :yep (case :x (:y :x) :yep :a :a :nope)))
+  (is (= :yep (case :x :a :a (:y :x) :yep :a :a :nope)))
+  (is (= :yep (case 1 1 :yep)))
+  (is (= :yep (case 'x x :yep)))
+  (is (= :yep (case 'and and :yep)))
+  (is (= :yep (case 'and (and) :yep)))
+  (is (= :yep (case '+ + :yep)))
+  (is (= :yep (case '+ (+) :yep)))
+  (is (= :yep (case "x" "x" :yep)))
+  (is (= :yep (case [1] [1] :yep)))
+  (is (= :yep (case #{1} #{1} :yep)))
+  (is (= :yep (case {1 2} {1 2} :yep))))
+
 (testing "cond->"
   (is (= :yep (cond-> :yep)))
-  (is (= :yep (cond-> :yep string? name)))
-  (is (= "yep" (cond-> :yep keyword? name)))
-  (is (= :yep (cond-> :yep keyword? name string? keyword)))
-  (is (= "yep" (cond-> :yep keyword? name keyword? keyword)))
-  (is (= "yep!" (cond-> "yep" string? (str "!")))))
+  (is (= :yep (cond-> :yep (nil? :x) name)))
+  (is (= "yep" (cond-> :yep (nil? nil) name)))
+  (is (= 'yep (cond-> :yep (nil? :x) name (nil? nil) symbol)))
+  (is (= "yep" (cond-> :yep (nil? nil) name (nil? :x) symbol)))
+  (is (= 'yep (cond-> :yep (nil? nil) name (nil? nil) symbol)))
+  (is (= "yep!" (cond-> "yep" (nil? nil) (str "!"))))
+  (is (= "yep!?" (cond-> "yep" (nil? nil) (str "!") (nil? nil) (str "?")))))
 
 (testing "cond->>"
   (is (= :yep (cond->> :yep)))
-  (is (= :yep (cond->> :yep string? name)))
-  (is (= "yep" (cond->> :yep keyword? name)))
-  (is (= :yep (cond->> :yep keyword? name string? keyword)))
-  (is (= "yep" (cond->> :yep keyword? name keyword? keyword)))
-  (is (= "...yep" (cond->> "yep" string? (str "...")))))
+  (is (= :yep (cond->> :yep (nil? :x) name)))
+  (is (= "yep" (cond->> :yep (nil? nil) name)))
+  (is (= 'yep (cond->> :yep (nil? :x) name (nil? nil) symbol)))
+  (is (= "yep" (cond->> :yep (nil? nil) name (nil? :x) symbol)))
+  (is (= 'yep (cond->> :yep (nil? nil) name (nil? nil) symbol)))
+  (is (= "!yep" (cond->> "yep" (nil? nil) (str "!"))))
+  (is (= "?!yep" (cond->> "yep" (nil? nil) (str "!") (nil? nil) (str "?")))))
 
 (testing "condp"
   (is (= :yep (condp < 0 -1 :yep)))

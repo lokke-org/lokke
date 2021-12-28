@@ -1,0 +1,67 @@
+
+Getting started
+===============
+
+In addition to the platform specific notes below, you may want to
+peruse the [`dev/prep-*` ](dev/) scripts in the source tree as a guide
+to the requirements on for any given platform.  Some are being used to
+prep the CI hosts, and those should be completely up-to-date.
+
+If you install Guile yourself via `./configure --prefix DIR ...` then
+you may be able to build against it after making arrangments like this:
+
+    export PATH=DIR/bin:"$PATH"
+    export PKG_CONFIG_PATH=DIR/lib/pkgconfig
+    export ACLOCAL_PATH=DIR/share/aclocal
+
+Platform specific notes
+=======================
+
+Debian (and some derivatives)
+-----------------------------
+
+Debian is covered in the [Getting started section of the
+README](README#getting-started), and that information may also suffice
+for many Debian derivatives like Ubuntu.
+
+FreeBSD
+-------
+
+The build requires GNU make (`pkg install gmake`), and so please
+substitute `gmake` for `make` in any of our build instructions, e.g.
+
+    gmake check
+
+See [`dev/prep-for-freebsd-build` ](dev/prep-for-freebsd-build) for a
+set up process that worked for at least FreeBSD 12.2, and please let
+us know if you encounter trouble.
+
+macOS
+-----
+
+For macOS you can use [Homebrew](https://brew.sh/) to install missing
+dependencies:
+
+    $ brew install autoconf automake pcre2 gettext git
+
+and then for Guile 3.0:
+
+    $ brew install guile
+
+or for Guile 2.2:
+
+    # Only if you have Guile 3.0 installed
+    $ brew unlink guile
+
+    $ brew install guile@2
+
+    # Setup environment variables as indicated after installation.
+    $ export PATH=/usr/local/opt/guile@2/bin:$PATH
+    $ export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
+    $ export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
+
+<!--
+Local Variables:
+mode: markdown
+End:
+-->

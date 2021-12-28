@@ -1,4 +1,4 @@
-;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2020-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; This is the lowest level, supporting *everything*, including
@@ -21,6 +21,10 @@
             reader-hash-set-meta
             reader-meta
             reader-meta?
+            reader-tagged
+            reader-tagged?
+            reader-tagged-data
+            reader-tagged-tag
             reader-vector
             reader-vector?
             reader-vector-elts
@@ -31,6 +35,9 @@
 ;; For now, we'll still promise that the first item is the symbol
 ;; distinguishing the item, i.e. not require require the use of
 ;; reader-hash-set? predicates, etc.
+
+(define (meta-data-data? x)
+  (or (eq? #nil x) (reader-hash-map? x)))
 
 (define (reader-meta x)
   (list '/lokke/reader-meta x))
@@ -47,8 +54,7 @@
        (begin
          (unless (pair? (cdr x))
            (error "No metadata in reader vector:" x))
-         (unless (or (eq? #nil (cadr x))
-                     (reader-hash-map? (cadr x)))
+         (unless (meta-data-data? (cadr x))
            (error "Invalid metadata in reader vector:" x))
          #t)))
 
@@ -75,8 +81,7 @@
        (let ((len (length x)))
          (unless (> len 1)
            (error "No metadata in reader map:" x))
-         (unless (or (eq? #nil (cadr x))
-                     (reader-hash-map? (cadr x)))
+         (unless (meta-data-data? (cadr x))
            (error "Invalid metadata in reader map:" x))
          (unless (even? len)
            (error "Missing value for key in reader map:" x))         
@@ -84,6 +89,17 @@
 
 (define (reader-hash-map-meta m) (cadr m))
 (define (reader-hash-map-elts m) (cddr m))
+
+(define (reader-tagged tag data)
+  (list '/lokke/reader-tagged tag data))
+
+(define (reader-tagged? x)
+  (match x
+    (('/lokke/reader-tagged (? symbol? tag) data) #t)
+    (_ #f)))
+
+(define (reader-tagged-tag m) (cadr m))
+(define (reader-tagged-data m) (caddr m))
 
 (define (supports-reader-meta? x)
   (and (pair? x)
@@ -93,7 +109,7 @@
        #t))
 
 (define (with-reader-meta x meta)
-  (unless (or (eq? #nil meta) (hash-map? meta))
+  (unless (or (hash-map? meta) (meta-data-data? meta))
     (scm-error 'wrong-type-arg 'with-reader-meta
                "metadata is not nil or a map: ~s" (list meta) (list meta)))
   (match x

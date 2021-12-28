@@ -83,10 +83,11 @@ RUN_OPT
               rightmost seed related argument determines the startup behavior.
 
 SCRIPT EVALUATION
-       If,  and  only  if, you don't need to specify any additional arguments,
-       you may begin your scripts like this:
+       If,  and only if, you don't need to specify any additional arguments to
+       Lokke itself, you may begin your scripts like this:
 
-              #!/path/to/lokke-0 -0 ;; -*-clojure-*-
+              #!/path/to/lokke-0 -0
+              ;; -*-clojure-*-
               !#
               (prn :hello-world)
               ...
@@ -103,7 +104,8 @@ SCRIPT EVALUATION
        Accordingly, if you need to make adjustments, you may do something like
        this:
 
-              #!/path/to/lokke-0 -0 ;; -*-clojure-*-
+              #!/path/to/lokke-0 -0
+              ;; -*-clojure-*-
               ;; We're in a Guile preamble module defining a procedure for each
               ;; lokke subcommand.
               (apply run "-l" %0 "--" %&)
@@ -120,34 +122,33 @@ SCRIPT EVALUATION
 
        Everything after the -0 and before the !# is executed as Scheme code by
        Guile in a module that has definitions for each of  the  lokke  subcom-
-       mands.  Note that the code Guile executes will begin with the character
-       immediately after the zero in -0 no matter what it is (i.e. even if  it
-       is not whitespace).  The zero actually specifies a compatibility level,
-       and for now zero is the only valid number.
+       mands.   Note  that -0 must be the only argument, and the zero actually
+       specifies a compatibility level.  For now zero is the only  valid  num-
+       ber.
 
-       As you may have guessed, the preamble module binds  %0  to  the  script
-       path  (like  $0 in POSIX shells), %& to a list of all of the subsequent
+       As  you  may  have  guessed, the preamble module binds %0 to the script
+       path (like $0 in POSIX shells), %& to a list of all of  the  subsequent
        command line arguments, and %1, %2, etc. to the elements of %&.
 
        At the moment lokke is not a binary executable.  If the system requires
-       #!  interpreters  to  be binary executables, or if you'd like to locate
+       #! interpreters to be binary executables, or if you'd  like  to  locate
        lokke via the current PATH, you may be able to rely on env like this:
 
               #!/usr/bin/env lokke-0 -0
               ...
 
 DEPENDENCIES
-       Dependencies may be specified via --deps file.  Each file must  contain
+       Dependencies  may be specified via --deps file.  Each file must contain
        a         subset         of         the         deps.edn         syntax
-       <https://clojure.org/reference/deps_and_cli#_deps_edn>, and at the  mo-
-       ment,  only  :git/url  dependencies are supported.  When multiple files
+       <https://clojure.org/reference/deps_and_cli#_deps_edn>,  and at the mo-
+       ment, only :git/url dependencies are supported.   When  multiple  files
        are specified, their dependency maps are merged from left to right.  If
-       you  just want to ensure you have acquired all of the dependencies, you
+       you just want to ensure you have acquired all of the dependencies,  you
        can run lok --deps some.edn -e nil.
 
 READLINE SUPPORT
-       Assuming your guile was compiled with  readline  support,  it's  likely
-       you'll  want  to  add  something  like this to ~/.config/lokke/interac-
+       Assuming  your  guile  was  compiled with readline support, it's likely
+       you'll want to add  something  like  this  to  ~/.config/lokke/interac-
        tive.scm to enable it in the REPL:
 
               ;;; -*-scheme-*-
@@ -156,7 +157,7 @@ READLINE SUPPORT
 
 ENVIRONMENT
        LOKKE_HISTORY
-              Specifies the path  to  the  REPL  history  file.   Defaults  to
+              Specifies  the  path  to  the  REPL  history  file.  Defaults to
               $XDG_CACHE_HOME/lokke/history when XDG_CACHE_HOME is set, other-
               wise $HOME/.cache/lokke/history.
 

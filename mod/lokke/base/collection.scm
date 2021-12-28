@@ -407,7 +407,7 @@
 (define-method (seqable? (x <pair>)) #t)
 (define-method (sequential? (x <pair>)) #t)
 
-(define-method (conj (p <list>) x) (cons x p))
+(define-method (conj (p <list>) x) (%scm-cons x p))
 
 ;;; <vector>
 
@@ -464,7 +464,7 @@
       (- (get-count (slot-ref x 'items))
          (slot-ref x 'i)))
 
-    (define-method (const-nth (x name)) #t)
+    (define-method (const-nth? (x name)) #t)
 
     (define-method (nth (x name) (i <integer>))
       (when (negative? i)
@@ -646,6 +646,10 @@
     (if ks
         (assoc associative k (apply update-in (get associative k) ks f args))
         (assoc associative k (apply f (get associative k) args)))))
+
+(define-method (dissoc (b <boolean>) . ks)
+  (require-nil 'empty? b)
+  #nil)
 
 ;; Generic implementation -- may be able to do better for any given
 ;; class.

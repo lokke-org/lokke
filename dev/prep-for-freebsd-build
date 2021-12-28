@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+usage()
+{
+    echo "Usage: prep-for-freebsd-build [guile-2.2 | guile-3.0]"
+}
+
+guile="${1:-guile-3.0}"
+pkgs='autoconf automake libtool gettext git gmake pcre2 pkgconf'
+
+pkg update
+
+case "$guile" in
+    guile-2.2) guile_pkg=guile2 ;;
+    # This one's not actually in (at least) 12.2 yet (guessing the name)
+    guile-3.0) guile_pkg=guile3 ;;
+    *)
+        usage 1>&2
+        exit 2
+        ;;
+esac
+
+pkg install "$guile_pkg" $debs

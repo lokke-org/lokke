@@ -24,11 +24,16 @@
                           with-reader-meta))
   #:use-module ((lokke symbol)
                 #:select (parse-symbol parsed-sym-ns parsed-sym-ref))
+  #:use-module ((lokke time)
+                #:select (instant? instant->tagged-data tagged-data->instant))
   #:use-module ((lokke transmogrify)
-                #:select (clj-instances->literals
+                #:select (add-tagged-element
+                          clj-instances->literals
                           literals->clj-instances
                           preserve-meta-if-new!
                           quote-empty-lists))
+  #:use-module ((lokke uuid)
+                #:select (uuid? uuid->tagged-data tagged-data->uuid))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (concatenate iota fold))
   #:export (read-for-compiler read-string read-string-for-compiler)
@@ -45,27 +50,8 @@
 
 (load-extension "lokke-reader.so" "init_lokke_reader")
 
-(define (expand-@-refs expr)
-  (define (expand-@-sym sym)
-    (let ((str (symbol->string sym)))
-      (if (string-prefix? "@" str)
-          (list 'clojure.core/deref (string->symbol (substring/read-only str 1)))
-          sym)))
-  (define (expand expr)
-    (cond
-     ((symbol? expr) (expand-@-sym expr))
-     ((keyword? expr) expr)
-     ((null? expr) expr)
-     ((list? expr) (map expand expr))
-     ((string? expr) expr)
-     ((number? expr) expr)
-     ((boolean? expr) expr)
-     ((char? expr) expr)
-     (else
-      (error
-       (format #f "Unexpected expression while expanding @ refs ~s:"
-               (class-of expr)) expr))))
-  (expand expr))
+(add-tagged-element 'inst instant? tagged-data->instant instant->tagged-data)
+(add-tagged-element 'uuid uuid? tagged-data->uuid uuid->tagged-data)
 
 (define (expand-ref sym env aliases)
   ;; foo -> some.where/foo
@@ -125,6 +111,8 @@
          (cons 'syntax-quote (map (lambda (x) (expand x #t)) (cdr expr))))
         ((unquote)
          (cons 'unquote (map (lambda (x) (expand x #f)) (cdr expr))))
+        ((unquote-splicing)
+         (cons 'unquote-splicing (map (lambda (x) (expand x #f)) (cdr expr))))
         (else
          (map (lambda (x) (expand x syntax-quoted?)) expr))))
      ((string? expr) expr)
@@ -475,9 +463,7 @@
           (error (format #f "Unexpected metadata type ~s for:" (class-of m))
                  m)))))
      (else  ;; Not (/lokke/reader-meta ...)
-      (let* ((_ (when debug-reader?
-                  (format (current-error-port) "reader expanding @refs: ~s\n" expr)))
-             (result (expand-@-refs expr))
+      (let* ((result expr)
              (_ (when debug-reader?
                   (format (current-error-port) "reader expanding syms/keys: ~s\n" result)))
              (result (expand-sym/key-aliases result env aliases))
@@ -492,6 +478,8 @@
              (result (apply-internal-metadata result (hash-map)))
              (_ (when debug-reader?
                   (format (current-error-port) "reader finishing up: ~s\n" result)))
+             (_ (when debug-reader?
+                  (format (current-error-port) "reader pending meta: ~s\n" pending-meta)))
              (result (if (empty? pending-meta)
                          result
                          (if (supports-reader-meta? result)

@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; Commonly useful code, including most notably, destructuring let and
@@ -35,6 +35,7 @@
                 #:select ((cons . clj-cons)
                           concat
                           first
+                          get
                           lazy-seq
                           rest
                           take-while
@@ -42,12 +43,16 @@
   #:use-module ((lokke base destructure) #:select (destructure-binding-syntax))
   #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
+  #:use-module ((lokke base metadata) #:select (alter-meta!))
   #:use-module ((lokke base util)
                 #:select (global-identifier?
                           map-tag?
                           meta-tag?
                           pairify
+                          set-tag?
                           vec-tag?))
+  #:use-module ((lokke compare) #:select (clj=))
+  #:use-module ((lokke metadata) #:select (with-meta))
   #:use-module ((lokke reader literal)
                 #:select (reader-hash-map? reader-meta? reader-vector?))
   #:use-module (oop goops)
@@ -433,8 +438,8 @@
         (if (null? body)
             (make-fn args body)
             (with-syntax ((recur (datum->syntax context 'recur)))
-              #`(letrec ((#,name (lambda args (apply recur args)))
-                         (recur #,(make-fn args body)))
+              #`(letrec ((recur #,(make-fn args body))
+                         (#,name recur))
                   recur))))
       (syntax-case args (&)
         ((vec-tag meta arg ... & rst) (vec-tag? #'vec-tag)
@@ -460,8 +465,8 @@
              (method-adder #'recur #'(arg ... . rst) #'(body ...)))
             ((#(arg ...) body ...)
              (method-adder #'recur #'(arg ...) #'(body ...)))))
-        #`(letrec ((#,name (lambda args (apply recur args)))
-                   (recur (make-generic)))
+        #`(letrec ((recur (make-generic))
+                   (#,name recur))
             #,@(map add-method-for-arity arities)
             recur)))
     (define (multi-arity template arities)
@@ -670,7 +675,7 @@
   (syntax-rules ()
     ((_ x) x)
     ((_ x pred exp exp* ...)
-     (%scm-if (pred x)
+     (%scm-if pred
               (cond-> (-> x exp) exp* ...)
               (cond-> x exp* ...)))))
 
@@ -678,7 +683,7 @@
   (syntax-rules ()
     ((_ x) x)
     ((_ x pred exp exp* ...)
-     (%scm-if (pred x)
+     (%scm-if pred
               (cond->> (->> x exp) exp* ...)
               (cond->> x exp* ...)))))
 

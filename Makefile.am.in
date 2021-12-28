@@ -1,3 +1,5 @@
+### Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
+### SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 # Makefile.am is automatically generated from Makefile.am.in via ./gen-makefile
 
@@ -22,17 +24,25 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver
 
 EXTRA_DIST = $(TESTS)
 
-lokke_scripts = lok lok-@LOKKE_MAJOR_VERSION@ lokke lokke-@LOKKE_MAJOR_VERSION@
-
 # FIXME: preserve symlinks in install tree?
 man1_MANS = lok.1 lokke.1
 noinst_DATA = lokke.1.txt
 
+# Only opportunistically render the plain text manpage via "-l" for
+# now because on at least on FreeBSD rendering via "man -M . lokke >
+# lokke.1" or even "groff -mtty-char -Tascii -mandoc -P -ubo ..."
+# (see grotty(1) for -ubo) doesn't actually omit formatting escape
+# characters.
+
 lokke.1.txt: lokke.1
-	COLUMNS=80 man -l $^ > $@
+	if COLUMNS=80 man -l $^ > $@.tmp; then \
+	    mv $@.tmp $@; \
+	fi
+CLEANFILES += lokke.1.txt.tmp
 
 AM_CFLAGS = \
-  -g -Wall -Werror -std=gnu11 -fdiagnostics-color=always \
+  -g -Wall -Werror -Wno-error=deprecated-declarations \
+  -std=gnu11 -fdiagnostics-color=always \
   -fno-strict-aliasing
 
 vpkglibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)
@@ -53,10 +63,55 @@ lib_lokke_pcre2_la_SOURCES = lib/lokke-pcre2.c
 lib_lokke_pcre2_la_CFLAGS = @GUILE_CFLAGS@ $(AM_CFLAGS) @PCRE2_CFLAGS@
 lib_lokke_pcre2_la_LDFLAGS = -module $(lokke_lib_ldflags) @PCRE2_LIBS@
 
+bin_PROGRAMS = bin/lok-@LOKKE_MAJOR_VERSION@ bin/lokke-@LOKKE_MAJOR_VERSION@
+EXTRA_PROGRAMS = guile lok lokke
+
+lokke_cflags = $(AM_CFLAGS) $(GUILE_CFLAGS)
+lokke_cflags += -DLOKKE_LIBDIR='"$(modlibdir)"'
+lokke_cflags += -DLOKKE_MODULE_ROOT='"$(moddatadir)"'
+lokke_cflags += -DLOKKE_COMPILED_ROOT='"$(vpkglibdir)"'
+
+# Note: at the moment lokke_dev_cflags are shared with ./guile
+lokke_dev_cflags = $(AM_CFLAGS) $(GUILE_CFLAGS)
+lokke_dev_cflags += -DLOKKE_LIBDIR='"$(abs_top_srcdir)/lib/.libs"'
+lokke_dev_cflags += -DLOKKE_MODULE_ROOT='"$(abs_top_srcdir)/mod"'
+lokke_dev_cflags += -DLOKKE_COMPILED_ROOT='"$(abs_top_srcdir)/mod"'
+
+lok_flavor_cflags = -DLOKKE_PROGRAM_NAME='"lok"' -DLOKKE_MAIN_FN='"lok-main"'
+lokke_flavor_cflags = -DLOKKE_PROGRAM_NAME='"lokke"' -DLOKKE_MAIN_FN='"lokke-main"'
+
+lokke_SOURCES = lokke.c
+lokke_CFLAGS = $(lokke_dev_cflags) $(lokke_flavor_cflags)
+lokke_LDADD = $(GUILE_LIBS)
+lokke_DEPENDENCIES = Makefile
+
+lok_SOURCES = lokke.c
+lok_CFLAGS = $(lokke_dev_cflags) $(lok_flavor_cflags)
+lok_LDADD = $(lokke_LDADD)
+lok_DEPENDENCIES = $(lokke_DEPENDENCIES)
+
+bin_lokke_@LOKKE_MAJOR_VERSION@_SOURCES = lokke.c
+bin_lokke_@LOKKE_MAJOR_VERSION@_CFLAGS = $(lokke_cflags) $(lokke_flavor_cflags)
+bin_lokke_@LOKKE_MAJOR_VERSION@_LDADD = $(lokke_LDADD)
+bin_lokke_@LOKKE_MAJOR_VERSION@_DEPENDENCIES = $(lokke_DEPENDENCIES)
+
+bin_lok_@LOKKE_MAJOR_VERSION@_SOURCES = lokke.c
+bin_lok_@LOKKE_MAJOR_VERSION@_CFLAGS = $(lokke_cflags) $(lok_flavor_cflags)
+bin_lok_@LOKKE_MAJOR_VERSION@_LDADD = $(lokke_LDADD)
+bin_lok_@LOKKE_MAJOR_VERSION@_DEPENDENCIES = $(lokke_DEPENDENCIES)
+
+# Potentially confusing to have guile_CFLAGS and GUILE_CFLAGS...
+guile_SOURCES = lokke.c
+guile_CFLAGS = $(lokke_dev_cflags)
+guile_CFLAGS += -DLOKKE_PROGRAM_NAME='"lokke-guile"' -DLOKKE_JUST_RUN_GUILE=1
+guile_LDADD = $(GUILE_LIBS)
+guile_DEPENDENCIES = Makefile
+
 # Avoids the otherwise circular dependency
-BUILT_SOURCES = $(lokke_scripts) \
+BUILT_SOURCES = guile lok lokke \
   lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x lokke.1 \
   mod/lokke/base/version.scm
+CLEANFILES += $(BUILT_SOURCES)
 
 # FIXME: see guile's am/guilec for a way to order the install wrt timestamps
 
@@ -79,14 +134,20 @@ export LOKKE_TEST_PROTOCOL = tap
 
 TESTS = \
   test/equality \
+  test/clojure-array \
+  test/clojure-basics \
   test/clojure-comparison \
+  test/clojure-concurrency \
   test/clojure-defmacro \
   test/clojure-dynamic \
+  test/clojure-edn \
   test/clojure-evaluation \
   test/clojure-exceptions \
   test/clojure-metadata \
   test/clojure-ns \
+  test/clojure-set \
   test/clojure-string \
+  test/clojure-test \
   test/clojure-vector \
   test/clojure-pr \
   test/lokke-comparison \
@@ -99,6 +160,7 @@ TESTS = \
   test/lokke-ns \
   test/lokke-pr \
   test/lokke-scm-atom \
+  test/lokke-scm-edn \
   test/lokke-scm-promise \
   test/lokke-scm-vector \
   test/lokke-symbol \
@@ -145,33 +207,13 @@ SUFFIXES = .x .clj.go .scm.go
 	  -Warity-mismatch -Wformat \
 	-o $@ $<
 
-
-$(lokke_scripts): gen-lokke config.status Makefile
-	./gen-lokke $@ '$(GUILE)' '' '' '' > $@.tmp.$$PID
-	chmod 0755 $@.tmp.$$PID
-	mv $@.tmp.$$PID $@
-
-CLEANFILES += lok lok.tmp.* lok-*.tmp.*
-CLEANFILES += lokke lokke.tmp.* lokke-*.tmp.*
-
-lokke_dest_scripts = \
-  "$(DESTDIR)$(bindir)"/lok \
-  "$(DESTDIR)$(bindir)"/lok-@LOKKE_MAJOR_VERSION@ \
-  "$(DESTDIR)$(bindir)"/lokke \
-  "$(DESTDIR)$(bindir)"/lokke-@LOKKE_MAJOR_VERSION@
-
+lokke_dest_scripts = "$(DESTDIR)$(bindir)"/lok "$(DESTDIR)$(bindir)"/lokke
 lokke_uninstall += $(lokke_dest_scripts)
 
-$(lokke_dest_scripts): gen-lokke config.status Makefile
+$(lokke_dest_scripts):
 	$(install_sh) -d "$(DESTDIR)$(bindir)"
-	./gen-lokke $$(basename "$@") '$(GUILE)' \
-	  '$(vpkglibdir)' '$(moddatadir)' '$(modlibdir)' \
-	  > $$(basename "$@")-install.tmp
-	chmod 0755 $$(basename "$@")-install.tmp
-	mv $$(basename "$@")-install.tmp $@
-
-CLEANFILES += lok-install.tmp.* lokke-install.tmp.*
-CLEANFILES += lok-*-install.tmp.* lokke-*-install.tmp.*
+	cd "$(DESTDIR)$(bindir)" && $(LN_S) -f lok-@LOKKE_MAJOR_VERSION@ lok
+	cd "$(DESTDIR)$(bindir)" && $(LN_S) -f lokke-@LOKKE_MAJOR_VERSION@ lokke
 
 # Install a slightly different version of the tools
 # moduledir is defined by gen-makefile

@@ -1,8 +1,9 @@
-#!./lokke -0  ;; -*-clojure-*-
+#!./lokke -0
+;; -*-clojure-*-
 !#
 
 ;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-collection
@@ -10,6 +11,15 @@
    [clojure.test :refer [begin-tests end-tests is testing]]))
 
 (begin-tests (ns-name *ns*))
+
+(testing "type predicates"
+  ;; vector? is already testsed in test/clojure-vector
+  (is (list? ()))
+  (is (map? {}))
+  (is (set? #{}))
+  (is (not (list? :nope)))
+  (is (not (map? :nope)))
+  (is (not (set? :nope))))
 
 (testing "rest behavior"
   (is (= '(2) (rest (list 1 2))))
@@ -280,6 +290,9 @@
 (testing "assoc"
   (is (= {:x 1} (assoc nil :x 1))))
 
+(testing "dissoc"
+  (is (= nil (dissoc nil :x 1))))
+
 (testing "assoc-in"
   (is (= {:x 1} (assoc-in {} [:x] 1)))
   (is (= {:x {:y 1}} (assoc-in {} [:x :y] 1)))
@@ -425,5 +438,23 @@
   (is (= {:x 1} (zipmap [:x] [1])))
   (is (= {:x 1} (zipmap [:x :y] [1])))
   (is (= {:x 1 :y 2} (zipmap [:x :y] [1 2]))))
+
+(testing "some"
+  (is (= 3 (some identity [nil nil false 3 4 5])))
+  (is (= 1 (some identity [1 2 3 4 5])))
+  (is (= nil (some identity [nil false nil])))
+  (is (= nil (some identity []))))
+
+(testing "repeat"
+  (is (= [1 1 1] (take 3 (repeat 1))))
+  (is (= [1 1 1] (repeat 3 1)))
+  (is (= [] (repeat 0 1)))
+  (is (= [nil nil nil] (repeat 3 nil))))
+
+(testing "repeatedly"
+  (is (= [1 1 1] (take 3 (repeatedly (fn [] 1)))))
+  (is (= [1 1 1] (take 3 (drop 100 (repeatedly (fn [] 1))))))
+  (is (= [1 1 1] (repeatedly 3 (fn [] 1))))
+  (is (= [] (repeatedly 0 (fn [] 1)))))
 
 (end-tests (ns-name *ns*) :exit? true)

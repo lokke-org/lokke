@@ -5,6 +5,7 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke collection) #:select (merge))
  ((lokke hash-map) #:select (conj hash-map))
  ((lokke hash-set) #:select (hash-set))
@@ -13,13 +14,7 @@
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke scm vector) #:select (lokke-vector))
  ((srfi srfi-64)
-  #:select (test-assert
-            test-begin
-            test-end
-            test-equal
-            test-group
-            test-runner-current
-            test-runner-fail-count)))
+  #:select (test-assert test-begin test-equal test-group test-runner-current)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -52,7 +47,4 @@
 ;; FIXME: crashes
 ;; (test-equal '() (t/meta (lokke/read-string "^{:tag foo :doc bar} [1]")))
 
-(test-end)
-
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

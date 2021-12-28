@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; This module must not depend on (lokke collection) because because
@@ -6,8 +6,10 @@
 ;; destructure) which depends on hash-map which depends on this.
 
 (define-module (lokke concurrent)
-  #:use-module ((ice-9 atomic) #:select (make-atomic-box))
-  #:use-module ((ice-9 futures) #:select (make-future touch))
+  #:use-module ((ice-9 atomic)
+                #:select (atomic-box-ref atomic-box-set! make-atomic-box))
+  #:use-module ((ice-9 match) #:select (match-let*))
+  #:use-module ((ice-9 threads) #:select (begin-thread join-thread))
   #:use-module ((oop goops) #:hide (<promise>))
   #:use-module ((lokke metadata) #:select (alter-meta! meta))
   #:use-module ((lokke scm atom)
@@ -29,12 +31,13 @@
                           promise-deliver
                           promise-deref))
   #:use-module ((lokke scm vector) #:select (lokke-vector))
+  #:use-module ((lokke time) #:select (normalize-ts))
   #:use-module ((srfi srfi-11) #:select (let-values))
   #:export (<atom>
             <promise>
             alter-meta!
-            atom?
             add-watch
+            compare-and-set!
             remove-watch
             deref
             future
@@ -44,8 +47,15 @@
             set-validator!
             swap!
             swap-vals!)
-  #:re-export (atom promise (promise-deliver . deliver))
+  #:re-export (atom atom? promise (promise-deliver . deliver))
   #:duplicates (merge-generics replace warn-override-core warn last))
+
+(define-generic deref)
+
+;; GOOPS doesn't define <variable>
+(define var-class (class-of (module-variable (current-module) 'define)))
+
+(define-method (deref (x var-class)) (variable-ref x))
 
 ;; For now, this <atom> is a class, while (lokke scm atom) <atom> is a record.
 (define <atom> (class-of (atom #t)))
@@ -63,7 +73,7 @@
     (lokke-vector prev new)))
 
 (define-method (compare-and-set! (a <atom>) oldval newval)
-  (apply atom-compare-and-set! a oldval newval))
+  (atom-compare-and-set! a oldval newval))
 
 (define-method (add-watch (a <atom>) key fn) (atom-add-watch a key fn))
 (define-method (remove-watch (a <atom>) key) (atom-remove-watch a key))
@@ -75,26 +85,37 @@
   (apply atom-alter-meta! a f args))
 
 
-;; Can't just alias guile futures because this doesn't work w/goops:
-;;   (define <future> (@@ (ice-9 futures) <future>))
-;; think maybe because it's a record, and even if (class-of
-;; (%scm-future #f)) would work, we can't use it because it deadlocks
-;; compilation somehow right now (guile 2.2.6).
+(define-class <lokke-future> ()
+  ;; An atomic-box containing either the thread, or (list result).
+  (state #:init-keyword #:state))
 
-(define-class <future> ()
-  (scm-future #:init-keyword #:scm-future))
+(define* (deref-future f #:optional timeout-ms timeout-val)
+  (let* ((box (slot-ref f 'state))
+         (s (atomic-box-ref box)))
+    (if (pair? s)
+        (car s)
+        (let ((r (if (not timeout-ms)
+                     (join-thread s)
+                     (join-thread s (match-let* (((sec . usec) (gettimeofday)))
+                                      (normalize-ts sec (+ usec (* timeout-ms 1000))))
+                                  timeout-val))))
+          (begin
+            (atomic-box-set! box (list r))
+            r)))))
 
-(define-method (deref (x <future>))
-  (touch (slot-ref x 'scm-future)))
+(define-method (deref (f <lokke-future>)) (deref-future f))
+(define-method (deref (f <lokke-future>) timeout-ms timeout-val)
+  (deref-future f timeout-ms timeout-val))
 
 (define (future-call f)
-  (make <future>
+  (make <lokke-future>
     ;; Provide our version of binding conveyance by transferring the state
-    #:scm-future (let ((bindings (current-dynamic-state)))
-                   (make-future (lambda () (with-dynamic-state bindings f))))))
+    #:state (let ((bindings (current-dynamic-state)))
+              (make-atomic-box (begin-thread (with-dynamic-state bindings f))))))
 
 (define-syntax-rule (future exp ...)
   (future-call (lambda () exp ...)))
+
 
 (define <promise> (class-of (promise)))
 

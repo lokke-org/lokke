@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+usage()
+{
+    echo "Usage: prep-for-macos-build [guile-2.2 | guile-3.0]"
+}
+
+guile="${1:-guile}"
+formulae='autoconf automake pcre2 gettext git'
+
+case "$guile" in
+    guile-3.0) brew install $formulae guile ;;
+    guile-2.2) brew install $formulae guile@2 ;;
+    *)
+        usage 1>&2
+        exit 2
+        ;;
+esac

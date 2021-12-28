@@ -13,6 +13,7 @@
             module-name->ns-sym
             pairify
             require-nil
+            set-tag?
             string->keyword
             synquote-resolve-symbol-str
             vec-tag?))
@@ -45,6 +46,7 @@
 ;; We use these as a syntax-pattern fender to detect reader-types.
 (define (map-tag? x) (eq? '/lokke/reader-hash-map (syntax->datum x)))
 (define (meta-tag? x) (eq? '/lokke/reader-meta (syntax->datum x)))
+(define (set-tag? x) (eq? '/lokke/reader-hash-set (syntax->datum x)))
 (define (vec-tag? x) (eq? '/lokke/reader-vector (syntax->datum x)))
 
 (define (pairify lst)

@@ -53,8 +53,9 @@ Currently Lokke can be found at
 
 To build Lokke, you'll need
 
-  * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0 (preferring 3.0
-    recommended which should perform notably better)
+  * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0
+    (preferring 3.0 which should perform notably better and allows
+    interleaving expressions with `def` and `defn`).
   * [PCRE2](https://www.pcre.org/)
   * [libunistring](https://www.gnu.org/software/libunistring/)
   * [GCC](https://www.gnu.org/software/gcc/)
@@ -67,7 +68,7 @@ To build Lokke, you'll need
 Your system may already provide these.  For Debian, for example:
 
     # apt-get install autoconf automake libpcre2-dev libunistring-dev
-    # apt-get install  make gettext gcc git
+    # apt-get install make gettext gcc git
 
 and then for Guile 3.0:
 
@@ -77,9 +78,12 @@ or for Guile 2.2:
 
     # apt-get install guile-2.2 guile-2.2-dev
 
-and then:
+See [INSTALL](INSTALL) for additional platform-specific information.
 
-    $ git clone ... lokke
+Once you have the dependencies installed, you should be able to build
+lokke like this:
+
+    $ git clone https://github.com/lokke-org/lokke
     $ cd lokke
     $ ./setup
     $ autoreconf -fi
@@ -96,6 +100,9 @@ to select a particular version at configuration time like this:
 
     $ ./configure GUILE_EFFECTIVE_VERSION=3.0
 
+unless your platform requires other arrangements, which should be
+mentioned in the relevant section in [INSTALL](INSTALL).
+
 At this point you should be able to run a Clojure program like this:
 
     $ ./lok -l hello.clj
@@ -106,7 +113,7 @@ or run the REPL:
 
     $ ./lok
     ...
-    lokke@(lokke user)>
+    lokke@lokke.user>
 
 `./lok ...` is equivalent to `./lokke run ...`.
 
@@ -116,10 +123,9 @@ features should be available.  Though for now, `lokke` loads
 `$XDG_CONFIG_HOME/lokke/interactive.scm` if `$XDG_CACHE_HOME` is set,
 otherwise `~/.config/lokke/interactive.scm` rather than `~/.guile`.
 
-See `./lokke --help` or `man -l lokke.1` for additional information,
-or if `man -l` isn't available, perhaps something like `nroff -man
-lokke.1 | less`.  A [plain text version of the manual page](lokke.1.txt)
-is also available.
+See `./lokke --help` or `man -M . lokke.1` for additional information.
+A [plain text version of the manual page](lokke.1.txt) is also
+available.
 
 Assuming your guile was compiled with readline support, it's likely
 you'll want to add something like this to
@@ -142,7 +148,7 @@ Scheme specific facilities:
     $ ./guile
     ...
     scheme@(guile-user)> (use-modules (lokke core))
-    scheme@(guile-user) [1]> (take 3 (repeat "?"))
+    scheme@(guile-user)> (take 3 (repeat "?"))
     $1 = #<<class> <lazy-seq> 55bdaff362c0 ("?" "?" "?")>
 
 As you can see, seqs are not written like lists.  Currently the Scheme
@@ -152,10 +158,10 @@ representation.
 
 From `./guile`, you can switch to a Lokke REPL manually like this:
 
-    scheme@(guile-user)> ,module (lokke user)
-    scheme@(lokke user)> ,language lokke
+    scheme@(guile-user)> ,module (lokke ns lokke user)
+    scheme@(lokke ns lokke user)> ,language lokke
     Happy hacking with Lokke, a Clojure dialect!  To switch back, type `,L scheme'.
-    lokke@(lokke user)> (inc 1)
+    lokke@(lokke ns lokke user)> (inc 1)
     $1 = 2
 
 Lokke expects all Clojure namespaces to be located in a lokke/ns/
@@ -208,7 +214,7 @@ General comparison with Clojure/JVM
   time.  That is, they are not compiled at read time, and so are
   re-evaluated.
 
-* `lokke.io` is analogous `clojure.java.io`, and `lokke.shell` is
+* `lokke.io` is analogous to `clojure.java.io`, and `lokke.shell` is
   analogous to `clojure.java.shell`.  At the moment, paths are
   generally only handled as (Unicode) strings.  We'll fix that once
   Guile does.  As a workaround, you may be able to set the `LC_CTYPE`
@@ -217,13 +223,23 @@ General comparison with Clojure/JVM
   `setlocale` acts globally, not just with respect to the current
   thread.
 
+* Arrays (`byte-array`, `aref`, `aset`, etc.) are implemented using
+  Guile's [SRFI-4 homogeneous vectors](https://www.gnu.org/software/guile/manual/guile.html#SRFI_002d4),
+  and so should behave fairly similarly to JVM arrays (constant time
+  access, compact storage, etc.).  The support is imcomplete,
+  currently omitting `object` arrays, support for multidimensional
+  arrays (including `make-array`), and casts like `bytes`, for
+  example.
+
+  Boolean arrays are implemented as
+  [Guile bit vectors](https://www.gnu.org/software/guile/manual/html_node/Bit-Vectors.html),
+  and so are "packed", but consider the type subject to change.
+
 * There is some experimental, rudimentary
   [compatibility with Clojure/JVM exception handling](#exception-handling).
 
-* Currently, a Lokke `future` is a Guile `<future>`, which means that
-  it draws from a fixed-size thread pool of size `(dec
-  (current-processor-count))` while recent versions of Clojure/JVM
-  have an unbounded pool.
+* Currently, `future` and `future-call` always create a new thread,
+  i.e. they do not cache/pool threads.
 
 * Metadata support is limited: vectors, hash-sets, and hash-maps,
   vars, namespaces, and atoms are supported, lists and symbols are
@@ -247,9 +263,9 @@ General comparison with Clojure/JVM
 
 * The integer syntax does not yet support BASErNUM bases over 16.
 
-* Rather than throwing an exception, the reader functions, `read`,
-  `read-string`, etc. return the
-  [rnrs end-of-file object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
+* Rather than throwing an exception, the Clojure and edn reader
+  functions, `read`, `read-string`, etc. return the [rnrs end-of-file
+  object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
   which can be identified with `guile.guile/eof-object?`.
 
 * There are some differences and limitations with respect to the
@@ -297,9 +313,8 @@ On the Scheme side
 * In the `(lokke scm)` apis, Scheme vectors are referred to as vector,
   Clojure's as lokke-vector.
 
-* The `num` method can be used to convert characters or any
-    <number> to a number.  Characters are converted via Guile's
-    `char->integer`.
+* The `num` method can be used to convert characters or any <number>
+  to a number.  Characters are converted via Guile's `char->integer`.
 
 * The `integer` method is effectively `(truncate (num x))`, using
   Guile's `truncate`.
@@ -492,7 +507,8 @@ Additional differences from Clojure/JVM
 
 * Many of the coercions haven't been included: `float` `double` ...
 
-* Number is taken to mean <number> (i.e. objects satisfying `number?`).
+* Number is taken to mean the GOOPS `<number>` class (i.e. objects
+  satisfying `number?`).
 
 * Duplicate keys in map and set literals, e.g. `{:x 1 :x 2}` do not
   provoke an error.  They just behave as if `(hash-map :x 1 :x 2)` had
@@ -507,24 +523,26 @@ Known issues
 
 - *Many* things are still broken or incomplete.
 
+- When built against Guile 2.2, `def` and `defn` statements cannot
+  currently be interleaved with other expressions.
+
 - When an error occurs in the REPL, a
   [new (recursive) prompt is created](https://www.gnu.org/software/guile/manual/html_node/Error-Handling.html).
   At the moment, the new prompt will use the Guile printer instead of
   Lokke's.  For example:
 
-        lokke@(lokke user)> true
+        lokke@lokke.user> true
         $1 = true
-        lokke@(lokke user)> (/ :x)
+        lokke@lokke.user> (/ :x)
         ice-9/boot-9.scm:1669:16: In procedure raise-exception:
         In procedure /: Wrong type argument in position 1: #:x
 
         Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
-        lokke@(lokke user) [1]> true
+        lokke@(lokke ns lokke user) [1]> true
         $2 = #t
 
-  An exit back to the top-level prompt will restore the Lokke writer.
-
-- `deref` does not support a timeout for futures yet.
+  An exit back to the top-level prompt via `,q` will restore the Lokke
+  writer.
 
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
@@ -620,8 +638,9 @@ Additional contacts
   <a href="mailto:~rlb/lokke+unsubscribe@lists.sr.ht">~rlb/lokke+unsubscribe@lists.sr.ht</a>.
   Additional information can be found [here](https://man.sr.ht/lists.sr.ht/).
 
-* [#lokke](https://webchat.freenode.net/?channels=lokke) on
-  [freenode](https://freenode.net/)
+* The \#lokke IRC channel at ircs://irc.libera.chat:6697/lokke on the
+  [libera.chat](https://libera.chat/) network, which is also available
+  [on the web](https://web.libera.chat/?channels=lokke).
 
 Thanks
 ------

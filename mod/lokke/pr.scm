@@ -28,6 +28,7 @@
             prn
             str
             to-string
+            with-in-str
             with-out-str)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -57,6 +58,11 @@
    (tree-il/lambda-case? x)
    (tree-il/let? x)
    (tree-il/letrec? x)))
+
+(define-syntax-rule (with-in-str s e ...)
+  (call-with-input-string s
+    (lambda (port)
+      (binding (*in* port) e ...))))
 
 (define-syntax-rule (with-out-str e ...)
   (call-with-output-string

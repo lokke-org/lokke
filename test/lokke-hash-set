@@ -5,22 +5,20 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything)
   #:select (tap-test-runner))
  ((lokke collection) #:select (clj= counted? reduce seq))
  ((lokke hash-set) #:prefix t/)
- ((srfi srfi-1)
-  #:select (iota))
+ ((srfi srfi-1) #:select (iota))
  ((srfi srfi-64)
   #:select (test-assert
             test-begin
-            test-end
             test-eq
             test-equal
             test-eqv
             test-group
-            test-runner-current
-            test-runner-fail-count)))
+            test-runner-current)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -67,7 +65,4 @@
 (test-eqv 16 (reduce + 1 (t/hash-set 1 2 3 4 5)))
 (test-eqv "x" (reduce / (t/hash-set "x")))
 
-(test-end)
-
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

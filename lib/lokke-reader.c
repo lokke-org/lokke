@@ -1,6 +1,6 @@
 /* Copyright (C) 1995-1997, 1999-2001, 2003, 2004, 2006-2012, 2014, 2015
  *   Free Software Foundation, Inc.
- * Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+ * Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3 of
@@ -26,7 +26,6 @@
 #include <unistd.h>
 #include <unicase.h>
 #include <unictype.h>
-#include <alloca.h>
 
 #include <libguile.h>
 
@@ -37,6 +36,8 @@ SCM_SYMBOL (lokke_sym_reader_meta, "/lokke/reader-meta");
 SCM_SYMBOL (lokke_sym_reader_hash_map, "/lokke/reader-hash-map");
 SCM_SYMBOL (lokke_sym_reader_hash_set, "/lokke/reader-hash-set");
 SCM_SYMBOL (lokke_sym_reader_vector, "/lokke/reader-vector");
+SCM_SYMBOL (lokke_sym_reader_tagged, "/lokke/reader-tagged");
+SCM_SYMBOL (sym_core_deref, "clojure.core/deref");
 SCM_SYMBOL (sym_re_pattern, "re-pattern");
 SCM_SYMBOL (sym_syntax_quote, "syntax-quote");
 SCM_SYMBOL (sym_var, "var");
@@ -145,22 +146,6 @@ scm_i_input_error (char const *function,
 /* } */
 /* #undef FUNC_NAME */
 
-/* A fluid referring to an association list mapping extra hash
-   characters to procedures.  */
-static SCM *scm_i_read_hash_procedures;
-
-static SCM
-scm_i_read_hash_procedures_ref (void)
-{
-  return scm_fluid_ref (*scm_i_read_hash_procedures);
-}
-
-static void
-scm_i_read_hash_procedures_set_x (SCM value)
-{
-  scm_fluid_set_x (*scm_i_read_hash_procedures, value);
-}
-
 
 /* Token readers.  */
 
@@ -205,7 +190,6 @@ scm_i_read_hash_procedures_set_x (SCM value)
 static SCM scm_read_scsh_block_comment (scm_t_wchar, SCM);
 static SCM scm_read_commented_expression (scm_t_wchar, SCM, scm_t_read_opts *);
 static SCM scm_read_shebang (scm_t_wchar, SCM, scm_t_read_opts *);
-static SCM scm_get_hash_procedure (int);
 
 /* Read from PORT until a delimiter (e.g., a whitespace) is read.  Put the
    result in the pre-allocated buffer BUF.  Return zero if the whole token has
@@ -511,9 +495,6 @@ skip_intraline_whitespace (SCM port)
   scm_ungetc (c, port);
 }
 
-/* Read either a double-quoted string or an R7RS-style symbol delimited
-   by vertical lines, depending on the value of 'chr' ('"' or '|').
-   Regardless, the result is always returned as a string.  */
 static SCM
 scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
 #define FUNC_NAME "scm_lreadr"
@@ -534,10 +515,7 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
       if (c == EOF)
         {
         str_eof:
-          scm_i_input_error (FUNC_NAME, port,
-                             (chr == '|'
-                              ? "end of file in symbol"
-                              : "end of file in string constant"),
+          scm_i_input_error (FUNC_NAME, port, "end of file in string constant",
                              SCM_EOL);
         }
 
@@ -553,7 +531,6 @@ scm_read_string_like_syntax (int chr, SCM port, scm_t_read_opts *opts)
             {
             case EOF:
               goto str_eof;
-            case '|':
             case '\\':
             case '(':  /* Accept "\(" for use at the beginning of lines
 			  in multiline strings to avoid confusing emacs
@@ -702,18 +679,6 @@ is_latin1_hex_digit(SCM c) {
     }
   return 0;
 }
-
-static inline int
-is_latin1_plusminus(SCM c) {
-  switch (SCM_UNPACK(c))
-    {
-    case SCM_UNPACK(SCM_MAKE_CHAR ('+')):
-    case SCM_UNPACK(SCM_MAKE_CHAR ('-')):
-      return 1;
-    }
-  return 0;
-}
-
 
 static SCM
 radix_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
@@ -1077,43 +1042,6 @@ scm_read_semicolon_comment (int chr, SCM port)
   return SCM_UNSPECIFIED;
 }
 
-/* If the EXPECTED_CHARS are the next ones available from PORT, then
-   consume them and return 1.  Otherwise leave the port position where
-   it was and return 0.  EXPECTED_CHARS should be all lowercase, and
-   will be matched case-insensitively against the characters read from
-   PORT. */
-/* static int */
-/* try_read_ci_chars (SCM port, const char *expected_chars) */
-/* { */
-/*   int num_chars_wanted = strlen (expected_chars); */
-/*   int num_chars_read = 0; */
-/*   char *chars_read = alloca (num_chars_wanted); */
-/*   int c; */
-
-/*   while (num_chars_read < num_chars_wanted) */
-/*     { */
-/*       c = scm_getc (port); */
-/*       if (c == EOF) */
-/*         break; */
-/*       else if (c_tolower (c) != expected_chars[num_chars_read]) */
-/*         { */
-/*           scm_ungetc (c, port); */
-/*           break; */
-/*         } */
-/*       else */
-/*         chars_read[num_chars_read++] = c; */
-/*     } */
-
-/*   if (num_chars_read == num_chars_wanted) */
-/*     return 1; */
-/*   else */
-/*     { */
-/*       while (num_chars_read > 0) */
-/*         scm_ungetc (chars_read[--num_chars_read], port); */
-/*       return 0; */
-/*     } */
-/* } */
-
 
 /* Sharp readers, i.e. readers called after a `#' sign has been read.  */
 
@@ -1323,30 +1251,6 @@ scm_read_commented_expression (scm_t_wchar chr, SCM port,
 /* Top-level token readers, i.e., dispatchers.  */
 
 static SCM
-scm_read_sharp_extension (int chr, SCM port, scm_t_read_opts *opts)
-{
-  SCM proc;
-
-  proc = scm_get_hash_procedure (chr);
-  if (scm_is_true (scm_procedure_p (proc)))
-    {
-      long line = scm_to_long (scm_port_line (port));
-      int column = scm_to_int (scm_port_column (port)) - 2;
-      SCM got;
-
-      got = scm_call_2 (proc, SCM_MAKE_CHAR (chr), port);
-
-      if (opts->record_positions_p && SCM_NIMP (got)
-          && !scm_i_has_source_properties (got))
-        scm_i_set_source_properties_x (got, line, column, scm_port_filename (port));
-
-      return got;
-    }
-
-  return SCM_UNSPECIFIED;
-}
-
-static SCM
 scm_read_sharp_sharp(SCM port, scm_t_read_opts *opts)
 #define FUNC_NAME "read"
 {
@@ -1406,15 +1310,7 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
                 long line, int column)
 #define FUNC_NAME "scm_lreadr"
 {
-  SCM result;
-
   chr = scm_getc (port);
-
-  // FIXME: keep extensions?
-  result = scm_read_sharp_extension (chr, port, opts);
-  if (!scm_is_eq (result, SCM_UNSPECIFIED))
-    return result;
-
   switch (chr)
     {
     case '(':
@@ -1448,10 +1344,28 @@ scm_read_sharp (scm_t_wchar chr, SCM port, scm_t_read_opts *opts,
         return scm_list_2(sym_var, exp);
       }
     default:
-      scm_i_input_error (FUNC_NAME, port, "Unknown # object: ~S",
-                         scm_list_1 (SCM_MAKE_CHAR (chr)));
+      {
+        scm_unget_byte (chr, port);
+        SCM tag = scm_read_expression (port, opts);
+        if (!scm_is_symbol (tag))
+          scm_i_input_error ("scm_read_sharp", port,
+                             "reader tag is not a symbol in #~s",
+                             scm_list_1 (tag));
+        SCM exp = scm_read_expression (port, opts);
+        // Use the available public functions to approximate what the
+        // guile reader does.
+        if (opts->record_positions_p && SCM_NIMP (exp)
+            && scm_source_properties (exp) == SCM_EOL)
+          {
+            // Since scm_i_set_source_properties_x is private...
+            scm_set_source_property_x(exp, scm_sym_line, scm_from_long(line));
+            scm_set_source_property_x(exp, scm_sym_column, scm_from_int(column - 1));
+            scm_set_source_property_x(exp, scm_sym_filename,
+                                      scm_port_filename (port));
+          }
+        return scm_list_3 (lokke_sym_reader_tagged, tag, exp);
+      }
     }
-
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
@@ -1482,8 +1396,6 @@ read_inner_expression (SCM port, scm_t_read_opts *opts)
           return scm_read_sexp (chr, 0, port, opts);
 	case '"':
 	  return scm_read_string (chr, port, opts);
-        case '|':
-          return scm_read_mixed_case_symbol (chr, port, opts);
 	case '\\':
           return scm_read_character (chr, port, opts);
 	case '\'':
@@ -1501,6 +1413,8 @@ read_inner_expression (SCM port, scm_t_read_opts *opts)
 	    else
 	      return result;
 	  }
+        case '@':
+          return scm_list_2 (sym_core_deref, scm_read_expression (port, opts));
         case '^':
           return scm_read_metadata (port, opts);
 	case ')':
@@ -1561,93 +1475,6 @@ SCM_DEFINE (cljg_read, "read-primitively", 0, 1, 0,
   return (scm_read_expression (port, &opts));
 }
 #undef FUNC_NAME
-
-
-
-
-/* Manipulate the read-hash-procedures alist.  This could be written in
-   Scheme, but maybe it will also be used by C code during initialisation.  */
-SCM_DEFINE (scm_read_hash_extend, "read-hash-extend", 2, 0, 0,
-            (SCM chr, SCM proc),
-	    "Install the procedure @var{proc} for reading expressions\n"
-	    "starting with the character sequence @code{#} and @var{chr}.\n"
-	    "@var{proc} will be called with two arguments:  the character\n"
-	    "@var{chr} and the port to read further data from. The object\n"
-	    "returned will be the return value of @code{read}. \n"
-	    "Passing @code{#f} for @var{proc} will remove a previous setting. \n"
-	    )
-#define FUNC_NAME s_scm_read_hash_extend
-{
-  SCM this;
-  SCM prev;
-
-  SCM_VALIDATE_CHAR (1, chr);
-  SCM_ASSERT (scm_is_false (proc)
-	      || scm_is_eq (scm_procedure_p (proc), SCM_BOOL_T),
-	      proc, SCM_ARG2, FUNC_NAME);
-
-  /* Check if chr is already in the alist.  */
-  this = scm_i_read_hash_procedures_ref ();
-  prev = SCM_BOOL_F;
-  while (1)
-    {
-      if (scm_is_null (this))
-	{
-	  /* not found, so add it to the beginning.  */
-	  if (scm_is_true (proc))
-	    {
-              SCM new = scm_cons (scm_cons (chr, proc),
-                                  scm_i_read_hash_procedures_ref ());
-	      scm_i_read_hash_procedures_set_x (new);
-	    }
-	  break;
-	}
-      if (scm_is_eq (chr, SCM_CAAR (this)))
-	{
-	  /* already in the alist.  */
-	  if (scm_is_false (proc))
-	    {
-	      /* remove it.  */
-	      if (scm_is_false (prev))
-		{
-                  SCM rest = SCM_CDR (scm_i_read_hash_procedures_ref ());
-		  scm_i_read_hash_procedures_set_x (rest);
-		}
-	      else
-		scm_set_cdr_x (prev, SCM_CDR (this));
-	    }
-	  else
-	    {
-	      /* replace it.  */
-	      scm_set_cdr_x (SCM_CAR (this), proc);
-	    }
-	  break;
-	}
-      prev = this;
-      this = SCM_CDR (this);
-    }
-
-  return SCM_UNSPECIFIED;
-}
-#undef FUNC_NAME
-
-/* Recover the read-hash procedure corresponding to char c.  */
-static SCM
-scm_get_hash_procedure (int c)
-{
-  SCM rest = scm_i_read_hash_procedures_ref ();
-
-  while (1)
-    {
-      if (scm_is_null (rest))
-	return SCM_BOOL_F;
-
-      if (SCM_CHAR (SCM_CAAR (rest)) == c)
-	return SCM_CDAR (rest);
-
-      rest = SCM_CDR (rest);
-    }
-}
 
 
 
@@ -1724,10 +1551,6 @@ init_lokke_reader ()
   sym_quote = scm_from_utf8_symbol("quote");
   sym_unquote = scm_from_utf8_symbol("unquote");
   sym_uq_splicing = scm_from_utf8_symbol("unquote-splicing");
-
-  SCM read_hash_procs = scm_make_fluid_with_default (SCM_EOL);
-  scm_i_read_hash_procedures =
-    SCM_VARIABLE_LOC (scm_c_define ("%read-hash-procedures", read_hash_procs));
 
   scm_init_opts (scm_read_options, scm_read_opts);
 

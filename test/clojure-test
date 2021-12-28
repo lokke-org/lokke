@@ -1,0 +1,18 @@
+#!./lokke -0
+;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+(ns test.clojure-test
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]))
+
+(begin-tests (ns-name *ns*))
+
+(is true)
+(is (not false))
+(is (thrown? Exception (throw (Exception. "?"))))
+
+(end-tests (ns-name *ns*) :exit? true)

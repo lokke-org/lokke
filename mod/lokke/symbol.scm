@@ -5,7 +5,6 @@
   #:use-module ((ice-9 receive) #:select (receive))
   #:use-module ((lokke base util) #:select (string->keyword))
   #:use-module ((lokke pr) #:select (str))
-  #:use-module ((lokke scm core) #:select (->>))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (any))
   #:export (ident?

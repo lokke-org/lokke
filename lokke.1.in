@@ -143,12 +143,13 @@ at startup.  The rightmost seed related argument determines the
 startup behavior.
 .
 .SH SCRIPT EVALUATION
-If, and only if, you don't need to specify any additional arguments,
-you may begin your scripts like this:
+If, and only if, you don't need to specify any additional arguments to
+Lokke itself, you may begin your scripts like this:
 .P
 .RS
 .EX
-#!/path/to/lokke-@LOKKE_MAJOR_VERSION@ -0 ;; -*-clojure-*-
+#!/path/to/lokke-@LOKKE_MAJOR_VERSION@ -0
+;; -*-clojure-*-
 !#
 (prn :hello-world)
 \&.\|.\|.\&
@@ -173,7 +174,8 @@ like this:
 .P
 .RS
 .EX
-#!/path/to/lokke-@LOKKE_MAJOR_VERSION@ -0 ;; -*-clojure-*-
+#!/path/to/lokke-@LOKKE_MAJOR_VERSION@ -0
+;; -*-clojure-*-
 ;; We're in a Guile preamble module defining a procedure for each
 ;; lokke subcommand.
 (apply run "-l" %0 "--" %&)
@@ -197,12 +199,10 @@ Everything after the
 and before the
 .B !#
 is executed as Scheme code by Guile in a module that has definitions
-for each of the lokke subcommands.  Note that the code Guile executes
-will begin with the character immediately after the zero in
+for each of the lokke subcommands.  Note that
 .B \-0
-no matter what it is (i.e. even if it is not whitespace).  The zero
-actually specifies a compatibility level, and for now zero is the only
-valid number.
+must be the only argument, and the zero actually specifies a
+compatibility level.  For now zero is the only valid number.
 .P
 As you may have guessed, the preamble module binds
 .B %0

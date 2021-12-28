@@ -477,6 +477,9 @@ Hacking
 - At the moment in some cases we treat keywords much like symbols.
   cf. the `(lokke symbol)` module.
 
+- An `Unbound variable: x` error during compilation might indicate a
+  dependency cycle, i.e. mutually dependent modules.
+
 Sending patches to the list
 ===========================
 

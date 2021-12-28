@@ -1,7 +1,8 @@
 #!./lokke -0
-!#
+!# ;; -*-clojure-*-
 
 ;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>
+;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-pr
@@ -30,5 +31,16 @@
   (is (= "foo" (print-str "foo")))
   (is (= "foo" (with-out-str (print "foo"))))
   (is (= "[1 2 3]" (print-str [1 2 3]))))
+
+(testing "tagged literals"
+  (let [inst (guile.lokke.time/instant (* 242312160 1000000))]
+    (is (= "#inst \"1977-09-05T12:56:00Z\"" (pr-str inst)))
+    (is (= "#inst \"1977-09-05T12:56:00Z\"" (print-str inst)))
+    (is (= "#inst \"1977-09-05T12:56:00Z\"" (guile.lokke.pr/to-string inst))))
+  (let [u #uuid "9d01ae80-35a4-423e-afb5-f841fbdfc81c"
+        us "#uuid \"9d01ae80-35a4-423e-afb5-f841fbdfc81c\""]
+    (is (= us (pr-str u)))
+    (is (= us (print-str u)))
+    (is (= us (guile.lokke.pr/to-string u)))))
 
 (end-tests (ns-name *ns*) :exit? true)

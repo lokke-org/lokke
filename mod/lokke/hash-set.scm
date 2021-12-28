@@ -8,7 +8,11 @@
                 #:select (make-fash
                           fash-fold
                           fash-ref
-                          fash-update))
+                          fash-set!
+                          fash-update
+                          make-transient-fash
+                          persistent-fash
+                          transient-fash))
   #:use-module ((ice-9 control) #:select (call/ec))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base invoke) #:select (invoke))
@@ -21,6 +25,7 @@
                           count
                           counted?
                           empty
+                          empty?
                           get
                           into
                           lazy-seq
@@ -31,7 +36,7 @@
   #:use-module ((lokke compare) #:select (clj= hash))
   #:use-module ((lokke hash-map) #:select (<hash-map>))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
-  #:use-module ((lokke set) #:select (<set>))
+  #:use-module ((lokke set) #:select (<set> difference intersection union))
   #:use-module (oop goops)
   #:use-module ((rnrs sorting) #:select (vector-sort!))
   #:use-module ((srfi srfi-43) #:select (vector-fold))
@@ -45,15 +50,18 @@
                conj
                contains?
                count
+               difference
                empty
                get
                hash
+               intersection
                into
                meta
                pr-approachable
                pr-readable
                seq
                seqable?
+               union
                with-meta)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -257,3 +265,73 @@
             h)))))
 
 ;; FIXME: custom merge?
+
+(define-method (union) empty-hash-set)
+
+(define-method (union (s1 <hash-set>) (s2 <set>))
+  (cond
+   ((empty? s1) s2)
+   ((empty? s2) s1)
+   (else
+    (let* ((n (set-count s1))
+           (h1 (set-fm s1))
+           (fm (persistent-fash
+                (reduce (lambda (result x)
+                          (if (eq? not-found
+                                   (fash-ref h1 x (lambda (_) not-found)))
+                              (begin
+                                (set! n (1+ n))
+                                (fash-set! result x x))
+                              result))
+                        (transient-fash (set-fm s1))
+                        s2))))
+      (make-set fm n (meta s1))))))
+
+
+(define (intersect-via-get s1 s2 s2-get)
+  (let* ((n 0)
+         (fm (persistent-fash
+              (fash-fold (lambda (k v result)
+                           (if (or (eq? not-found v)
+                                   (eq? not-found (s2-get s2 k not-found)))
+                               result
+                               (begin
+                                 (set! n (1+ n))
+                                 (fash-set! result k v))))
+                         (set-fm s1)
+                         (make-transient-fash #:hash hash #:equal clj=)))))
+    (make-set fm n (meta s1))))
+
+(define-method (intersection (s1 <hash-set>) (s2 <hash-set>))
+  (intersect-via-get s1 (set-fm s2) (lambda (s k not-found)
+                                      (fash-ref s k (lambda (_) not-found)))))
+
+(define-method (intersection (s1 <hash-set>) (s2 <set>))
+  (intersect-via-get s1 s2 get))
+
+;; FIXME: need "update if exists"
+
+(define (difference-via-get s1 s1-get s1-n s2 m)
+  (let* ((n s1-n)
+         (fm (persistent-fash
+              (fash-fold (lambda (k v result)
+                           (cond
+                            ((eq? not-found v) result)
+                            ((eq? not-found (s1-get s1 k not-found)) result)
+                            (else
+                             (set! n (1- n))
+                             (fash-set! result k not-found))))
+                         (set-fm s2)
+                         (transient-fash s1)))))
+    (make-set fm n m)))
+
+(define-method (difference (s1 <hash-set>) (s2 <hash-set>))
+  (difference-via-get (set-fm s1)
+                      (lambda (s k not-found)
+                        (fash-ref s k (lambda (_) not-found)))
+                      (set-count s1)
+                      s2
+                      (meta s1)))
+
+(define-method (difference (s1 <hash-set>) (s2 <set>))
+  (difference-via-get s1 get (set-count s1) s2 (meta s1)))

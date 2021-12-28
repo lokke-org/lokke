@@ -10,13 +10,10 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ['$(top_srcdir)/guile.in'])
-
 # Checks for programs.
 AM_PROG_AR
 AC_PROG_CC
-gl_EARLY
-gl_INIT
+AC_PROG_LN_S
 
 # Checks for libraries.
 
@@ -53,7 +50,5 @@ AC_SUBST(LOKKE_EFFECTIVE_VERSION, [${VERSION%.*}])
 AC_CONFIG_FILES([
   Makefile lokke.1 mod/lokke/base/version.scm
 ])
-
-AC_CONFIG_FILES([guile], [chmod +x guile])
 
 AC_OUTPUT

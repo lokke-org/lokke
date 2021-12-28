@@ -19,8 +19,8 @@ fi
 
 dirty_tree=$(git status --porcelain -uno)
 if test "$dirty_tree"; then
-    echo '1..0 # skipping standalone-install tests (uncommitted changes)'
-    exit 0
+    echo 'Bail out! standalone-install tests detected uncommitted changes'
+    exit 2
 fi
 
 echo '1..2'
@@ -39,19 +39,20 @@ autoreconf -fi
 make -j2 install
 cd /
 
-i=0
+i=1
 
 check-cmd()
-(
+{
     result=$("$@")
     rc=$?
     if test $rc -eq 0 && test "$result" = ':howdy'; then
-        echo 'ok $i'
+        echo "ok $i"
     else
         echo "not ok $i ($rc) $@ => $result"
     fi
     ((i++)) || true
-)
+    echo i_f "$i"
+}
 
 check-cmd "$tmpdir/install/bin/lok" -e '(println :howdy)'
 check-cmd "$tmpdir/install/bin/lokke" run -e '(println :howdy)'

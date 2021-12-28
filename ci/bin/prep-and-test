@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -uexo pipefail
+
+usage() { echo "Usage: prep CI_FLAVOR OS GUILE_VER"; }
+misuse() { usage 1>&2; exit 2; }
+
+test $# -eq 3 || misuse
+ci="$1"
+os="$2"
+guile_ver="$3"
+test "$1" = github || misuse
+
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+
+case "$os" in
+    ubuntu-*)
+        sudo -i "$(pwd)/dev/prep-for-debianish-build" "guile-$guile_ver"
+        ;;
+    macos-*)
+        ./dev/prep-for-macos-build "guile-$guile_ver"
+        if [ "$guile_ver" = 2.2 ]; then
+            export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
+            export PATH="/usr/local/opt/guile@2/bin:$PATH"
+            export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
+        fi
+        ;;
+    *) misuse ;;
+esac
+
+export GUILE_EFFECTIVE_VERSION="$guile_ver"
+
+./setup && autoreconf -fi
+./configure
+touch lokke.1.txt
+make -j4
+./guile --version
+test $(./guile -c '(format #t "~a.~a" (major-version) (minor-version))') = "$guile_ver"
+git status
+make -j4 check-everything

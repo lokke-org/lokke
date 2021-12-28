@@ -5,21 +5,17 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
+ ((lokke reader) #:prefix reader/)
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((lokke pr) #:prefix t/)
- ((lokke pr) #:select (*out*))
+ ((lokke pr) #:select (*in* *out*))
  ((lokke collection) #:prefix coll/)  ;; For '(1 2 3) print specialization
  ((lokke compare) #:prefix c/)
  ((lokke vector) #:select (vector))
  ((srfi srfi-1) #:select (iota))
  ((srfi srfi-64)
-  #:select (test-assert
-            test-begin
-            test-end
-            test-equal
-            test-group
-            test-runner-current
-            test-runner-fail-count)))
+  #:select (test-assert test-begin test-equal test-group test-runner-current)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -47,7 +43,6 @@
  "test collection printing"
  (test-equal "(1 2 3)" (t/print-str '(1 2 3))))
 
-(test-end)
+(test-equal 42 (t/with-in-str "42" (reader/read *in*)))
 
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

@@ -10,17 +10,10 @@
  ((lokke hash-map) #:select (assoc hash-map))
  ((lokke scm core) #:select (doto))
  ((lokke scm promise) #:prefix t/)
+ ((lokke scm test) #:select (test-end-and-exit))
  ((lokke scm test-anything) #:select (tap-test-runner))
  ((srfi srfi-64)
-  #:select (test-assert
-            test-begin
-            test-end
-            test-eq
-            test-equal
-            test-eqv
-            test-group
-            test-runner-current
-            test-runner-fail-count)))
+  #:select (test-assert test-begin test-equal test-group test-runner-current)))
 
 (when (equal? "tap" (getenv "LOKKE_TEST_PROTOCOL"))
   (test-runner-current (tap-test-runner)))
@@ -67,7 +60,4 @@
     (usleep 1))
   (test-assert ok?))
 
-(test-end)
-
-(unless (zero? (test-runner-fail-count (test-runner-current)))
-  (exit 2))
+(test-end-and-exit 2)

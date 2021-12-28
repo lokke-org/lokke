@@ -5,11 +5,40 @@
   #:use-module ((guile)
                 #:select ((apply . %scm-apply)
                           (begin . %scm-begin)
+                          (if . %scm-if)
                           (let . %scm-let)
                           (format . %scm-format)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (iota))
+  #:use-module ((lokke array)
+                #:select (aclone
+                          aget
+                          aget-boolean
+                          aget-byte
+                          aget-double
+                          aget-float
+                          aget-int
+                          aget-long
+                          aget-short
+                          alength
+                          amap
+                          areduce
+                          aset
+                          aset-boolean
+                          aset-byte
+                          aset-double
+                          aset-float
+                          aset-int
+                          aset-long
+                          aset-short
+                          boolean-array
+                          byte-array
+                          double-array
+                          float-array
+                          int-array
+                          long-array
+                          short-array))
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base dynamic) #:select (set!))
@@ -53,8 +82,9 @@
                           when-let
                           when-not
                           when-some))
+  #:use-module ((lokke base util) #:select (map-tag? set-tag? vec-tag?))
   #:use-module ((lokke base version) #:prefix ver/)
-  #:use-module ((lokke boot) #:select (quote))
+  #:use-module ((lokke base quote) #:select (clj-quote))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -64,6 +94,7 @@
                           atom
                           atom?
                           add-watch
+                          compare-and-set!
                           deliver
                           deref
                           future
@@ -98,6 +129,7 @@
                 #:select (*ns*
                           alias
                           find-ns
+                          find-var
                           in-ns
                           ns
                           ns-aliases
@@ -122,9 +154,10 @@
                           println
                           prn
                           str
+                          with-in-str
                           with-out-str))
   #:use-module ((lokke reader) #:select (read read-string))
-  #:use-module ((lokke set) #:select (<set>))
+  #:use-module ((lokke set) #:select (<set> set?))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
                 #:select (*print-meta* alter-meta! meta vary-meta with-meta))
@@ -211,7 +244,7 @@
             short
             time
             trampoline)
-  #:replace (= boolean? do instance?)
+  #:replace (= boolean? case do instance?)
   #:re-export (*
                *err*
                *in*
@@ -241,11 +274,31 @@
                ExceptionInfo
                Throwable
                Throwable.
-               as->
+               aclone
                add-watch
+               aget
+               aget-boolean
+               aget-byte
+               aget-double
+               aget-float
+               aget-int
+               aget-long
+               aget-short
+               alength
                alias
                alter-meta!
+               amap
                and
+               areduce
+               as->
+               aset
+               aset-boolean
+               aset-byte
+               aset-double
+               aset-float
+               aset-int
+               aset-long
+               aset-short
                assoc-in
                atom
                atom?
@@ -260,11 +313,14 @@
                bit-set
                bit-test
                bit-xor
+               boolean-array
                bounded-count
                butlast
+               byte-array
                char?
                (class-of . class)
                (ver/version . clojure-version)
+               compare-and-set!
                (clj-cond . cond)
                cond->
                cond->>
@@ -302,6 +358,7 @@
                dotimes
                doto
                double
+               double-array
                double?
                drop
                drop-last
@@ -320,8 +377,10 @@
                filterv
                find
                find-ns
+               find-var
                first
                float
+               float-array
                float?
                flush
                fn
@@ -346,6 +405,7 @@
                in-ns
                inc
                inc'
+               int-array
                int?
                integer?
                interleave
@@ -365,8 +425,10 @@
                line-seq
                list*
                load-file
+               long-array
                loop
                macroexpand
+               make-array
                map?
                map-entry
                map-entry?
@@ -441,6 +503,8 @@
                sequential?
                set
                set-validator!
+               set?
+               short-array
                shuffle
                slurp
                spit
@@ -480,6 +544,7 @@
                when-not
                when-some
                with-open
+               with-in-str
                with-out-str
                with-meta
                zero?
@@ -496,7 +561,7 @@
                         'newline
                         'nil?
                         'peek
-                        'quote
+                        '(clj-quote . quote)
                         'read
                         'set!
                         'sort)
@@ -668,3 +733,28 @@
                                      "Wrong number of arguments" '() #f)
                           (cons (if (nil? (car args)) (car patches) (car args))
                                 (loop (cdr args) (cdr patches)))))))))))
+
+(define-syntax case
+  (lambda (x)
+    (syntax-case x ()
+      ((_ target () action exp ...) #'(case target exp ...))
+
+      ;; Literal adapter, so expressions like (quote x) and
+      ;; (/lokke/reader-vector #nil 1) aren't taken as multiple
+      ;; symbol selectors by (candidate ...)  below.
+      ((_ target (tag meta x ...) exp ...)
+       (or (eq? 'quote (syntax->datum #'tag))
+           (vec-tag? #'tag) (map-tag? #'tag) (set-tag? #'tag))
+       #'(case target ((tag meta x ...)) exp ...))
+
+      ((_ target-exp (candidate candidate* ...) action exp ...)
+       #'(%scm-let ((target target-exp))
+           (%scm-if (clj= (clj-quote candidate) target)
+                    action
+                    (case target (candidate* ...) action exp ...))))
+
+      ((_ target candidate action exp ...)
+       #'(case target (candidate) action exp ...))
+
+      ((_ target action) #'action)
+      ((_ target) #'(error "No matching clause for" target)))))
