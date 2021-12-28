@@ -66,6 +66,8 @@
   (is (empty? (seq ())))
   (is (empty? []))
   (is (empty? (seq [])))
+  (is (false? (empty? "foobar")))
+  (is (true? (empty? "")))
   (is (not= () false))
   (is (not= '(1) true))
   (is (not= () nil))
