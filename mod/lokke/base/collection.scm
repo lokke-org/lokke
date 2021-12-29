@@ -717,6 +717,9 @@
   (require-nil 'empty? b)
   #t)
 
+(define-method (empty? (s <string>))
+  (string-null? s))
+
 ;; The jvm has a persistent stack interface...
 ;; FIXME: improper lists, etc.  See DESIGN <pair>s TODO.
 
