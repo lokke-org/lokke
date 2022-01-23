@@ -14,8 +14,8 @@
 
 (begin-tests (ns-name *ns*))
 
-(def src-prefix (some-> (guile/getenv "LOKKE_TEST_DATA_DIR")
-                        (str "/")))
+(def src-prefix (when-let [dir (guile/getenv "LOKKE_TEST_DATA_DIR")]
+                  (str dir "/")))
 
 (testing "slurp and spit"
   (let [message "Open the pod bay doors, please, HAL."

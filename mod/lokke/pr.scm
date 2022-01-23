@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke pr)
@@ -108,9 +108,9 @@
 
 (define (boolean->string x)
   (case x
+    ((#nil) "nil")
     ((#t) "true")
     ((#f) "false")
-    ((#nil) "nil")
     (else (error "impossible boolean" x))))
 
 (define-inlinable (show-boolean x port)
@@ -263,6 +263,13 @@
 
 (define-method (to-string x)
   (with-out-str (print x)))
+
+(define-method (to-string (x <boolean>))
+  (case x
+    ((#nil) "")
+    ((#t) "true")
+    ((#f) "false")
+    (else (error "impossible boolean" x))))
 
 (define str
   (match-lambda*

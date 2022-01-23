@@ -2,7 +2,7 @@
 !# ;; -*-clojure-*-
 
 ;;; Copyright (C) 2019 Ryan Senior <senior.ryan@gmail.com>
-;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-pr
@@ -31,6 +31,18 @@
   (is (= "foo" (print-str "foo")))
   (is (= "foo" (with-out-str (print "foo"))))
   (is (= "[1 2 3]" (print-str [1 2 3]))))
+
+(testing "str"
+  (is (= "" (str)))
+  (is (= "" (str nil)))
+  (is (= "1" (str 1)))
+  (is (= "1" (str 1 nil)))
+  (is (= "42" (str 4 2)))
+  (is (= "x" (str \x)))
+  (is (= "\n" (str \newline)))
+  (is (= "foo" (str "foo")))
+  (is (= "foo" (with-out-str (print "foo"))))
+  (is (= "[1 2 3]" (str [1 2 3]))))
 
 (testing "tagged literals"
   (let [inst (guile.lokke.time/instant (* 242312160 1000000))]
