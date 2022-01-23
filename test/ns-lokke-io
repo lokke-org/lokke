@@ -2,7 +2,7 @@
 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.lokke-io
@@ -14,20 +14,23 @@
 
 (begin-tests (ns-name *ns*))
 
+(def src-prefix (some-> (guile/getenv "LOKKE_TEST_DATA_DIR")
+                        (str "/")))
+
 (testing "slurp and spit"
   (let [message "Open the pod bay doors, please, HAL."
         out (mkstemp "test-ns-lokke-io-XXXXXX")
         outname (port-filename out)]
-    (with-final [_  outname :always delete-file]
+    (with-final [_ outname :always delete-file]
       (spit out message)
       (is (= message (slurp outname))))
     (is (not (guile.guile/file-exists? outname))))
-  (is (= "Lokke" (subs (slurp "README") 0 5))))
+  (is (= "Lokke" (subs (slurp (str src-prefix "README")) 0 5))))
 
 (testing "path-seq"
-  (let [found (-> "mod/lokke/ns" path-seq set)]
-    (is (found "mod/lokke/ns/clojure/core.clj" ))
-    (is (found "mod/lokke/ns/clojure/string.scm"))
-    (is (found "mod/lokke/ns/lokke/shell.scm"))))
+  (let [found (-> (str src-prefix "mod/lokke/ns") path-seq set)]
+    (is (found (str src-prefix "mod/lokke/ns/clojure/core.clj") ))
+    (is (found (str src-prefix "mod/lokke/ns/clojure/string.scm")))
+    (is (found (str src-prefix "mod/lokke/ns/lokke/shell.scm")))))
 
 (end-tests (ns-name *ns*) :exit? true)

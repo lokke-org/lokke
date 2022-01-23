@@ -5,5 +5,6 @@ set -xueo pipefail
 # TAP protocol - expect 1 test
 echo "1..1"
 
-example/nbody/nbody 10
+"${LOKKE_TEST_DATA_DIR:+${LOKKE_TEST_DATA_DIR}/}"example/nbody/nbody 10
+
 echo "ok nbody (10 iterations)"
