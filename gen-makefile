@@ -1,7 +1,7 @@
 #!/usr/bin/env guile
 !#
 
-;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2020-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (setlocale LC_CTYPE "C")
@@ -16,7 +16,7 @@
  ((srfi srfi-1) #:select (append-map delete-duplicates drop-right)))
 
 (define (usage port)
-  (display "Usage: gen-makefile module-paths\n" port))
+  (display "Usage: gen-makefile mod/.../some.clj mod/.../some.scm ...\n" port))
 
 (define (misuse)
   (usage (current-error-port))
@@ -62,10 +62,7 @@
             (format #f "moddata_~a_DATA += ~a\n" (string-join dir-parts "_") p)
             (format #f "modlib_~a_DATA += ~a\n"
                     (string-join dir-parts "_")
-                    (string-append (string-drop-right p 4) ".go"))
-            (if clj?
-                (format #f "mod_clj_srcs += ~a" p)
-                (format #f "mod_scm_srcs += ~a" p)))))
+                    (string-append (string-drop-right p 4) ".go")))))
        (sort paths string<?)))
 
 ;; For now, let's just be lazy about this (not in the clojure sense)...
@@ -84,15 +81,12 @@
    "\n"))
 
 (define (expand template module-paths)
-  (regexp-substitute/global #f (make-regexp "@MODULE_FILES@")
+  (regexp-substitute/global #f (make-regexp "# @MODULE_FILES@ #")
                             template
                             'pre (module-directives module-paths) 'post))
 
 (define (gen-makefile args)
-  (unless (= 2 (length args))
-    (misuse))
-  (let* ((module-paths (cadr args))
-         (module-paths (call-with-input-file module-paths lines))
+  (let* ((module-paths (sort (cdr args) string<?))
          (template (call-with-input-file "Makefile.am.in"
                      (lambda (in) (get-string-all in))))
          ;; FIXME: clean up on error...

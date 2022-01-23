@@ -2,6 +2,4 @@
 
 set -xe
 
-mkdir -p state
-dev/gen-module-paths | dev/refresh state/module-paths
-./gen-makefile state/module-paths
+make -f Makefile.am.in Makefile.am

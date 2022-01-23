@@ -1,30 +1,49 @@
 ### Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 ### SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
-# Makefile.am is automatically generated from Makefile.am.in via ./gen-makefile
+# Makefile.am is automatically generated from Makefile.am.in via
+# ./gen-makefile.  For bootstrapping "make -f Makefile.am.in
+# Makefile.am" must always work (see ./setup).
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-error-on-warning
 
 CLEANFILES =
+DISTCLEANFILES =
 lokke_clean =
 lokke_uninstall =
 
-state:
-	mkdir state
-lokke_clean += state
-
-state/module-paths:: state
-	dev/gen-module-paths | dev/refresh "$@"
-
-Makefile.am: Makefile.am.in gen-makefile state/module-paths
-	./gen-makefile state/module-paths
+Makefile.am: Makefile.am.in gen-makefile $(mod_clj_srcs) $(mod_scm_srcs)
+	./gen-makefile $(mod_clj_srcs) $(mod_scm_srcs)
 
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/build-aux/tap-driver.sh
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(TESTS) $(mod_clj_srcs) $(mod_scm_srcs) \
+  DESIGN.md \
+  EPL-1.0 \
+  LGPL-2.1 \
+  Makefile.am.in \
+  README.md \
+  ci/bin/prep-and-test \
+  dev/gen-module-paths \
+  dev/prep-for-debianish-build \
+  dev/prep-for-freebsd-build \
+  dev/prep-for-macos-build \
+  dev/refresh \
+  example/cli/deps.edn \
+  example/cli/patch/0001-Provide-jvm-defaults-for-all-reader-conditionals.patch \
+  example/cli/src/trycli.cljc \
+  example/nbody/COPYING \
+  example/nbody/README \
+  example/nbody/nbody \
+  example/nbody/nbody.clj-1.clj \
+  gen-makefile \
+  hello.clj \
+  lok.1 \
+  setup
+
 
 # FIXME: preserve symlinks in install tree?
 man1_MANS = lok.1 lokke.1
@@ -41,6 +60,7 @@ lokke.1.txt: lokke.1
 	    mv $@.tmp $@; \
 	fi
 CLEANFILES += lokke.1.txt.tmp
+DISTCLEANFILES += lokke.1.txt
 
 AM_CFLAGS = \
   -g -Wall -Werror -Wno-error=deprecated-declarations \
@@ -111,14 +131,83 @@ guile_DEPENDENCIES = Makefile
 
 # Avoids the otherwise circular dependency
 BUILT_SOURCES = guile lok lokke \
-  lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x lokke.1 \
+  lib/lokke-reader.x lib/lokke-pcre2.x lib/lokke-vector.x \
   mod/lokke/base/version.scm
 CLEANFILES += $(BUILT_SOURCES)
 
 # FIXME: see guile's am/guilec for a way to order the install wrt timestamps
 
-mod_clj_srcs =
-mod_scm_srcs =
+mod_clj_srcs = \
+  mod/lokke/ns/clojure/core.clj \
+  mod/lokke/ns/clojure/core/epl.clj \
+  mod/lokke/ns/clojure/edn.clj \
+  mod/lokke/ns/clojure/walk.clj \
+  mod/lokke/ns/clojure/zip.clj \
+  mod/lokke/ns/lokke/deps.clj \
+  mod/lokke/ns/lokke/io.clj
+
+mod_scm_srcs = \
+  mod/language/lokke/spec.scm \
+  mod/lokke/array.scm \
+  mod/lokke/base/collection.scm \
+  mod/lokke/base/destructure.scm \
+  mod/lokke/base/doc.scm \
+  mod/lokke/base/dynamic.scm \
+  mod/lokke/base/invoke.scm \
+  mod/lokke/base/map-entry.scm \
+  mod/lokke/base/map.scm \
+  mod/lokke/base/metadata.scm \
+  mod/lokke/base/quote.scm \
+  mod/lokke/base/syntax.scm \
+  mod/lokke/base/util.scm \
+  mod/lokke/base/version.scm \
+  mod/lokke/boot.scm \
+  mod/lokke/collection.scm \
+  mod/lokke/compare.scm \
+  mod/lokke/compat.scm \
+  mod/lokke/compile.scm \
+  mod/lokke/concurrent.scm \
+  mod/lokke/config.scm \
+  mod/lokke/core.scm \
+  mod/lokke/exception.scm \
+  mod/lokke/fash.scm \
+  mod/lokke/hash-map.scm \
+  mod/lokke/hash-set.scm \
+  mod/lokke/io.scm \
+  mod/lokke/lang.scm \
+  mod/lokke/main.scm \
+  mod/lokke/metadata.scm \
+  mod/lokke/ns.scm \
+  mod/lokke/ns/clojure/main.scm \
+  mod/lokke/ns/clojure/set.scm \
+  mod/lokke/ns/clojure/string.scm \
+  mod/lokke/ns/clojure/test.scm \
+  mod/lokke/ns/lokke/exception.scm \
+  mod/lokke/ns/lokke/math.scm \
+  mod/lokke/ns/lokke/shell.scm \
+  mod/lokke/ns/lokke/user.scm \
+  mod/lokke/pcre2.scm \
+  mod/lokke/pr.scm \
+  mod/lokke/reader.scm \
+  mod/lokke/reader/literal.scm \
+  mod/lokke/regex.scm \
+  mod/lokke/repl.scm \
+  mod/lokke/scm/atom.scm \
+  mod/lokke/scm/bit.scm \
+  mod/lokke/scm/core.scm \
+  mod/lokke/scm/edn.scm \
+  mod/lokke/scm/foreign-object.scm \
+  mod/lokke/scm/promise.scm \
+  mod/lokke/scm/test-anything.scm \
+  mod/lokke/scm/test.scm \
+  mod/lokke/scm/vector.scm \
+  mod/lokke/set.scm \
+  mod/lokke/symbol.scm \
+  mod/lokke/time.scm \
+  mod/lokke/transmogrify.scm \
+  mod/lokke/uuid.scm \
+  mod/lokke/vector.scm
+
 compiled_go = $(mod_clj_srcs:%.clj=%.go) $(mod_scm_srcs:%.scm=%.go)
 
 $(compiled_go): $(vpkglib_LTLIBRARIES)
@@ -128,9 +217,14 @@ modlibdir = $(pkglibdir)/$(LOKKE_EFFECTIVE_VERSION)
 CLEANFILES += $(compiled_go)
 
 # This section is automatically generated
-@MODULE_FILES@
+# @MODULE_FILES@ #
 # End of automatically generated section
 
+AM_TESTS_ENVIRONMENT = \
+  export GUILE_LOAD_COMPILED_PATH="$(abs_top_builddir)/mod"; \
+  export GUILE_LOAD_PATH="$(abs_top_srcdir)/mod"; \
+  export LOKKE_TEST_DATA_DIR="$(abs_top_srcdir)"; \
+  export LTDL_LIBRARY_PATH="$(abs_top_builddir)/lib";
 
 export LOKKE_TEST_PROTOCOL = tap
 
@@ -196,18 +290,20 @@ SUFFIXES = .x .clj.go .scm.go
 .clj.go:
 	GUILE=$(CURDIR)/guile \
 	GUILE_AUTO_COMPILE=0 \
+	LTDL_LIBRARY_PATH="$(abs_top_builddir)/lib" \
 	$(GUILD) compile \
 	  -Wunbound-variable -Wmacro-use-before-definition \
 	  -Warity-mismatch -Wformat \
-	--from=lokke -o $@ $<
+	  --from=lokke -o $@ $<
 
 .scm.go:
 	GUILE=$(CURDIR)/guile \
 	GUILE_AUTO_COMPILE=0 \
+	LTDL_LIBRARY_PATH="$(abs_top_builddir)/lib" \
 	$(GUILD) compile \
 	  -Wunbound-variable -Wmacro-use-before-definition \
 	  -Warity-mismatch -Wformat \
-	-o $@ $<
+	  -o $@ $<
 
 lokke_dest_scripts = "$(DESTDIR)$(bindir)"/lok "$(DESTDIR)$(bindir)"/lokke
 lokke_uninstall += $(lokke_dest_scripts)
