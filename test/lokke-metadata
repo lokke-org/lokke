@@ -1,12 +1,13 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
  ((lokke scm test) #:select (test-end-and-exit))
  ((lokke collection) #:select (merge))
+ ((lokke core) #:select ((= . clj=)))
  ((lokke hash-map) #:select (conj hash-map))
  ((lokke hash-set) #:select (hash-set))
  ((lokke metadata) #:prefix t/)
@@ -21,30 +22,40 @@
 
 (test-begin (basename (car (program-arguments))))
 
-;; (test-equal (lokke-vector 1) (lokke/read-string "^:foo [1]"))
-;; (test-equal (hash-map #:foo #t) (t/meta (lokke/read-string "^:foo [1]")))
+(test-assert (clj= (lokke-vector 1)
+                   (lokke/read-string "^:foo [1]")))
+(test-assert (clj= (hash-map #:foo #t)
+                   (t/meta (lokke/read-string "^:foo [1]"))))
 
-;; (test-equal (lokke-vector 1) (lokke/read-string "^{:bar :baz} [1]"))
-;; (test-equal (hash-map #:bar #:baz)
-;;   (t/meta (lokke/read-string "^{:bar :baz} [1]")))
+(test-assert (clj= (lokke-vector 1)
+                   (lokke/read-string "^{:bar :baz} [1]")))
+(test-assert (clj= (hash-map #:bar #:baz)
+                   (t/meta (lokke/read-string "^{:bar :baz} [1]"))))
 
-;; (test-equal (lokke-vector 1) (lokke/read-string "^:foo ^{:bar :baz} [1]"))
-;; (test-equal (hash-map #:foo #t #:bar #:baz)
-;;   (t/meta (lokke/read-string "^:foo ^{:bar :baz} [1]")))
+(test-assert (clj= (lokke-vector 1)
+                   (lokke/read-string "^:foo ^{:bar :baz} [1]")))
+(test-assert (clj= (hash-map #:foo #t #:bar #:baz)
+                   (t/meta (lokke/read-string "^:foo ^{:bar :baz} [1]"))))
 
-;; (test-equal (lokke-vector 1) (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]"))
-;; (test-equal (hash-map #:bar #:bax)
-;;   (t/meta (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]")))
+(test-assert (clj= (lokke-vector 1)
+                   (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]")))
+(test-assert (clj= (hash-map #:bar #:bax)
+                   (t/meta (lokke/read-string "^{:bar :bax} ^{:bar :baz} [1]"))))
 
-;; (test-equal (lokke-vector 1) (lokke/read-string "^foo [1]"))
-;; (test-equal (hash-map #:tag 'foo) (t/meta (lokke/read-string "^foo [1]")))
+(test-assert (clj= (lokke-vector 1)
+                   (lokke/read-string "^foo [1]")))
+(test-assert (clj= (hash-map #:tag 'foo)
+                   (t/meta (lokke/read-string "^foo [1]"))))
 
-;; (test-equal (lokke-vector 1) (lokke/read-string "^\"foo\" [1]"))
-;; (test-equal (hash-map #:tag "foo") (t/meta (lokke/read-string "^\"foo\" [1]")))
+(test-assert (clj= (lokke-vector 1)
+                   (lokke/read-string "^\"foo\" [1]")))
+(test-assert (clj= (hash-map #:tag "foo")
+                   (t/meta (lokke/read-string "^\"foo\" [1]"))))
 
-;; (test-equal (hash-map #:x '(inc 1)) (t/meta (lokke/read-string "^{:x (inc 1)} [1]")))
+(test-assert (clj= (hash-map #:x '(inc 1))
+                   (t/meta (lokke/read-string "^{:x (inc 1)} [1]"))))
 
-;; FIXME: crashes
-;; (test-equal '() (t/meta (lokke/read-string "^{:tag foo :doc bar} [1]")))
+(test-assert (clj= (hash-map #:tag 'foo #:doc 'bar)
+                   (t/meta (lokke/read-string "^{:tag foo :doc bar} [1]"))))
 
 (test-end-and-exit 2)
