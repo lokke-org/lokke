@@ -35,6 +35,20 @@ LT_INIT
 GUILE_PKG([3.0 2.2])
 GUILE_PROGS
 GUILE_FLAGS
+#GUILE_CHECK([maybe_broken_guile],[(string=? (version) "3.0.7")])
+
+GUILE_CHECK([maybe_broken_guile],
+  [(define-syntax foo
+    (syntax-rules ()
+      ((_ x) (eq? #nil x))))
+
+   (foo #t)])
+
+if test "$maybe_broken_guile" -ne 0; then
+   AC_MSG_ERROR([
+  The detected $GUILE (3.0.7?) appears to be missing this required patch:
+    https://git.savannah.gnu.org/cgit/guile.git/commit/?id=d79a226359d28f4a1dc5df136e5544d699903a96 ])
+fi
 
 lokke_major_version="${VERSION%%.*}"
 lokke_nomajor_version="${VERSION#*.}"
