@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke core)
@@ -158,6 +158,7 @@
                           with-out-str))
   #:use-module ((lokke reader) #:select (read read-string))
   #:use-module ((lokke set) #:select (<set> set?))
+  #:use-module ((lokke time) #:select (instant?))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
                 #:select (*print-meta* alter-meta! meta vary-meta with-meta))
@@ -405,6 +406,7 @@
                in-ns
                inc
                inc'
+               (instant? . inst?)
                int-array
                int?
                integer?

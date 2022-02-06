@@ -2,7 +2,7 @@
 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2020-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-basics
@@ -46,6 +46,10 @@
 (testing "fn?"
   (is (not (fn? true)))
   (is (fn? (fn [] true))))
+
+(testing "inst?"
+  (is (not (inst? :x)))
+  (is (inst? #inst "1977-09-05T12:56:00Z")))
 
 (testing "as->"
   (is (= :yep (as-> :yep x)))
