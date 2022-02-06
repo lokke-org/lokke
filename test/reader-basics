@@ -275,13 +275,13 @@
 
 (test-group
  "tagged literals"
- (test-equal (instant (* 242312160 1000000))
+ (test-equal (instant (* 242312160 1000000000))
    (t/read-string "#inst \"1977-09-05T12:56:00Z\""))
- (test-equal (instant (* 242312160 1000000))
+ (test-equal (instant (* 242312160 1000000000))
    (t/read-string "#inst \"1977-09-05T12:56:00.0Z\""))
- (test-equal (instant (* 242312160 1000000))
+ (test-equal (instant (* 242312160 1000000000))
    (t/read-string "#inst \"1977-09-05T12:56:00+00:00\""))
- (test-equal (instant (* 242312160 1000000))
+ (test-equal (instant (* 242312160 1000000000))
    (t/read-string "#inst \"1977-09-05T12:56:00-00:00\""))
  ;; FIXME: test error cases
  (test-equal 208697526932167446277510606439038568476

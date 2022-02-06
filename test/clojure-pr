@@ -45,7 +45,7 @@
   (is (= "[1 2 3]" (str [1 2 3]))))
 
 (testing "tagged literals"
-  (let [inst (guile.lokke.time/instant (* 242312160 1000000))]
+  (let [inst (guile.lokke.time/instant (* 242312160 1000000000))]
     (is (= "#inst \"1977-09-05T12:56:00Z\"" (pr-str inst)))
     (is (= "#inst \"1977-09-05T12:56:00Z\"" (print-str inst)))
     (is (= "#inst \"1977-09-05T12:56:00Z\"" (guile.lokke.pr/to-string inst))))

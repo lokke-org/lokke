@@ -49,7 +49,7 @@
                  (error "Invalid #inst content:" data)))
             (frac-sec (or (match:substring m 1) "0"))
             (frac-sec (string->number frac-sec))
-            (frac-ns (inexact->exact (round (* frac-sec 1000000))))
+            (frac-ns (inexact->exact (round (* frac-sec 1000000000))))
             (offset (if (string=? "Z" (match:substring m 2))
                         0
                         (* 60
@@ -57,10 +57,10 @@
                               (string->number (match:substring m 5)))))))
        (set-tm:gmtoff tm offset)
        (match (mktime tm "UTC")
-         ((s . tm) (instant (+ (* s 1000000) frac-ns))))))))
+         ((s . tm) (instant (+ (* s 1000000000) frac-ns))))))))
 
 (define (instant->tagged-data inst)
-  (let-values (((s ns) (floor/ (instant-ns inst) 1000000)))
+  (let-values (((s ns) (floor/ (instant-ns inst) 1000000000)))
     (let* ((tm (gmtime s))
            (off (tm:gmtoff tm)))
       (string-append
