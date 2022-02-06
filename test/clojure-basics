@@ -43,12 +43,26 @@
   (is (= false (boolean? ())))
   (is (= false (boolean? []))))
 
+(testing "number?"
+  (is (not (number? true)))
+  (is (not (number? :x)))
+  (is (number? 1))
+  (is (number? 1.1))
+  (is (number? (/ 1 3))))
+
 (testing "ratio?"
   (is (not (ratio? true)))
   (is (not (ratio? :x)))
   (is (not (ratio? 1)))
   (is (not (ratio? 1.1)))
   (is (ratio? (/ 1 3))))
+
+(testing "rational?"
+  (is (not (rational? true)))
+  (is (not (rational? :x)))
+  (is (rational? 1))
+  (is (rational? 1.1))
+  (is (rational? (/ 1 3))))
 
 (testing "fn?"
   (is (not (fn? true)))

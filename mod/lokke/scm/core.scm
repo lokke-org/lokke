@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke scm core)
@@ -27,6 +27,7 @@
                (quotient . quot)
                (real? . double?)
                (real? . float?)
+               rational?
                (remainder . rem)
                some->
                some->>

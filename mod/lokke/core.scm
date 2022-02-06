@@ -456,6 +456,7 @@
                ns-aliases
                ns-name
                nth
+               number?
                odd?
                or
                partial
@@ -476,6 +477,7 @@
                random-sample
                range
                ratio?
+               rational?
                re-find
                re-groups
                re-matcher
