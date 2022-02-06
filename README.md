@@ -257,6 +257,10 @@ General comparison with Clojure/JVM
   distinction between functions like `+'` and `+`, or `*'` and `*`,
   etc.
 
+* Currently `ratio?` tests whether the value is a number that's
+  actually represented as a fraction, more specifically, that the
+  value is an exact rational, but not an integer.
+
 * There are no explicit bigints or BigDecimal (bigint, decimal?,
   bigdec, 7N, 4.2M, etc.), but of course arbitrarily large integers
   are supported.

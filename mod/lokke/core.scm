@@ -208,6 +208,7 @@
                           quot
                           rand
                           rand-int
+                          ratio?
                           rem
                           subs
                           true?))
@@ -474,6 +475,7 @@
                rand-int
                random-sample
                range
+               ratio?
                re-find
                re-groups
                re-matcher

@@ -42,6 +42,7 @@
             partial
             pos-int?
             rand rand-int
+            ratio?
             str))
 
 ;; Are "Identifier Macros" felevant for any of our direct mappings?
@@ -117,6 +118,9 @@
 
 (define (str . items)
   (string-concatenate (map (lambda (x) (format #f "~a" x)) items)))
+
+(define (ratio? x)
+  (and (not (exact-integer? x)) (rational? x) (exact? x)))
 
 (define (pos-int? x) (and (fixnum? x) (positive? x)))
 (define (neg-int? x) (and (fixnum? x) (negative? x)))
