@@ -130,13 +130,6 @@ SCRIPT EVALUATION
        path (like $0 in POSIX shells), %& to a list of all of  the  subsequent
        command line arguments, and %1, %2, etc. to the elements of %&.
 
-       At the moment lokke is not a binary executable.  If the system requires
-       #! interpreters to be binary executables, or if you'd  like  to  locate
-       lokke via the current PATH, you may be able to rely on env like this:
-
-              #!/usr/bin/env lokke-0 -0
-              ...
-
 DEPENDENCIES
        Dependencies  may be specified via --deps file.  Each file must contain
        a         subset         of         the         deps.edn         syntax

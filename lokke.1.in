@@ -215,19 +215,6 @@ to a list of all of the subsequent command line arguments, and
 .BR %2 ,
 etc. to the elements of
 .BR %& .
-.P
-At the moment lokke is not a binary executable.  If the system
-requires #! interpreters to be binary executables, or if you'd like to
-locate lokke via the current PATH, you may be able to rely on env like
-this:
-.P
-.RS
-.EX
-
-#!/usr/bin/env lokke-@LOKKE_MAJOR_VERSION@ -0
-\&.\|.\|.\&
-.EE
-.RE
 .
 .SH DEPENDENCIES
 Dependencies may be specified via
