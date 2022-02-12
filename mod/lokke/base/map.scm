@@ -11,7 +11,7 @@
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
-  #:export (<map> map?)
+  #:export (<map> map-invert map?)
   #:re-export (clj= get invoke)
   #:replace (assoc merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -22,6 +22,8 @@
 ;; depends on (lokke collection) because it depends on (lokke base
 ;; syntax) which depends on (lokke base destructure) which depends on
 ;; hash-map.
+
+(define-generic map-invert)
 
 (define sentinel (cons #f #f))  ;; Globally eq?/equal? unique token
 

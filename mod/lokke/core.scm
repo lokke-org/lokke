@@ -42,7 +42,7 @@
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base dynamic) #:select (set!))
-  #:use-module ((lokke base map) #:select (<map>))
+  #:use-module ((lokke base map) #:select (<map> map-invert map?))
   #:use-module ((lokke base syntax)
                 #:select (->
                           ->>
@@ -432,9 +432,10 @@
                loop
                macroexpand
                make-array
-               map?
+               map-invert
                map-entry
                map-entry?
+               map?
                mapv
                max
                meta

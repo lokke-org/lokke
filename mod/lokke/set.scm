@@ -21,7 +21,6 @@
             index
             intersection
             join
-            map-invert
             project
             rename
             rename-keys
@@ -40,7 +39,6 @@
 (define-generic index)
 (define-generic intersection)
 (define-generic join)
-(define-generic map-invert)
 (define-generic project)
 (define-generic rename)
 (define-generic rename-keys)

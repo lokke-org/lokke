@@ -34,12 +34,15 @@
                           update
                           vals))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
-  #:use-module ((lokke base map) #:select (<map>))
+  #:use-module ((lokke base map) #:select (<map> map-invert))
   #:use-module ((lokke fash)
-                #:select (make-fash
-                          fash-fold
+                #:select (fash-fold
                           fash-ref
-                          fash-update))
+                          fash-set!
+                          fash-update
+                          make-fash
+                          make-transient-fash
+                          persistent-fash))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= hash))
@@ -63,6 +66,7 @@
                empty
                get
                keys
+               map-invert
                meta
                pr-approachable
                pr-readable
@@ -149,6 +153,8 @@
                             v)
                           not-found)))
     (make-map fm n (map-meta m))))
+
+(define (transient-fash) (make-transient-fash #:hash hash #:equal clj=))
 
 (define empty-fash (make-fash #:hash hash #:equal clj=))
 (define empty-hash-map (make-map empty-fash 0 #nil))
@@ -323,5 +329,13 @@
                                 hashes)))
             (atomic-box-set! box h)
             h)))))
+
+(define-method (map-invert (m <hash-map>))
+  (make-map (persistent-fash
+             (fash-fold (lambda (k v result) (fash-set! result v k))
+                        (map-fm m)
+                        (transient-fash)))
+            (map-count m)
+            #nil))
 
 ;; FIXME: custom merge?

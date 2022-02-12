@@ -239,6 +239,7 @@ TESTS = \
   test/clojure-edn \
   test/clojure-evaluation \
   test/clojure-exceptions \
+  test/clojure-map \
   test/clojure-metadata \
   test/clojure-ns \
   test/clojure-set \
