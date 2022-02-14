@@ -3,14 +3,16 @@
 
 (define-module (lokke base util)
   #:use-module ((ice-9 receive) #:select (receive))
-  #:use-module ((srfi srfi-1) #:select (drop take))
+  #:use-module ((srfi srfi-1) #:select (drop drop-right take last))
   #:use-module ((system syntax) #:select (syntax-local-binding))
   #:export (global-identifier?
+            macro-identifier?
             keyword->string
             map-tag?
             meta-tag?
             module-name->ns-str
             module-name->ns-sym
+            module-filename->ns-str
             pairify
             require-nil
             set-tag?
@@ -32,6 +34,16 @@
 (define (module-name->ns-sym m)
   (string->symbol (module-name->ns-str m)))
 
+(define (module-filename->ns-str filename)
+  (let* ((fn-list (string-split filename #\/))
+         (fn-list (append (drop-right fn-list 1)
+                          (list (car (string-split (last fn-list) #\.))))))
+    (string-join (if (and (> (length fn-list) 2)
+                          (equal? '("lokke" "ns") (take fn-list 2)))
+                     (drop fn-list 2)
+                     (cons 'guile fn-list))
+                 ".")))
+
 (define (synquote-resolve-symbol-str s s-mod)
   (let ((src-module (module-import-interface s-mod (string->symbol s))))
     (string-append (module-name->ns-str (module-name (or src-module s-mod)))
@@ -42,6 +54,11 @@
   (receive (type _)
       (syntax-local-binding syn)
     (eq? 'global type)))
+
+(define (macro-identifier? syn)
+  (receive (type _)
+      (syntax-local-binding syn)
+    (eq? 'macro type)))
 
 ;; We use these as a syntax-pattern fender to detect reader-types.
 (define (map-tag? x) (eq? '/lokke/reader-hash-map (syntax->datum x)))

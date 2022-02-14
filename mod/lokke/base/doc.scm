@@ -4,8 +4,12 @@
 (define-module (lokke base doc)
   #:use-module ((ice-9 threads) #:select (with-mutex))
   #:use-module ((lokke base util)
-                #:select (global-identifier? module-name->ns-str))
+                #:select (global-identifier?
+                          macro-identifier?
+                          module-name->ns-str
+                          module-filename->ns-str))
   #:use-module ((srfi srfi-1) #:select (drop take))
+  #:use-module ((system vm program) #:select (source:file program-source))
   #:use-module ((texinfo string-utils) #:select (make-text-wrapper))
   #:export (clear-def-doc! doc maybe-set-def-doc!))
 
@@ -57,9 +61,11 @@ procedure-documentation if the value is a procedure."
              (if doc
                  doc
                  (find-doc name value #f))))))
-      (if (procedure? value)
-          (or (procedure-documentation value)
-              #nil)
+      (or (cond ((procedure? value)
+                 (procedure-documentation value))
+                ((macro? value)
+                 (and=> (macro-transformer value) procedure-documentation))
+                (else #f))
           #nil)))
 
 (define show-doc
@@ -75,11 +81,19 @@ procedure-documentation if the value is a procedure."
     (syntax-case x ()
       ((_ what)
        ;; For now, assume it's acceptable to always evaluate what
-       (if (global-identifier? #'what)
-           #'(show-doc (string-append
-                        (module-name->ns-str (module-name (current-module)))
-                        "/"
-                        (symbol->string 'what))
-                       (find-doc 'what what #t))
-           #'(show-doc (string-append "/" (symbol->string 'what))
-                       (find-doc 'what what #f)))))))
+       (cond ((global-identifier? #'what)
+              #'(show-doc (string-append
+                           (module-name->ns-str (module-name (current-module)))
+                           "/"
+                           (symbol->string 'what))
+                          (find-doc 'what what #t)))
+             ((macro-identifier? #'what)
+              #'(let ((what* (module-ref (current-module) 'what)))
+                  (show-doc (string-append (module-filename->ns-str
+                                            (source:file
+                                             (program-source
+                                              (macro-transformer what*) 0)))
+                                           "/" (symbol->string 'what))
+                            (find-doc 'what what* #f))))
+             (else #'(show-doc (string-append "/" (symbol->string 'what))
+                               (find-doc 'what what #f))))))))
