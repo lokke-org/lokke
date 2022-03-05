@@ -41,13 +41,13 @@ EXTRA_DIST = $(TESTS) $(mod_clj_srcs) $(mod_scm_srcs) \
   example/nbody/nbody.clj-1.clj \
   gen-makefile \
   hello.clj \
-  lok.1 \
+  lokke.1 \
   setup
 
 
 # FIXME: preserve symlinks in install tree?
 man1_MANS = lok.1 lokke.1
-noinst_DATA = lokke.1.txt
+noinst_DATA = lok.1.txt lokke.1.txt
 
 # Only opportunistically render the plain text manpage via "-l" for
 # now because on at least on FreeBSD rendering via "man -M . lokke >
@@ -59,8 +59,15 @@ lokke.1.txt: lokke.1
 	if COLUMNS=80 man -l $^ > $@.tmp; then \
 	    mv $@.tmp $@; \
 	fi
-CLEANFILES += lokke.1.txt.tmp
-DISTCLEANFILES += lokke.1.txt
+
+lok.1:
+	$(LN_S) lokke.1 lok.1
+
+lok.1.txt: lokke.1.txt
+	$(LN_S) lokke.1.txt lok.1.txt
+
+CLEANFILES += lok.1 lokke.1.txt.tmp
+DISTCLEANFILES += lok.1.txt lokke.1.txt
 
 AM_CFLAGS = \
   -g -Wall -Werror -Wno-error=deprecated-declarations \
