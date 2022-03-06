@@ -1,0 +1,143 @@
+#!./lokke -0
+;; -*-clojure-*-
+!#
+
+;;; Copyright (C) 2022 Rob Browning <rlb@defaultvalue.org>
+;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
+
+(ns test.clojure-datatype
+  (:require
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [guile.rnrs.io.ports :refer [eof-object]]))
+
+(begin-tests (ns-name *ns*))
+
+;; FIXME: check error cases.  Since defprotocol, defrecord, etc. are
+;; macros, we'll have to figure out how we want to test those,
+;; i.e. (is (thrown? 'misc-error ...)) won't work as-is.
+
+;; At the moment, defprotocol, etc. can't be inside testing forms.
+
+(defprotocol Ineffable)
+(defprotocol Trivial (foo [t]))
+(defprotocol Nontrivial
+  (bar [n])
+  (baz [n x])
+  (bax [n] [n x] "?"))
+
+(testing "defprotcol"
+  ;; For now, just validate some internals
+  (is (map? Ineffable))
+  (is (:lokke.datatype/protocol Ineffable))
+  (is (= 'Ineffable (:name Ineffable)))
+  (is (not (seq (:methods Ineffable))))
+  (is (= '{bar {:name bar :sigs [[n]]}
+           baz {:name baz :sigs [[n x]]}
+           bax {:name bax :sigs [[n] [n x]]}}
+         (:methods Nontrivial))))
+
+
+(defrecord Point [x y z])
+
+(defrecord SuperImportantThing []
+  Nontrivial
+  (bar [n] "bar")
+  (baz [n x] "baz")
+  (bax ([n] "bax 1") ([n x] "bax 2")))
+
+(testing "defrecord"
+  (is (instance? guile.oop.goops/<class> Point))
+  (is (instance? Point (->Point 1 2 3)))
+  (is (map? (->Point 1 2 3)))
+  (is (coll? (->Point 1 2 3)))
+  (is (= (->Point 1 2 3) (->Point 1 2 3)))
+  (is (not (= (->Point 1 2 3) (->Point 1 2 9))))
+  (is (= {:x 1 :y 2 :z 3} (->Point 1 2 3)))
+  (is (not (= {:x 1 :z 3} (->Point 1 2 3))))
+  (is (= 3 (:z (->Point 1 2 3))))
+  (is (= nil (-> (->Point 1 2 3) :w)))
+  (is (= 0 (-> (->Point 1 2 3) (assoc :w 0) :w)))
+  (is (= nil (-> (->Point 1 2 3) (assoc :w 0) (dissoc :w) :w)))
+  (is (= 3 (count (->Point 1 2 3))))
+  (is (= 4 (count (-> (->Point 1 2 3) (assoc :w 0)))))
+  (is (= 2 (count (-> (->Point 1 2 3) (dissoc :y)))))
+  (is (= #{[:x 1] [:y 2] [:z 3]} (-> (->Point 1 2 3) seq set)))
+  (let [x (-> (->Point 1 2 3) (dissoc :x))]
+    (is (not (instance? Point x)))
+    (is (map? x))
+    (is (coll? x))
+    (is (= #{[:x 1] [:z 3]} (-> (->Point 1 2 3) (dissoc :y) seq set))))
+
+  (let [x (->SuperImportantThing)]
+    (is (= "bar" (bar x)))
+    (is (= "baz" (baz x nil)))
+    (is (= "bax 1" (bax x)))
+    (is (= "bax 2" (bax x nil)))))
+
+(testing "extend-type"
+  (extend-type guile.oop.goops/<string>
+    Trivial
+    (foo [t] "foo"))
+  (is (= "foo" (foo "s")))
+
+  (extend-type Point
+    Trivial
+    (foo [t] "foo")
+
+    Nontrivial
+    (bar [n] "bar")
+    (baz [n x] "baz")
+    (bax ([n] "bax 1") ([n x] "bax 2")))
+
+  (let [x (->Point 1 2 3)]
+    (is (= "foo" (foo x)))
+    (is (= "bar" (bar x)))
+    (is (= "baz" (baz x nil)))
+    (is (= "bax 1" (bax x)))
+    (is (= "bax 2" (bax x nil)))))
+
+(testing "record ="
+  (is (= (->Point 1 2 3) (->Point 1 2 3)))
+  (is (not= (->Point 1 2 3) (->Point 1 2 9)))
+  (is (not= (->Point 1 2 3) (->Point 1 9 3)))
+  (is (not= (->Point 1 2 3) (->Point 9 2 3)))
+
+  (is (= (assoc (->Point 1 2 3) :x 9)
+         (assoc (->Point 1 2 3) :x 9)))
+  (is (= (assoc (->Point 1 2 3) :w 9)
+         (assoc (->Point 1 2 3) :w 9)))
+  (is (not= (assoc (->Point 1 2 3) :x 4)
+            (assoc (->Point 1 2 3) :x 9)))
+  (is (not= (assoc (->Point 1 2 3) :w 7)
+            (assoc (->Point 1 2 3) :w 9)))
+
+  (is (= (dissoc (->Point 1 2 3) :x)
+         (dissoc (->Point 1 2 3) :x)))
+  (is (not= (dissoc (->Point 1 2 3) :x)
+            (dissoc (->Point 1 2 3) :y))))
+
+(testing "record metadata"
+  (let [x (->Point 1 2 3)]
+    (is (= nil (meta x)))
+    (is (= nil (meta (with-meta x nil))))
+    (is (= {:x 1} (meta (with-meta x {:x 1}))))
+    (is (= {:x 1} (meta (assoc (with-meta x {:x 1}) :z 1))))
+    (is (= {:x 1} (meta (assoc (with-meta x {:x 1}) :foo 1))))
+    (is (= {:x 1} (meta (dissoc (with-meta x {:x 1}) :x))))
+    (is (identical? x (with-meta x nil)))))
+
+(testing "record hash"
+  (let [x (->Point 1 2 3)]
+    (is (= (hash x) (hash x)))
+    (is (= (hash x) (hash (->Point 1 2 3))))
+    (is (= (hash x) (hash (assoc (->Point 1 2 4) :z 3))))
+    (is (= (hash (assoc x :foo 1))
+           (hash (assoc x :foo 1))))
+    (is (not (= (hash (->Point 1 2 3))
+                (hash (->Point 1 2 4)))))
+    (is (not (= (hash (assoc x :foo 1))
+                (hash (assoc x :foo 2)))))
+    (is (not (= (hash x) (hash (assoc x :foo 1)))))
+    (is (not (= (hash x) (hash (dissoc x :z)))))))
+
+(end-tests (ns-name *ns*) :exit? true)

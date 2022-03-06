@@ -288,6 +288,15 @@ General comparison with Clojure/JVM
   course you can modify anything on the JVM too, if you really set
   your mind to it.
 
+* References like `x.y.z` (that are class references on the JVM) are
+  not supported, and there is no `import` or `:import`.
+
+* `defrecord` and `defprotocol` define a normal bindings in the
+  current namespace, which must be `require`d, not `import`ed (as with
+  records in ClojureScript).
+
+* `deftype` is not yet supported.
+
 On the Scheme side
 ------------------
 

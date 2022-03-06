@@ -1,4 +1,4 @@
-### Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
+### Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ### SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 # Makefile.am is automatically generated from Makefile.am.in via
@@ -176,6 +176,7 @@ mod_scm_srcs = \
   mod/lokke/concurrent.scm \
   mod/lokke/config.scm \
   mod/lokke/core.scm \
+  mod/lokke/datatype.scm \
   mod/lokke/exception.scm \
   mod/lokke/fash.scm \
   mod/lokke/hash-map.scm \
@@ -241,6 +242,7 @@ TESTS = \
   test/clojure-basics \
   test/clojure-comparison \
   test/clojure-concurrency \
+  test/clojure-datatype \
   test/clojure-defmacro \
   test/clojure-dynamic \
   test/clojure-edn \

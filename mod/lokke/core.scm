@@ -106,6 +106,8 @@
                           set-validator!
                           swap!
                           swap-vals!))
+  #:use-module ((lokke datatype)
+                #:select (defprotocol defrecord extend-type))
   #:use-module ((lokke exception)
                 #:select (Error
                           Error.
@@ -349,10 +351,12 @@
                defdynloc
                defn
                defn-
+               defprotocol
+               defrecord
+               deliver
                deref
                disj
                dissoc
-               deliver
                doall
                doc
                dorun
@@ -374,6 +378,7 @@
                ex-data
                ex-info
                ex-message
+               extend-type
                false?
                ffirst
                filterv
