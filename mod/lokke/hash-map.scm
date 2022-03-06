@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; This module must not depend on (lokke collection) because it
@@ -113,10 +113,14 @@
 
 (define-method (with-meta (m <hash-map>) (mdata <boolean>))
   (require-nil 'with-meta 2 mdata)
-  (make-map (map-fm m) (map-count m) mdata))
+  (if (nil? (map-meta m))
+      m
+      (make-map (map-fm m) (map-count m) mdata)))
 
 (define-method (with-meta (m <hash-map>) (mdata <hash-map>))
-  (make-map (map-fm m) (map-count m) mdata))
+  (if (eq? mdata (map-meta m))
+      m
+      (make-map (map-fm m) (map-count m) mdata)))
 
 (define (show m emit port)
   (display "{" port)

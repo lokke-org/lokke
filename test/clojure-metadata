@@ -2,7 +2,7 @@
 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-metadata
@@ -23,7 +23,9 @@
   (is (= {:x true} (meta ^:x [])))
   (is (= {:x :y} (meta ^{:x :y} [])))
   (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} [])))
-  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} []))))
+  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} [])))
+  (let [x [1]] (is (identical? x (with-meta x nil))))
+  (let [x (vector 1)] (is (identical? x (with-meta x nil)))))
 
 (testing "hash-map"
   (is (= nil (meta {})))
@@ -37,7 +39,10 @@
   (is (= {:x true} (meta ^:x {})))
   (is (= {:x :y} (meta ^{:x :y} {})))
   (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} {})))
-  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} {}))))
+  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} {})))
+
+  (let [x {:x 1}] (is (identical? x (with-meta x nil))))
+  (let [x (hash-map :x 1)] (is (identical? x (with-meta x nil)))))
 
 (testing "hash-set"
   (is (= nil (meta #{})))
@@ -51,7 +56,10 @@
   (is (= {:x true} (meta ^:x #{})))
   (is (= {:x :y} (meta ^{:x :y} #{})))
   (is (= {:w :x :y :z} (meta ^{:w :x} ^{:y :z} #{})))
-  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} #{}))))
+  (is (= {:w :x} (meta ^{:w :x} ^{:w :z} #{})))
+
+  (let [x #{:x}] (is (identical? x (with-meta x nil))))
+  (let [x (hash-set :x)] (is (identical? x (with-meta x nil)))))
 
 (def meta-test-var nil)
 

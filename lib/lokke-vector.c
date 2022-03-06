@@ -1,4 +1,4 @@
-// Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+// Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
 // SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 #ifdef HAVE_CONFIG_H
@@ -152,11 +152,15 @@ SCM_DEFINE (lokke_vector_with_meta, "%lokke-vector-with-meta", 2, 0, 0,
     const vector_t * const c_vec = scm_foreign_object_ref (vector, 0);
     if (c_vec->length <= 32) {
         const smaller_vec_t * const vs = (smaller_vec_t *) c_vec;
+        if (scm_is_eq(vs->meta, meta))
+          return vector;
         smaller_vec_t *result = smaller_vec_copy((smaller_vec_t *) vs);
         result->meta = meta;
         return scm_make_foreign_object_1 (vector_type_scm, result);
     }
     const larger_vec_t * const vl = (larger_vec_t *) c_vec;
+    if (scm_is_eq(vl->meta, meta))
+      return vector;
     larger_vec_t * const result = scm_gc_malloc (sizeof (larger_vec_t),
                                                  "larger lokke vector");
     memcpy (result, vl, sizeof(larger_vec_t));

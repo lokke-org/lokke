@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke hash-set)
@@ -96,10 +96,14 @@
 
 (define-method (with-meta (s <hash-set>) (mdata <boolean>))
   (require-nil 'with-meta 2 mdata)
-  (make-set (set-fm s) (set-count s) mdata))
+  (if (nil? (set-meta s))
+      s
+      (make-set (set-fm s) (set-count s) mdata)))
 
 (define-method (with-meta (s <hash-set>) (mdata <hash-map>))
-  (make-set (set-fm s) (set-count s) mdata))
+  (if (eq? mdata (set-meta s))
+      s
+      (make-set (set-fm s) (set-count s) mdata)))
 
 (define-method (get (s <hash-set>) x)
   (ref (set-fm s) x))
