@@ -270,6 +270,10 @@ General comparison with Clojure/JVM
 * `abs` returns the absolute value for all integers, i.e. it does not
   return the minimum 64-bit integer unchanged.
 
+* `parse-long` will return a value for integers of arbitrary
+  magnitude while the JVM returns `nil` for anything outside the range
+  of a 64-bit signed integer.
+
 * Rather than throwing an exception, the Clojure and edn reader
   functions, `read`, `read-string`, etc. return the [rnrs end-of-file
   object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
@@ -697,7 +701,7 @@ describing the applicable terms, including, but not limited to:
   - mod/lokke/ns/clojure/zip.clj
   - test/clojure-walk
 
-Copyright © 2015-2021 Rob Browning &lt;<rlb@defaultvalue.org>&gt;
+Copyright © 2015-2022 Rob Browning &lt;<rlb@defaultvalue.org>&gt;
 
 <!--
 Local Variables:

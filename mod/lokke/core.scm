@@ -248,6 +248,7 @@
             not=
             num
             parse-boolean
+            parse-long
             short
             time
             trampoline)
@@ -787,3 +788,8 @@
    ((string=? s "true") #t)
    ((string=? s "false") #f)
    (else #nil)))
+
+(define (parse-long s)
+  (let (n (string->number s))
+    (when (exact-integer? n)
+        n)))
