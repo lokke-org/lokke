@@ -222,6 +222,16 @@
     (is (= (cons :yep (range 30))
            (apply (fnil parrot :yep) nil (range 30))))))
 
+(testing "abs"
+  (is (= 0 (abs 0)))
+  (is (= 1 (abs 1)))
+  (is (= 1 (abs -1)))
+  (is (= 1.1 (abs 1.1)))
+  (is (= 1.1 (abs -1.1)))
+  (is (= ##Inf (abs ##Inf)))
+  (is (= ##Inf (abs ##-Inf)))
+  (is (NaN? (abs ##NaN))))
+
 (testing "future"
   (is (= :yep (deref (future :yep))))
   (is (= :yep (deref (future-call (constantly :yep))))))

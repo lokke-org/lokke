@@ -278,6 +278,7 @@
                ExceptionInfo
                Throwable
                Throwable.
+               abs
                aclone
                add-watch
                aget

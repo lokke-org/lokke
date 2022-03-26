@@ -267,6 +267,9 @@ General comparison with Clojure/JVM
 
 * The integer syntax does not yet support BASErNUM bases over 16.
 
+* `abs` returns the absolute value for all integers, i.e. it does not
+  return the minimum 64-bit integer unchanged.
+
 * Rather than throwing an exception, the Clojure and edn reader
   functions, `read`, `read-string`, etc. return the [rnrs end-of-file
   object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
