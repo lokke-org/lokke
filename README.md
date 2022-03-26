@@ -274,6 +274,10 @@ General comparison with Clojure/JVM
   magnitude while the JVM returns `nil` for anything outside the range
   of a 64-bit signed integer.
 
+* `parse-double` does not yet handle JVM `Double/valueOf` hex format
+  doubles, and at the moment, the floating point syntax is the same as
+  the reader's.
+
 * Rather than throwing an exception, the Clojure and edn reader
   functions, `read`, `read-string`, etc. return the [rnrs end-of-file
   object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),

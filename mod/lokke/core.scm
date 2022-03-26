@@ -159,7 +159,7 @@
                           str
                           with-in-str
                           with-out-str))
-  #:use-module ((lokke reader) #:select (read read-string))
+  #:use-module ((lokke reader) #:select (read read-string string->float))
   #:use-module ((lokke set) #:select (<set> set?))
   #:use-module ((lokke time) #:select (instant?))
   #:use-module ((lokke uuid) #:select (parse-uuid random-uuid uuid?))
@@ -248,6 +248,7 @@
             not=
             num
             parse-boolean
+            parse-double
             parse-long
             short
             time
@@ -788,6 +789,19 @@
    ((string=? s "true") #t)
    ((string=? s "false") #f)
    (else #nil)))
+
+(define (parse-double s)
+  (%scm-let ((s (string-trim-both s)))
+    (cond
+     ((string=? s "NaN") +nan.0)
+     ((string=? s "+NaN") +nan.0)
+     ((string=? s "-NaN") +nan.0)
+     ((string=? s "Infinity") +inf.0)
+     ((string=? s "+Infinity") +inf.0)
+     ((string=? s "-Infinity") -inf.0)
+     (else
+      (or (string->float s)
+          #nil)))))
 
 (define (parse-long s)
   (let (n (string->number s))

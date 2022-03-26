@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke reader)
@@ -36,7 +36,7 @@
                 #:select (uuid? uuid->tagged-data tagged-data->uuid))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (concatenate iota fold))
-  #:export (read-for-compiler read-string read-string-for-compiler)
+  #:export (read-for-compiler read-string read-string-for-compiler string->float)
   #:replace (read)
   #:duplicates (merge-generics replace warn-override-core warn last))
 

@@ -258,6 +258,28 @@
   (is (= true (parse-boolean "true")))
   (is (= false (parse-boolean "false"))))
 
+(testing "parse-double"
+  (is (= nil (parse-double "")))
+  (is (= nil (parse-double "x")))
+  (is (= 1 (parse-double "1")))
+  (is (= 1 (parse-double "+1")))
+  (is (= -1 (parse-double "-1")))
+  (is (= 1.0 (parse-double "1.0")))
+  (is (= 1.0 (parse-double "+1.0")))
+  (is (= -1.0 (parse-double "-1.0")))
+  (is (= 1e3 (parse-double "1e3")))
+  (is (= 1e3 (parse-double "+1e3")))
+  (is (= -1e3 (parse-double "-1e3")))
+  (is (NaN? (parse-double "NaN")))
+  (is (NaN? (parse-double "+NaN")))
+  (is (NaN? (parse-double "-NaN")))
+  (is (= ##Inf (parse-double "Infinity")))
+  (is (= ##Inf (parse-double "+Infinity")))
+  (is (= ##-Inf (parse-double "-Infinity")))
+  (is (= 1 (parse-double " 1")))
+  (is (= 1 (parse-double "1 ")))
+  (is (= 1 (parse-double " 1 "))))
+
 (testing "parse-long"
   (is (= nil (parse-long "")))
   (is (= nil (parse-long "x")))
