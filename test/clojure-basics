@@ -251,6 +251,13 @@
     (is (= :tired (trampoline (bouncer 1))))
     (is (= :tired (trampoline (bouncer 2))))))
 
+(testing "parse-boolean"
+  (is (= nil (parse-boolean "")))
+  (is (= nil (parse-boolean "x")))
+  (is (= nil (parse-boolean " true ")))
+  (is (= true (parse-boolean "true")))
+  (is (= false (parse-boolean "false"))))
+
 (testing "uuid?"
   (is (not (uuid? :x)))
   (is (uuid? #uuid "9d01ae80-35a4-423e-afb5-f841fbdfc81c")))

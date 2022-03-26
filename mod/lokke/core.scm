@@ -247,6 +247,7 @@
             min-key
             not=
             num
+            parse-boolean
             short
             time
             trampoline)
@@ -780,3 +781,9 @@
 
       ((_ target action) #'action)
       ((_ target) #'(error "No matching clause for" target)))))
+
+(define (parse-boolean s)
+  (cond
+   ((string=? s "true") #t)
+   ((string=? s "false") #f)
+   (else #nil)))
