@@ -412,6 +412,7 @@
                in-ns
                inc
                inc'
+               (inf? . infinity?)
                (instant? . inst?)
                int-array
                int?
@@ -448,6 +449,7 @@
                mod
                name
                namespace
+               (nan? . NaN?)
                nat-int?
                neg?
                neg-int?
