@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; This module must not depend on (lokke collection) because it
@@ -34,7 +34,8 @@
                           update
                           vals))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
-  #:use-module ((lokke base map) #:select (<map> map-invert))
+  #:use-module ((lokke base map)
+                #:select (<map> map-invert update-keys update-vals))
   #:use-module ((lokke fash)
                 #:select (fash-fold
                           fash-ref
@@ -76,6 +77,8 @@
                seqable?
                with-meta
                update
+               update-keys
+               update-vals
                vals)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
@@ -337,6 +340,22 @@
 (define-method (map-invert (m <hash-map>))
   (make-map (persistent-fash
              (fash-fold (lambda (k v result) (fash-set! result v k))
+                        (map-fm m)
+                        (transient-fash)))
+            (map-count m)
+            #nil))
+
+(define-method (update-keys m f)
+  (make-map (persistent-fash
+             (fash-fold (lambda (k v result) (fash-set! result (f k) v))
+                        (map-fm m)
+                        (transient-fash)))
+            (map-count m)
+            #nil))
+
+(define-method (update-vals m f)
+  (make-map (persistent-fash
+             (fash-fold (lambda (k v result) (fash-set! result k (f v)))
                         (map-fm m)
                         (transient-fash)))
             (map-count m)

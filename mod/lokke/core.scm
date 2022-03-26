@@ -42,7 +42,8 @@
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base dynamic) #:select (set!))
-  #:use-module ((lokke base map) #:select (<map> map-invert map?))
+  #:use-module ((lokke base map)
+                #:select (<map> map-invert map? update-keys update-vals))
   #:use-module ((lokke base syntax)
                 #:select (->
                           ->>
@@ -545,6 +546,8 @@
                try
                update
                update-in
+               update-keys
+               update-vals
                use
                val
                vals

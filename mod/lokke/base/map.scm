@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke base map)
@@ -11,7 +11,7 @@
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
-  #:export (<map> map-invert map?)
+  #:export (<map> map-invert map? update-keys update-vals)
   #:re-export (clj= get invoke)
   #:replace (assoc merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
@@ -24,6 +24,8 @@
 ;; hash-map.
 
 (define-generic map-invert)
+(define-generic update-keys)
+(define-generic update-vals)
 
 (define sentinel (cons #f #f))  ;; Globally eq?/equal? unique token
 

@@ -21,4 +21,12 @@
   (is (= {:x 1 :y 2 :z 3}
          (map-invert {1 :x 2 :y 3 :z}))))
 
+(deftest update-keys
+  (is (= {:x 1 :y 2 :z 3}
+         (update-keys {"x" 1 "y" 2 "z" 3} keyword))))
+
+(deftest update-vals
+  (is (= {:x 2 :y 3 :z 4}
+         (update-vals {:x 1 :y 2 :z 3} inc))))
+
 (end-tests (ns-name *ns*) :exit? true)
