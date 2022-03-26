@@ -1,4 +1,4 @@
-;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2021-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke uuid)
@@ -8,6 +8,7 @@
   #:use-module (oop goops)
   #:re-export (pr-readable to-string)
   #:export (nil-uuid
+            parse-uuid
             random-uuid
             tagged-data->uuid
             uuid->integer
@@ -53,14 +54,14 @@
 (define-inlinable (hex-substr->int s start end)
   (let ((u (substring/shared s start end)))
     (unless (string-every char-set:hex-digit u)
-      (error "Invalid UUID syntax:" s u))
+      (throw 'uuid-syntax-error "Invalid UUID syntax:" s u))
     (string->number u 16)))
 
 (define (string->uuid-int s)
   (unless (= 36 (string-length s))
-    (error "UUID string is not 36 characters long:" s))
+    (throw 'uuid-syntax-error "UUID string is not 36 characters long:" s))
   (for-each (lambda (i) (unless (eqv? #\- (string-ref s i))
-                          (error "Invalid UUID syntax:" s)))
+                          (throw 'uuid-syntax-error "Invalid UUID syntax:" s)))
             '(8 13 18 23))
   (let ((n (logior (ash (hex-substr->int s 0 8) 96)
                    (ash (hex-substr->int s 9 13) 80)
@@ -96,3 +97,8 @@
   (make-uuid (logior (logand (random #x100000000000000000000000000000000)
                              #xffffffffffff0fff3fffffffffffffff)
                      #x0000000000004000c000000000000000)))
+
+(define (parse-uuid s)
+  (catch 'uuid-syntax-error
+    (lambda () (make-uuid (string->uuid-int s)))
+    (lambda throw-args #nil)))

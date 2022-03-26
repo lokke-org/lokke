@@ -251,6 +251,19 @@
     (is (= :tired (trampoline (bouncer 1))))
     (is (= :tired (trampoline (bouncer 2))))))
 
+(testing "uuid?"
+  (is (not (uuid? :x)))
+  (is (uuid? #uuid "9d01ae80-35a4-423e-afb5-f841fbdfc81c")))
+
+(testing "parse-uuid"
+  (is (= #uuid "9d01ae80-35a4-423e-afb5-f841fbdfc81c"
+         (parse-uuid "9d01ae80-35a4-423e-afb5-f841fbdfc81c")))
+  (is (= nil (parse-uuid "")))
+  (is (= nil (parse-uuid "x"))))
+
+(testing "random-uuid"
+  (is (uuid? (random-uuid))))
+
 (is (= *warn-on-reflection* false))
 
 (end-tests (ns-name *ns*) :exit? true)

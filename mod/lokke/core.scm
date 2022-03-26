@@ -162,6 +162,7 @@
   #:use-module ((lokke reader) #:select (read read-string))
   #:use-module ((lokke set) #:select (<set> set?))
   #:use-module ((lokke time) #:select (instant?))
+  #:use-module ((lokke uuid) #:select (parse-uuid random-uuid uuid?))
   #:use-module (lokke vector) ;; #:FIXME select
   #:use-module ((lokke metadata)
                 #:select (*print-meta* alter-meta! meta vary-meta with-meta))
@@ -469,6 +470,7 @@
                number?
                odd?
                or
+               parse-uuid
                partial
                pop
                pos?
@@ -485,6 +487,7 @@
                rand
                rand-int
                random-sample
+               random-uuid
                range
                ratio?
                rational?
@@ -549,6 +552,7 @@
                update-keys
                update-vals
                use
+               uuid?
                val
                vals
                var
