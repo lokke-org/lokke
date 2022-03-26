@@ -196,8 +196,8 @@ General comparison with Clojure/JVM
   supported by the reader functions; they are not restricted to
   `.cljc` files.
 
-* Symbols, like keywords, are unique and compare very efficiently.  On
-  the JVM, this is only promised for
+* Symbols, like keywords, are unique and compare very efficiently (via
+  pointer comparison).  On the JVM, this is only promised for
   [keywords](https://clojure.org/reference/data_structures#Keywords).
   Symbols do not currently support metadata.
 
