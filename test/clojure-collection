@@ -459,4 +459,11 @@
   (is (= [1 1 1] (repeatedly 3 (fn [] 1))))
   (is (= [] (repeatedly 0 (fn [] 1)))))
 
+(testing "select-keys"
+  (is (= {} (select-keys {:x 1 :y 2} [])))
+  (is (= {} (select-keys {:x 1 :y 2} [:z])))
+  (is (= {:x 1} (select-keys {:x 1 :y 2} [:x])))
+  (is (= {:x 1 :y 2} (select-keys {:x 1 :y 2 :z 3} '(:x :y))))
+  (is (= 2 (count (select-keys {:x 1 :y 2 :z 3} '(:x :y))))))
+
 (end-tests (ns-name *ns*) :exit? true)

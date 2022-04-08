@@ -26,6 +26,7 @@
                           get
                           keys
                           lazy-seq
+                          reduce
                           reduce-kv
                           second
                           select-keys
@@ -310,12 +311,20 @@
              init))
 
 (define-method (select-keys (m <hash-map>) keys)
-  (fash-fold (lambda (k v result)
-               (if (eq? v not-found)
-                   result
-                   (assoc result k v)))
-             (map-fm m)
-             (empty-hash-map-w-meta (map-meta m))))
+  (let ((fm (map-fm m))
+        (n 0))
+    (make-map (persistent-fash
+               (reduce (lambda (result k)
+                         (let ((v (fash-ref fm k (lambda (_) not-found))))
+                           (if (eq? v not-found)
+                               result
+                               (begin
+                                 (set! n (1+ n))
+                                 (fash-set! result k v)))))
+                       (transient-fash)
+                       keys))
+              n
+              (map-meta m))))
 
 (define-method (hash (x <hash-map>))
   (let* ((box (map-hash x))
