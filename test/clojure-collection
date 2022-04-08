@@ -466,4 +466,8 @@
   (is (= {:x 1 :y 2} (select-keys {:x 1 :y 2 :z 3} '(:x :y))))
   (is (= 2 (count (select-keys {:x 1 :y 2 :z 3} '(:x :y))))))
 
+(testing "update"
+  (is (= [1 2 4] (update [1 2 3] 2 inc)))
+  (is (= {:x 2} (update {:x 1} :x inc))))
+
 (end-tests (ns-name *ns*) :exit? true)

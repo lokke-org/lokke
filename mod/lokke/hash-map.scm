@@ -297,7 +297,7 @@
     (when v
       (map-entry k v))))
 
-(define (update m k f . args)
+(define-method (update (m <hash-map>) k f . args)
   (make-map (apply fash-update (map-fm m) k f #nil args)
             (map-count m)
             (map-meta m)))
