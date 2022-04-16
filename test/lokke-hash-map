@@ -1,7 +1,7 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
@@ -67,14 +67,12 @@
                           0
                           (t/hash-map 1 2 3 4 5 6)))
 
-(let ((s (seq (t/hash-map 1 2 3 4))))
-  (test-equal 2 (count s))
+(let ((s (seq (t/hash-map 1 2))))
+  (test-equal 1 (count s))
   (test-assert (map-entry? (first s)))
-  (test-assert (map-entry? (second s)))
+  (test-assert (nil? (second s)))
   (test-equal 1 (key (first s)))
-  (test-equal 2 (val (first s)))
-  (test-equal 3 (key (second s)))
-  (test-equal 4 (val (second s))))
+  (test-equal 2 (val (first s))))
 
 (test-assert (clj= (t/hash-map 1 2 3 4)
                    (merge (t/hash-map 1 2) (t/hash-map 3 4))))

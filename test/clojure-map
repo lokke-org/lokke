@@ -14,7 +14,9 @@
 (deftest keys-behavior
   (is (= nil (keys nil)))
   (is (= nil (keys {})))
-  (is (= #{:x :y :z} (-> {:x 1 :y 2 :z 3} keys set))))
+  (is (= #{:x :y :z} (-> {:x 1 :y 2 :z 3} keys set)))
+  (is (= (map first (seq {:x 1 :y 2 :z 3}))
+         (keys {:x 1 :y 2 :z 3}))))
 
 (deftest reduce-kv-behavior
   (is (= "x" (reduce-kv / "x" {})))

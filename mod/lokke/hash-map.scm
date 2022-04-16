@@ -252,26 +252,20 @@
 ;; specialize this so that we'll bypass the generic <sequential> flavor
 (define-method (clj= (m1 <hash-map>) (m2 <hash-map>)) (hash-map-= m1 m2))
 
-;; FIXME: we might need to augment the data structure, but we should
-;; be able to do better with respect to seq traversal.  Need similar
-;; changes for keys, etc.
+;; FIXME: we could probably augment the data structure to support
+;; incremental traversal.  For now, we're just not lazy.
 
-(define (some-item fm)
-  (call/ec
-   (lambda (return)
-     ;; FIXME: vector...
-     (fash-fold (lambda (k v result)
-                  (unless (eq? v not-found)
-                    (return (map-entry k v))))
-                fm #t)
-     not-found)))
-
+;; FIXME: not lazy
 (define-method (seq (m <hash-map>))
-  (let loop ((m m))
-    (let ((item (some-item (map-fm m))))
-      (if (eq? item not-found)
-          #nil
-          (cons item (lazy-seq (loop (dissoc m (first item)))))))))
+  ;; Should produce the same ordering as keys
+  (if (zero? (map-count m))
+      #nil
+      (fash-fold (lambda (k v result)
+                   (if (eq? v not-found)
+                       result
+                       (cons (map-entry k v) result)))
+                 (map-fm m)
+                 '())))
 
 (define-method (seqable? (b <hash-map>)) #t)
 

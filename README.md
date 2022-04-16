@@ -542,6 +542,8 @@ Additional differences from Clojure/JVM
   would Clojure vectors and Scheme lists as the would clojure lists,
   e.g. some collection and sequence operations, etc.
 
+* For now, `keys` and `(seq map)` are not lazy.
+
 Known issues
 ------------
 
