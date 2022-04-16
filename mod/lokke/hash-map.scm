@@ -137,7 +137,7 @@
                    (if first?
                        (set! first? #f)
                        (display ", " port))
-                   (emit k port)) (display #\space port) (emit v port))
+                   (emit k port) (display #\space port) (emit v port)))
                (map-fm m)
                #t))
   (display "}" port))

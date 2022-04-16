@@ -19,7 +19,9 @@
   (is (= "\\x" (pr-str \x)))
   (is (= "\\newline" (pr-str \newline)))
   (is (= "\"foo\"" (pr-str "foo")))
-  (is (= "[1 2 3]" (pr-str [1 2 3]))))
+  (is (= "[1 2 3]" (pr-str [1 2 3])))
+  (is (= "{:y 2, :x 1}" (pr-str {:x 1 :y 2})))
+  (is (= "{:x 1}" (pr-str (dissoc {:x 1 :y 2} :y)))))
 
 (testing "print-str"
   (is (= "" (print-str)))
@@ -30,7 +32,9 @@
   (is (= "\n" (print-str \newline)))
   (is (= "foo" (print-str "foo")))
   (is (= "foo" (with-out-str (print "foo"))))
-  (is (= "[1 2 3]" (print-str [1 2 3]))))
+  (is (= "[1 2 3]" (print-str [1 2 3])))
+  (is (= "{:y 2, :x 1}" (print-str {:x 1 :y 2})))
+  (is (= "{:x 1}" (print-str (dissoc {:x 1 :y 2} :y)))))
 
 (testing "str"
   (is (= "" (str)))
@@ -42,7 +46,9 @@
   (is (= "\n" (str \newline)))
   (is (= "foo" (str "foo")))
   (is (= "foo" (with-out-str (print "foo"))))
-  (is (= "[1 2 3]" (str [1 2 3]))))
+  (is (= "[1 2 3]" (str [1 2 3])))
+  (is (= "{:y 2, :x 1}" (str {:x 1 :y 2})))
+  (is (= "{:x 1}" (str (dissoc {:x 1 :y 2} :y)))))
 
 (testing "tagged literals"
   (let [inst (guile.lokke.time/instant (* 242312160 1000000000))]
