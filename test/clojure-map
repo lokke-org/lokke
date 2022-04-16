@@ -11,6 +11,11 @@
 
 (begin-tests (ns-name *ns*))
 
+(deftest keys-behavior
+  (is (= nil (keys nil)))
+  (is (= nil (keys {})))
+  (is (= #{:x :y :z} (-> {:x 1 :y 2 :z 3} keys set))))
+
 (deftest reduce-kv-behavior
   (is (= "x" (reduce-kv / "x" {})))
   (is (= 21 (reduce-kv (fn [result k v] (+ result k v))

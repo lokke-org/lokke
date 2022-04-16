@@ -277,12 +277,15 @@
 
 ;; FIXME: not lazy
 (define-method (keys (m <hash-map>))
-  (fash-fold (lambda (k v result)
-               (if (eq? v not-found)
-                   result
-                   (cons k result)))
-             (map-fm m)
-             '()))
+  ;; Should produce the same ordering as seq
+  (if (zero? (map-count m))
+      #nil
+      (fash-fold (lambda (k v result)
+                   (if (eq? v not-found)
+                       result
+                       (cons k result)))
+                 (map-fm m)
+                 '())))
 
 (define-method (vals (m <hash-map>))
   (fash-fold (lambda (k v result)

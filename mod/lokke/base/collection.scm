@@ -165,6 +165,10 @@
   (require-nil 'get x)
   not-found)
 
+(define-method (keys (x <boolean>))
+  (require-nil 'get x)
+  #nil)
+
 (define-method (cons obj1 obj2)
   (unless (proper-list? rest)
     (error "Second argument to cons is an improper list:" obj2))
