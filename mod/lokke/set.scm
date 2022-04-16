@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke set)
@@ -12,6 +12,7 @@
                           get
                           seq))
   #:use-module ((lokke base invoke) #:select (apply invoke))
+  #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
@@ -115,4 +116,16 @@
 (define-method (difference (b1 <boolean>) (b2 <boolean>))
   (require-nil 'difference b1)
   (require-nil 'difference b2)
+  #nil)
+
+(define-method (rename-keys (m <boolean>) (new-names <map>))
+  (require-nil 'rename-keys m)
+  #nil)
+
+(define-method (rename-keys (m <map>) (new-names <boolean>))
+  (require-nil 'rename-keys new-names)
+  #nil)
+(define-method (rename-keys (m <boolean>) (new-names <boolean>))
+  (require-nil 'rename-keys m)
+  (require-nil 'rename-keys new-names)
   #nil)

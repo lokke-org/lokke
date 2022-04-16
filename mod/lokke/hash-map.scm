@@ -44,12 +44,14 @@
                           fash-update
                           make-fash
                           make-transient-fash
-                          persistent-fash))
+                          persistent-fash
+                          transient-fash))
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= hash))
   #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
+  #:use-module ((lokke set) #:select (rename-keys))
   #:use-module (oop goops)
   #:use-module ((rnrs sorting) #:select (vector-sort!))
   #:use-module ((srfi srfi-1) #:select (fold))
@@ -73,6 +75,7 @@
                pr-approachable
                pr-readable
                reduce-kv
+               rename-keys
                select-keys
                seq
                seqable?
@@ -366,5 +369,18 @@
                         (empty-transient-fash)))
             (map-count m)
             #nil))
+
+(define-method (rename-keys (m <hash-map>) (new-names <hash-map>))
+  (make-map (persistent-fash
+             (fash-fold (lambda (orig-k new-k result)
+                          (let ((orig-v (ref (map-fm m) orig-k not-found)))
+                            (if (eq? orig-v not-found)
+                                result
+                                (fash-set! (fash-set! result orig-k not-found)
+                                           new-k orig-v))))
+                        (map-fm new-names)
+                        (transient-fash (map-fm m))))
+            (map-count m)
+            (map-meta m)))
 
 ;; FIXME: custom merge?

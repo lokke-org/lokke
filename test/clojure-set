@@ -2,15 +2,23 @@
 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2021-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-set
   (:require
    [clojure.set :as set]
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests deftest end-tests is testing]]))
 
 (begin-tests (ns-name *ns*))
+
+(deftest rename-keys-behavior
+  (is (= nil (set/rename-keys nil nil)))
+  (is (= nil (set/rename-keys nil {})))
+  (is (= nil (set/rename-keys {} nil)))
+  (is (= {:x 1 :y 2 :z 3} (set/rename-keys {:x 1 :y 2 :z 3} {})))
+  (is (= {:x 1 :y 2 :z 3} (set/rename-keys {:x 1 :y 2 :z 3} {:a :b})))
+  (is (= {:w 1 :y 2 :z 3} (set/rename-keys {:x 1 :y 2 :z 3} {:x :w}))))
 
 ;; clj/jvm allows nil and lists, but gives odd results for lists.  For
 ;; now, ignore those types.
