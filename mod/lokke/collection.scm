@@ -313,7 +313,7 @@
 
 (define (last coll)
   (let ((n (next coll)))
-    (if n (last n) (first n))))
+    (if n (last n) (first coll))))
 
 (define (butlast coll)
   (let loop ((result '())

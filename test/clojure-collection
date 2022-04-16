@@ -221,6 +221,12 @@
   (is (= :z (apply 'nope {:x :y} '(:z))))
   (is (= :y (apply 'x (list {'x :y})))))
 
+(testing "last"
+  (is (= nil (last [])))
+  (is (= 1 (last [1])))
+  (is (= 3 (last [1 2 3])))
+  (is (= 3 (last '(1 2 3)))))
+
 (testing "take"
   (is (= [] (take 0 [])))
   (is (= [] (take 0 [1])))
