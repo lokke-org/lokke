@@ -81,6 +81,26 @@
   (is (not (inst? :x)))
   (is (inst? #inst "1977-09-05T12:56:00Z")))
 
+(defmacro parrot [x] x)
+
+(testing "->"
+  (is (= 1 (-> 1)))
+  (is (= 2 (-> (inc 1))))
+  (is (= 2 (-> 1 inc)))
+  (is (= [1] (-> 1 (cons []))))
+  (is (= 1 (-> 1 (cons []) first)))
+  (is (= 1 (parrot (-> 1 (cons []) first))))
+  (is (= 1 (parrot (-> " 1 " clojure.string/trim parse-long)))))
+
+(testing "->>"
+  (is (= 1 (->> 1)))
+  (is (= 2 (->> (inc 1))))
+  (is (= 2 (->> 1 inc)))
+  (is (= [1] (->> 1 (conj []))))
+  (is (= 1 (->> 1 (conj []) first)))
+  (is (= 1 (parrot (->> 1 (conj []) first))))
+  (is (= 1 (parrot (->> " 1 " clojure.string/trim parse-long)))))
+
 (testing "as->"
   (is (= :yep (as-> :yep x)))
   (is (= 1 (as-> 0 x (inc x))))

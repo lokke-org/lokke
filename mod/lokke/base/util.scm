@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke base util)
@@ -13,6 +13,7 @@
             module-name->ns-sym
             pairify
             require-nil
+            scoped-sym-tag?
             set-tag?
             string->keyword
             synquote-resolve-symbol-str
@@ -46,6 +47,7 @@
 ;; We use these as a syntax-pattern fender to detect reader-types.
 (define (map-tag? x) (eq? '/lokke/reader-hash-map (syntax->datum x)))
 (define (meta-tag? x) (eq? '/lokke/reader-meta (syntax->datum x)))
+(define (scoped-sym-tag? x) (eq? '/lokke/ref-scoped-sym-if-syntax (syntax->datum x)))
 (define (set-tag? x) (eq? '/lokke/reader-hash-set (syntax->datum x)))
 (define (vec-tag? x) (eq? '/lokke/reader-vector (syntax->datum x)))
 

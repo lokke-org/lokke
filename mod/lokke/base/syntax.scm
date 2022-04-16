@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; Commonly useful code, including most notably, destructuring let and
@@ -50,6 +50,7 @@
                           meta-tag?
                           pairify
                           set-tag?
+                          scoped-sym-tag?
                           vec-tag?))
   #:use-module ((lokke compare) #:select (clj=))
   #:use-module ((lokke metadata) #:select (with-meta))
@@ -106,16 +107,24 @@
     ((_ name name* ...) (begin (define name) (declare name* ...)))))
 
 (define-syntax ->
-  (syntax-rules ()
-    ((_ x) x)
-    ((_ x (f args ...) expr ...) (-> (f x args ...) expr ...))
-    ((_ x f expr ...) (-> (f x) expr ...))))
+  (lambda (x)
+    (syntax-case x ()
+      ((_ x) #'x)
+      ((_ x (scoped-sym-tag args ...) expr ...)
+       (scoped-sym-tag? #'scoped-sym-tag)
+       #'(-> ((scoped-sym-tag args ...) x) expr ...))
+      ((_ x (f args ...) expr ...) #'(-> (f x args ...) expr ...))
+      ((_ x f expr ...) #'(-> (f x) expr ...)))))
 
 (define-syntax ->>
-  (syntax-rules ()
-    ((_ x) x)
-    ((_ x (f args ...) expr ...) (->> (f args ... x) expr ...))
-    ((_ x f expr ...) (->> (f x) expr ...))))
+  (lambda (x)
+    (syntax-case x ()
+      ((_ x) #'x)
+      ((_ x (scoped-sym-tag args ...) expr ...)
+       (scoped-sym-tag? #'scoped-sym-tag)
+       #'(->> ((scoped-sym-tag args ...) x) expr ...))
+      ((_ x (f args ...) expr ...) #'(->> (f args ... x) expr ...))
+      ((_ x f expr ...) #'(->> (f x) expr ...)))))
 
 (define (expand-def sym metadata doc value must-be-private?)
   (with-syntax ((sym sym)
