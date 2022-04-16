@@ -162,9 +162,9 @@
                           not-found)))
     (make-map fm n (map-meta m))))
 
-(define (transient-fash) (make-transient-fash #:hash hash #:equal clj=))
-
 (define empty-fash (make-fash #:hash hash #:equal clj=))
+(define (empty-transient-fash) (make-transient-fash #:hash hash #:equal clj=))
+
 (define empty-hash-map (make-map empty-fash 0 #nil))
 (define (empty-hash-map-w-meta data)
   (if (eq? #nil data)
@@ -318,7 +318,7 @@
                                (begin
                                  (set! n (1+ n))
                                  (fash-set! result k v)))))
-                       (transient-fash)
+                       (empty-transient-fash)
                        keys))
               n
               (map-meta m))))
@@ -347,7 +347,7 @@
   (make-map (persistent-fash
              (fash-fold (lambda (k v result) (fash-set! result v k))
                         (map-fm m)
-                        (transient-fash)))
+                        (empty-transient-fash)))
             (map-count m)
             #nil))
 
@@ -355,7 +355,7 @@
   (make-map (persistent-fash
              (fash-fold (lambda (k v result) (fash-set! result (f k) v))
                         (map-fm m)
-                        (transient-fash)))
+                        (empty-transient-fash)))
             (map-count m)
             #nil))
 
@@ -363,7 +363,7 @@
   (make-map (persistent-fash
              (fash-fold (lambda (k v result) (fash-set! result k (f v)))
                         (map-fm m)
-                        (transient-fash)))
+                        (empty-transient-fash)))
             (map-count m)
             #nil))
 
