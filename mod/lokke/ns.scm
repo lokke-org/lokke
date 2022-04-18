@@ -7,7 +7,7 @@
   #:use-module ((ice-9 threads) #:select (make-mutex))
   #:use-module ((lokke base util) #:select (map-tag? module-name->ns-sym))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
-  #:use-module ((lokke metadata) #:select (alter-meta! meta))
+  #:use-module ((lokke metadata) #:select (alter-meta! meta with-meta))
   #:use-module ((lokke pr) #:select (pr-str))
   #:use-module ((lokke reader literal) #:select (reader-vector-elts))
   #:use-module ((lokke scm atom) #:select (atom atom-deref atom-swap!))
