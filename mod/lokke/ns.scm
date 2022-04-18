@@ -278,10 +278,11 @@
     (dbgf "item it: ~s ~s\n" item it)
     (when (null? it)
       (error "Empty ns dependency reference:" item))
+    ;; Note that select #f is effectively :refer :all.
     (let loop ((specs (cdr it))
                (alias #f)
                (select-src #f)
-               (select #f)
+               (select (if (eq? context 'use) #f '()))
                (hide '()))
       (dbgf "loop: ~s ~s ~s ~s ~s\n" specs alias select-src select hide)
       (if (null? specs)
@@ -390,6 +391,7 @@
     (let ((interface (resolve-interface (ns-dep-spec-module spec))))
       (dbgf "mod-use: ~s\n" interface)
       (dbgf "mod-use: ~s\n" (module-public-interface interface)))
+    ;; Note that #:select #f is effectively :refer :all.
     (module-use-interfaces! (current-module)
                             (list (resolve-interface (ns-dep-spec-module spec)
                                                      #:select (ns-dep-spec-select spec)

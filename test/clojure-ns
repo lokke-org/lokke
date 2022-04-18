@@ -16,6 +16,8 @@
 (begin-tests (ns-name *ns*))
 
 (is (= 'test.clojure-ns (ns-name *ns*)))
+;; FIXME: rewrite using resolve/ns-resolve once they're added
+(is (not (guile/module-variable (guile/current-module) 'join)))
 (is (= clojure.string/join str/join))
 (is (= seq (deref (find-var 'clojure.core/seq))))
 (is (integer? (guile/current-time)))
