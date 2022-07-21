@@ -74,13 +74,44 @@
 (define (make-vector-fn-ref src)
   (tree-il/make-module-ref src '(lokke scm vector) 'lokke-vector #t))
 
+
+;; Ensure the arguments of a function call are evaluated left to right.
+;; Wrap the function call in a let.
+(define (left-to-right-il-call tree)
+  (if (and (tree-il/call? tree)
+           (> (length (tree-il/call-args tree)) 0))
+      (let* ((src (tree-il/call-src tree))
+             (proc (tree-il/call-proc tree))
+             (invoke? (and (tree-il/module-ref? proc)
+                           (equal? (tree-il/module-ref-name proc) 'invoke)
+                           (equal? (tree-il/module-ref-mod proc) '(lokke base invoke))))
+             (args (tree-il/call-args tree))
+             (args (if invoke? (cdr args) args))
+             (names (map (lambda (_) (gensym)) args))
+             (gensyms (map (lambda (_) (gensym)) args))
+             (new-args (map (lambda (name gensym) (tree-il/make-lexical-ref src name gensym))
+                            names gensyms)))
+        (tree-il/make-let
+         src
+         names
+         gensyms
+         args
+         (tree-il/make-call
+          src
+          (tree-il/call-proc tree)
+          (if invoke?
+              (cons (car (tree-il/call-args tree)) new-args)
+              new-args))))
+      tree))
+
 (define (rewrite-il-call call)
   (define (add-invoke call)
     (tree-il/make-call (tree-il/call-src call)
                        (make-invoke-ref (tree-il/call-src call))
                        (cons (tree-il/call-proc call)
                              (tree-il/call-args call))))
-  (if enable-invoke? (add-invoke call) call))
+  (let ((with-invoke (if enable-invoke? (add-invoke call) call)))
+    (left-to-right-il-call with-invoke)))
 
 (define (resolved-ns-sym->mod-name ns-sym aliases)
   (if (not aliases)
