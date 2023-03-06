@@ -20,11 +20,6 @@ case "$os" in
         ;;
     macos-*)
         ./dev/prep-for-macos-build "guile-$guile_ver"
-        if [ "$guile_ver" = 2.2 ]; then
-            export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
-            export PATH="/usr/local/opt/guile@2/bin:$PATH"
-            export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
-        fi
         ;;
     *) misuse ;;
 esac

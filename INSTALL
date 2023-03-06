@@ -48,18 +48,6 @@ and then for Guile 3.0:
 
     $ brew install guile
 
-or for Guile 2.2:
-
-    # Only if you have Guile 3.0 installed
-    $ brew unlink guile
-
-    $ brew install guile@2
-
-    # Setup environment variables as indicated after installation.
-    $ export PATH=/usr/local/opt/guile@2/bin:$PATH
-    $ export PKG_CONFIG_PATH=/usr/local/opt/guile@2/lib/pkgconfig
-    $ export ACLOCAL_PATH=/usr/local/opt/guile@2/share/aclocal
-
 <!--
 Local Variables:
 mode: markdown

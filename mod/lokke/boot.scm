@@ -29,15 +29,6 @@
 
 (re-export-and-replace! '(clj-quote . quote))
 
-;; 3.0 requires this, but it can't go in the (guile) #:select above
-;; because *that* crashes 2.2
-(cond-expand
-  ;; note "guile-3" means >= 3
-  (guile-3
-   (use-modules ((guile) #:select (... else))))
-  (else))
-
-
 (define-syntax-rule (/lokke/reader-meta x ...)
   (warn (format #f "Ignoring metadata in unsupported position: ~s"
                 '(/lokke/reader-meta x ...))))

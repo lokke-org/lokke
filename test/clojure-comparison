@@ -108,11 +108,9 @@
   (is (not= (hash true) (hash false)))
 
   (is (= (hash :x) (hash :x)))
-  (when (> (:major *clojure-version*) 2)
-    ;; Unfortunately, guile-2.2 had a bug in the hash function.
-    (is (not= (hash :x) (hash :y)))
-    (is (not= (hash :x) (hash :y/x)))
-    (is (not= (hash :x/z) (hash :y/z))))
+  (is (not= (hash :x) (hash :y)))
+  (is (not= (hash :x) (hash :y/x)))
+  (is (not= (hash :x/z) (hash :y/z)))
   (is (not= (hash :x) (hash true)))
 
   (is (= (hash 1) (hash 1)))
@@ -149,10 +147,8 @@
 
   (let [x (atom nil)] (is (= (hash x) (hash x))))
   (let [x (promise)] (is (= (hash x) (hash x))))
-  (when (> (:major *clojure-version*) 2)
-    ;; Unfortunately, guile-2.2 had a bug in the hash function.
-    (is (not= (hash (atom nil)) (hash (atom nil))))
-    (is (not= (hash (promise)) (hash (promise)))))
+  (is (not= (hash (atom nil)) (hash (atom nil))))
+  (is (not= (hash (promise)) (hash (promise))))
 
   (testing "caching"
     (is (not (zero? (hash [1 2 3]))))

@@ -29,7 +29,7 @@
 
 (defmacro syntax-quote
   [exp]
-  ;; Don't use internal defns so we'll be compatibile with guile 2.2.
+  ;; Avoided internal defns originally for compatibility with earlier guiles.
   (letfn [(container? [x] (or (list? x) (vector? x) (map? x) (set? x)))
           (unquote-splicing? [x] (and (list? x) (= 'unquote-splicing (first x))))
           (insist-unary [name exp]

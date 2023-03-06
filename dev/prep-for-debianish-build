@@ -4,7 +4,7 @@ set -exuo pipefail
 
 usage()
 {
-    echo "Usage: prep-for-debianish-build [guile-2.2 | guile-3.0]"
+    echo "Usage: prep-for-debianish-build [guile-3.0]"
 }
 
 guile="${1:-guile-3.0}"
@@ -15,7 +15,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 
 case "$guile" in
-    guile-2.2|guile-3.0)
+    guile-3.0)
         apt-get install -y "$guile-dev" $debs
         ;;
     *)

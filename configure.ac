@@ -32,7 +32,7 @@ AC_CHECK_FUNCS([strchr strstr])
 
 LT_INIT
 
-GUILE_PKG([3.0 2.2])
+GUILE_PKG([3.0])
 GUILE_PROGS
 GUILE_FLAGS
 #GUILE_CHECK([maybe_broken_guile],[(string=? (version) "3.0.7")])

@@ -18,11 +18,4 @@
              #'else))))))
 
 (define (re-export-and-replace! . names)
-  ;; Guile 3.0.0 expands guile-2 and guile-2.2
-  (cond-expand
-    (guile-3.0
-     (module-re-export! (current-module) names #:replace? #t))
-    (guile-2.2
-     (module-re-export! (current-module) names))
-    (else
-     (module-re-export! (current-module) names #:replace? #t))))
+  (module-re-export! (current-module) names #:replace? #t))

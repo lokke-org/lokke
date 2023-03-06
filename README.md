@@ -53,9 +53,7 @@ Currently Lokke can be found at
 
 To build Lokke, you'll need
 
-  * [Guile](https://www.gnu.org/software/guile/) - 2.2 or 3.0
-    (preferring 3.0 which should perform notably better and allows
-    interleaving expressions with `def` and `defn`).
+  * [Guile](https://www.gnu.org/software/guile/) - 3.0+
   * [PCRE2](https://www.pcre.org/)
   * [libunistring](https://www.gnu.org/software/libunistring/)
   * [GCC](https://www.gnu.org/software/gcc/)
@@ -73,10 +71,6 @@ Your system may already provide these.  For Debian, for example:
 and then for Guile 3.0:
 
     # apt-get install guile-3.0 guile-3.0-dev
-
-or for Guile 2.2:
-
-    # apt-get install guile-2.2 guile-2.2-dev
 
 See [INSTALL](INSTALL) for additional platform-specific information.
 
@@ -411,10 +405,6 @@ may prompt a rework, perhaps to base exception handling on
 `raise-exception`, `with-exception-handler`, and exception objects.
 Consider the current support very unstable.
 
-Guile exception keys that map to `&error` in Guile 3.0 and above are
-currently caught as an `Error`, even with Guile 2.2, and even though
-we don't use the newer style exception objects yet.
-
 ### Exception suppression
 
 Lokke's exceptions (`ExceptionInfo`, `Throwable`, etc.) have
@@ -548,9 +538,6 @@ Known issues
 ------------
 
 - *Many* things are still broken or incomplete.
-
-- When built against Guile 2.2, `def` and `defn` statements cannot
-  currently be interleaved with other expressions.
 
 - When an error occurs in the REPL, a
   [new (recursive) prompt is created](https://www.gnu.org/software/guile/manual/html_node/Error-Handling.html).
