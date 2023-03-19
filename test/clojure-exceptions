@@ -35,6 +35,15 @@
 (is (= :yep (try (throw (ex-info "yep" {:kind 1})) (catch Exception ex :yep))))
 (is (= :yep (try (throw (ex-info "yep" {:kind 1})) (catch Throwable ex :yep))))
 
+(testing "corner cases"
+  ;; May or may not want/need to preserve these, but match the JVM for now
+  (is (= nil (let [catch :x] (try))))
+  (is (= :x (let [catch :x] (try catch))))
+  (is (= :x (let [catch :x] (try catch (catch Exception ex)))))
+  (is (= nil (let [finally :x] (try))))
+  (is (= :x (let [finally :x] (try finally))))
+  (is (= :x (let [finally :x] (try finally (finally true))))))
+
 (testing "fall through"
   (is (= :yep
          (try

@@ -8,7 +8,6 @@
 
 (define-module (lokke exception)
   #:version (0 0 0)
-  #:use-module ((guile) #:hide (catch)) ;; to work as literal, can't be defined
   #:use-module ((guile) #:select ((catch . %scm-catch) (throw . %scm-throw)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((lokke base map) #:select (map?))
@@ -41,8 +40,7 @@
             try
             with-final
             with-open)
-  #:duplicates (merge-generics replace warn-override-core warn last)
-  #:pure)
+  #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; Currently we rely on Guile's more efficient "single direction",
 ;; catch/throw mechanism.  i.e. you can only throw "up" the stack.
@@ -249,11 +247,13 @@
             exp))
 
     (define (body-clauses syn)
-      (syntax-case syn (catch)
+      (syntax-case syn ()
         ((exp* ...) (has-finally-clauses? (syntax->datum #'(exp* ...)))
          (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
                     (list (syntax->datum x)) #f))
-        (((catch catch-exp* ...) exp* ...) '())
+        (((maybe-catch catch-exp* ...) exp* ...)
+         (eq? 'catch (syntax->datum #'maybe-catch))
+         '())
         ((exp exp* ...) #`(exp #,@(body-clauses #'(exp* ...))))
         (() '())))
 
@@ -265,11 +265,12 @@
                   syn))
 
     (define (catch-clauses caught syn)
-      (syntax-case (drop-body syn) (catch)
+      (syntax-case (drop-body syn) ()
         ((exp* ...) (has-finally-clauses? (syntax->datum #'(exp* ...)))
          (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
                     (list (syntax->datum x)) #f))
-        (((catch what ex catch-exp* ...) exp* ...)
+        (((maybe-catch what ex catch-exp* ...) exp* ...)
+         (eq? 'catch (syntax->datum #'maybe-catch))
          #`(((ex-instance? what #,caught)
              (let* ((ex #,caught))
                #nil
@@ -282,12 +283,15 @@
         ((exp exp* ...) #`(exp #,@(body-clauses #'(exp* ...))))
         (() '())))
 
-    (syntax-case x (catch finally)
-      ((_ exp* ... (finally finally-exp-1 ...) (finally finally-exp-2 ...))
+    (syntax-case x ()
+      ((_ exp* ... (finally-1? finally-exp-1 ...) (finally-2? finally-exp-2 ...))
+       (and (eq? 'finally (syntax->datum #'finally-1?))
+            (eq? 'finally (syntax->datum #'finally-2?)))
        (scm-error 'syntax-error 'try "finally clause must be last and unique in ~s"
                   (list (syntax->datum x)) #f))
 
-      ((_ exp* ... (finally finally-exp* ...))
+      ((_ exp* ... (maybe-finally finally-exp* ...))
+       (eq? 'finally (syntax->datum #'maybe-finally))
        (let* ((caught (car (generate-temporaries '(#t))))
               (body (body-clauses #'(exp* ...)))
               (catches (catch-clauses caught #'(exp* ...))))
