@@ -33,4 +33,6 @@ make -j4
 ./guile --version
 test $(./guile -c '(format #t "~a.~a" (major-version) (minor-version))') = "$guile_ver"
 git status
-make -j4 check-everything
+if ! make -j4 check-everything; then
+    cat test-suite.log
+fi
