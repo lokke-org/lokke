@@ -7,8 +7,16 @@
 
 (ns test.clojure-exceptions
   (:require
+   [clojure.string :as str]
    [clojure.test :refer [begin-tests deftest end-tests is testing]]
-   [lokke.exception :refer [ex-suppressed ex-tag with-final]]))
+   [guile.ice-9.exceptions :as except
+    :refer [&assertion-failure
+            &error
+            &exception
+            &message
+            exception-irritants]]
+   [lokke.exception
+    :refer [ex-cause? ex-cause ex-info? ex-suppressed with-final]]))
 
 ;; The tests for this namespace are split between here and
 ;; test/lokke-exception.
@@ -30,7 +38,6 @@
 (is (= :nope (try (throw (ex-info "yep" {:kind 1}))
                   (catch ExceptionInfo ex :nope)
                   (finally true))))
-(is (= :yep (try (inc "x") (catch 'wrong-type-arg ex :yep))))
 (is (= :yep (try (inc "x") (catch Error ex :yep))))
 (is (= :yep (try (throw (ex-info "yep" {:kind 1})) (catch Exception ex :yep))))
 (is (= :yep (try (throw (ex-info "yep" {:kind 1})) (catch Throwable ex :yep))))
@@ -61,12 +68,17 @@
 
 (defn same-ex-excepting-suppressed? [ex1 ex2]
   ;; Are they the same excepting the suppressed vector?
-  (when (and (seq ex1) (seq ex2))
-    (if (and (= ExceptionInfo (ex-tag ex1)) (= ExceptionInfo (ex-tag ex2)))
-      (and (= (ex-message ex1) (ex-message ex2))
-           (= (ex-data ex1) (ex-data ex2))
-           (= (ex-cause ex1) (ex-cause ex2)))
-      (= (seq ex1) (seq ex2)))))
+  ;; (currently not comprehesive)
+  (when (and (except/exception? ex1) (except/exception? ex2))
+    (and (or (not ((except/exception-predicate &message) ex1))
+             (not ((except/exception-predicate &message) ex2))
+             (= (ex-message ex1) (ex-message ex2)))
+         (or (not (ex-cause? ex1))
+             (not (ex-cause? ex2))
+             (= (ex-cause ex1) (ex-cause ex2)))
+         (or (not (ex-info? ex1))
+             (not (ex-info? ex2))
+             (= (ex-data ex1) (ex-data ex2))))))
 
 (testing "finally behavior"
   (is (= nil (try (finally))))
@@ -400,12 +412,30 @@
 ;; create custom close methods.  See test/lokke-exception instead.
 
 (testing "compatibility constructors"
-  (is (= "x" (ex-message (Throwable. "x"))))
-  (is (= "x" (ex-message (Error. "x"))))
-  (is (= "x" (ex-message (Exception. "x"))))
+  (let [cause (ex-info "cause" {})]
+    (doseq [[what type make] [["Throwable" Throwable Throwable.]
+                              ["Error" Error Error.]
+                              ["Exception" Exception Exception.]]]
+      (is (except/error? (make)))
+      (is (= "x" (ex-message (make "x"))))
+      (is (= "x" (ex-message (new type "x"))))
+      (is (= cause (ex-cause (make cause))))
+      (is (= cause (ex-cause (new type cause))))
+      (let [ex (make "x" cause)]
+        (is (= "x" (ex-message ex)))
+        (is (= cause (ex-cause ex))))
+      (let [ex (new type "x" cause)]
+        (is (= "x" (ex-message ex)))
+        (is (= cause (ex-cause ex)))))))
 
-  (is (= "x" (ex-message (new Throwable "x"))))
-  (is (= "x" (ex-message (new Error "x"))))
-  (is (= "x" (ex-message (new Exception "x")))))
+(testing "assertions"
+  (is (= :yep (try (assert (= 1 1)) :yep (catch AssertionError ex ex))))
+  (let [ex (try (assert (= 1 2)) (catch AssertionError ex ex))]
+    (is (= (ex-message ex) "Assert failed: (= 1 2)"))
+    (is (= '((= 1 2)) (exception-irritants ex))))
+  (let [ex (try (assert (= 1 2) "nope") (catch AssertionError ex ex))]
+    (is (= (ex-message ex) "Assert failed: nope\n(= 1 2)"))
+    (is (= '((= 1 2)) (exception-irritants ex))))
+  (is (= :yep (try (inc "x") (catch &assertion-failure ex :yep)))))
 
 (end-tests (ns-name *ns*) :exit? true)

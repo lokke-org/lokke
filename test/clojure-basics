@@ -7,8 +7,7 @@
 
 (ns test.clojure-basics
   (:require
-   [clojure.test :refer [begin-tests end-tests is testing]]
-   [lokke.exception :refer [ex-tag]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]))
 
 (begin-tests (ns-name *ns*))
 
@@ -107,10 +106,7 @@
   (is (= "1" (as-> 0 x (inc x) (str x)))))
 
 (testing "case"
-  (try
-    (case :nope)
-    (catch Throwable ex
-      (is (= 'misc-error (ex-tag ex)))))
+  (is (= :yep (try (case :nope) (catch Error ex :yep))))
   (is (= :nope (case :x :nope)))
   (is (= :nope (case :x () :yep :nope)))
   (is (= :nope (case :x :y :yep :nope)))

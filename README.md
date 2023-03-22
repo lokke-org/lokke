@@ -302,6 +302,9 @@ General comparison with Clojure/JVM
 
 * `deftype` is not yet supported.
 
+* For now, `*assert*` (which is not documented in `clojure.core`) is
+  not supported.
+
 On the Scheme side
 ------------------
 
@@ -384,41 +387,49 @@ from a snapshot of the alias map, cf. `rewrite-il-calls`).
 Exception handling
 ------------------
 
-There is experimental support for `try/catch/finally` which maps very
-closely to Guile's underlying `catch/throw`, meaning that in addition
-to catching an `ex-info` exception via `(catch ExceptionInfo ex ...)`,
-you can catch Guile exceptions if you know the appropriate tag
-(symbol) with `(catch 'something ex ...)`.
+There is experimental support for `try/catch/finally` which maps
+closely to Guile's
+[exceptions](https://www.gnu.org/software/guile/manual/html_node/Exceptions.html#Exceptions)
+(also rnrs conditions), meaning that in addition to catching an
+`ex-info` exception via `(catch ExceptionInfo ex ...)`, you can catch
+Guile exceptions if you know the appropriate type, e.g. `(catch
+guile.ice-9.exceptions/&error ex ...)` (which is the same as
+`rnrs.conditions/&error`).
 
-When an exception is caught, `ex` will be bound a Scheme list of
-exactly the arguments that were passed to Guile's throw.  For
-`ex-info` exceptions, it will currently be a list starting with the
-(uninterned) tag that is bound to `ExceptionInfo`, which is why
-`(catch ExceptionInfo ex ...)` works.  Access the elements of
-Lokke-specific exceptions via the normal accessors: `ex-message`,
-`ex-data`, etc., and the `lokke.exception` namespace provides
-additional bindings like `ex-info?`, and `ex-cause`.
+When an exception is caught, `ex` is bound to the exception/condition
+object as you might expect.  Access the elements of Lokke-specific
+exceptions via the normal accessors: `ex-message`, `ex-data`, etc.,
+and the `lokke.exception` namespace provides additional bindings like
+`ex-info?`, and `ex-cause`.
 
-Note however, that
-[changes introduced in Guile 3.0](https://www.gnu.org/software/guile/manual/html_node/Exceptions.html#Exceptions)
-may prompt a rework, perhaps to base exception handling on
-`raise-exception`, `with-exception-handler`, and exception objects.
-Consider the current support very unstable.
+> Note that the current implementation only expects and intends to
+> support Clojure exception semantics, i.e. any given `try` will be
+> entered and exited at most once.  No consideration has been given to
+> the accomodation of multiple entries or exits (e.g. via use of
+> Scheme's `call-with-current-contination`, or related mechanisms).
+
+At the moment, in addition to `ExceptionInfo` Lokke provides
+rudimentary JVM compatibility via `Throwable`, `Error`, `Exception`,
+and `AssertionError` types.  The first three are currently `&error`s,
+and `AssertionError` is an `&assertion`.  All four can be constructed
+via JVM-style `Type.` constructors (e.g. `Throwable.`) that accept
+arguments matching the JVM's.
+
+Consider the current arrangement very unstable.
 
 ### Exception suppression
 
-Lokke's exceptions (`ExceptionInfo`, `Throwable`, etc.) have
-experimental support for suppressing exceptions, a concept also found
-on the JVM and in Python, though the details vary.  If an exception is
-thrown from within a `finally` block, and there was a pending Lokke
-exception, the exception that was thrown from the `finally` block will
-be added to the pending exception as a suppressed exception, and the
-Lokke exception will be rethrown.  The collection of suppressed
-exceptions can be retrieved with `lokke.exception/ex-suppressed`, and
-a suppressed exception can be added to any Lokke exception with
-`lokke.exception/add-suppressed`.  Note that `add-suppressed` is
-persistent, returning a new `ex-info` exception that may or may not
-share structure with the original, rather than mutating the original.
+Lokke has experimental support for suppressing exceptions, a concept
+also found on the JVM and in Python, though the details vary.  If an
+exception is thrown from within a `finally` block, and there was a
+pending Lokke exception, the exception that was thrown from the
+`finally` block will be added to the pending exception as a suppressed
+exception, and the exception will be rethrown.  The collection of
+suppressed exceptions can be retrieved with
+`lokke.exception/ex-suppressed`, and a suppressed exception can be
+added to any exception with `lokke.exception/add-suppressed`.  Note
+that `add-suppressed` is persistent, returning a new exception that
+may or may not share structure with the original.
 
 As an example:
 
@@ -441,14 +452,15 @@ with suppression, that information is preserved:
                             ; available via (ex-suppressed lp0-on-fire).
 ```
 
-At least for now, if the pending exception is a Guile specific
-exception like `'out-of-range`, rather than a Lokke exception like
-`(ex-info ...)` or `(Exception. ...)`, then there will be no
-suppression, and the original exception will be lost.
-
 The JVM provides a
 [related precedent](https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#addSuppressed-java.lang.Throwable-]),
 though it only applies to `try-with-resources` constructs.
+
+Because Guile exceptions are compositional, and the suppressed
+exceptions are implemented via an exception type, this system is
+compatible with all Guile exceptions, not just Lokke exceptions,
+i.e. suppressed exceptions can be added to any exception when
+appropriate.
 
 See DESIGN for further details.
 

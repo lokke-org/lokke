@@ -110,13 +110,16 @@
   #:use-module ((lokke datatype)
                 #:select (defprotocol defrecord extend-type))
   #:use-module ((lokke exception)
-                #:select (Error
+                #:select (AssertionError
+                          AssertionError.
+                          Error
                           Error.
                           Exception
                           Exception.
                           ExceptionInfo
                           Throwable
                           Throwable.
+                          assert
                           close
                           ex-cause
                           ex-data
@@ -227,12 +230,10 @@
   #:use-module ((system base compile)
                 #:select (compile-file compiled-file-name))
   #:export ((do . %scm-do)
-            *assert*
             *clojure-version*
             *command-line-args* ;; this is wrong...
             *file*
             *warn-on-reflection*
-            assert
             boolean
             byte
             complement
@@ -276,6 +277,8 @@
                ==
                >
                >=
+               AssertionError
+               AssertionError.
                Error
                Error.
                Exception
@@ -309,6 +312,7 @@
                aset-int
                aset-long
                aset-short
+               assert
                assoc-in
                atom
                atom?
@@ -607,14 +611,6 @@
 
 (define (complement f)
   (lambda args (not (apply f args))))
-
-(defdyn *assert* #t)
-
-(define-syntax assert
-  (syntax-rules ()
-    ((_ x) (when-not x (error "Assertion failed:" (pr-str x))))
-    ((_ x message)
-     (when-not x (error (str "Assertion failed: " message "\n" (pr-str x)))))))
 
 (define-syntax *file*
   (identifier-syntax (or (current-filename) #nil)))

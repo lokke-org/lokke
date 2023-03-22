@@ -7,6 +7,10 @@
                           atomic-box-compare-and-swap!
                           atomic-box-ref
                           make-atomic-box))
+  #:use-module ((ice-9 exceptions)
+                #:select (&error
+                          define-exception-type
+                          make-exception-with-irritants))
   #:use-module ((ice-9 threads) #:select (yield))
   #:use-module ((srfi srfi-9) #:select (define-record-type))
   #:use-module ((srfi srfi-11) #:select (let-values))
@@ -69,10 +73,17 @@
   (make-infra validator watchers meta))
 
 ;; FIXME: is this the exception and error handling we want?
+;; JVM uses IllegalStateException.
+
+(define-exception-type &invalid-ref-state &error
+  make-invalid-ref-state invalid-ref-state?)
+
 (define (validate-val validate value)
   (when validate
     (unless (validate value)
-      (throw 'invalid-ref-state atom value))))
+      (raise-exception
+       (make-exception (make-invalid-ref-state)
+                       (make-exception-with-irritants (list atom value)))))))
 
 (define* (atom value #:key (validator #f) (meta #nil))
   (validate-val validator value)

@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; For now, we do things in a bit more primitive way than we otherwise
@@ -8,45 +8,51 @@
 
 (define-module (lokke exception)
   #:version (0 0 0)
-  #:use-module ((guile) #:select ((catch . %scm-catch) (throw . %scm-throw)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
+  #:use-module ((ice-9 exceptions)
+                #:select (define-exception-type
+                          exception-message
+                          exception-with-message?
+                          make-error
+                          make-exception-with-irritants
+                          make-exception-with-message))
   #:use-module ((lokke base map) #:select (map?))
   #:use-module ((lokke base util) #:select (vec-tag?))
-  #:use-module ((lokke base syntax) #:select (let))
-  #:use-module ((lokke scm vector)
-                #:select (lokke-vector?
-                          lokke-vector
-                          lokke-vector-conj
-                          lokke-vector-length
-                          lokke-vector-ref))
+  #:use-module ((lokke base syntax) #:select (defdyn let when-not))
+  #:use-module ((lokke pr) #:select (pr-str))
+  #:use-module ((lokke scm vector) #:select (lokke-vector lokke-vector-conj))
   #:use-module (oop goops)
-  #:use-module ((srfi srfi-1) :select (drop-while find first second))
+  #:use-module ((rnrs conditions)
+                #:select (&assertion
+                          make-assertion-violation
+                          simple-conditions))
+  #:use-module ((srfi srfi-1) :select (drop-while find))
   #:replace (close throw)
-  #:export (Error
+  #:export (AssertionError
+            AssertionError.
+            Error
             Error.
             Exception
             Exception.
             ExceptionInfo
             Throwable
             Throwable.
+            assert
             ex-cause
+            ex-cause?
             ex-data
             ex-info
             ex-info?
             ex-message
             ex-suppressed
-            ex-tag
             new
             try
             with-final
             with-open)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-;; Currently we rely on Guile's more efficient "single direction",
-;; catch/throw mechanism.  i.e. you can only throw "up" the stack.
-
 ;; FIXME: do we want/need any with-continuation-barrier wrappers,
-;; and/or does catch/throw already provide a barrier?
+;; and/or does the infrastructure already provide a barrier?
 
 (define-syntax-rule (validate-arg fn-name pred expected val)
   (unless (pred val)
@@ -54,176 +60,140 @@
                "~A argument is not ~A: ~A"
                (list 'val expected val) (list val))))
 
-;; The content of Guile catch/throw exceptions is just the argument
-;; list passed to throw, where the first argument must be a symbol
-;; that a catch can be watching for.  So at the moment, ex-info
-;; exceptions are just that list of arguments, and the exceptions
-;; caught by Lokke's catch are also those Scheme argument lists,
-;; i.e. (tag . args).
+;; This is very experimental, i.e. not sure we'll want to preserve
+;; exactly this kind of interop.  For now, provide *very* basic
+;; compatibility, and as yet, there's no extensibility.
 
-;; Provide *very* basic compatibility.  For the moment, there's no
-;; extensibility, and if we add any, we might only do it for guile 3+
-;; where we're likely to reimplement the handling in terms of
-;; exception objects.
+(define-exception-type &cause &exception make-cause ex-cause? (cause ex-cause))
+(define-exception-type &suppressed &exception make-suppressed
+  exception-with-suppression?
+  (suppressed suppressed-exceptions))
 
-(define Throwable (make-symbol "lokke-throwable-catch-tag"))
-(define Error (make-symbol "lokke-error-catch-tag"))
-(define Exception (make-symbol "lokke-exception-catch-tag"))
-(define ExceptionInfo (make-symbol "lokke-exception-info-catch-tag"))
+(define Throwable &error)
+(define Error &error)
+(define Exception &error)
+(define AssertionError &assertion)
 
-(define lokke-exception-tags (list Throwable Error Exception ExceptionInfo))
+(define-exception-type ExceptionInfo &error make-ex-info ex-info?
+  (data ex-data))
 
-;; This will of course be different when we support (or just switch
-;; to) guile 3+ exception objects.  This is also very experiemntal,
-;; i.e. not sure we'll want to preserve exactly this kind of interop.
-;; The tentative plan is to switch to raise-exception,
-;; with-exception-handler, and exception objects, and then Error might
-;; map to &error, etc.
+;; The Foo. constructors mostly match the JVM
 
-(define (maybe-exception? x)
-  (and (pair? x) (symbol? (first x))))
-
-(define (lokke-exception? x)
-  (and (pair? x)
-       (let* ((s (first x)))
-         (and (symbol? s) (memq s lokke-exception-tags)))))
-
-(define-method (ex-instance? kind ex)
-  (validate-arg 'ex-instance? symbol? "a symbol" kind)
-  (validate-arg 'ex-instance? maybe-exception? "an exception" ex)
-  (let* ((ex-kind (car ex)))
-    (or
-     (eq? kind ex-kind)
-     (eq? kind Throwable)
-     (cond
-      ((eq? kind Exception) (or (eq? Exception ex-kind)
-                                (eq? ExceptionInfo ex-kind)))
-      ((eq? kind ExceptionInfo) (eq? ExceptionInfo ex-kind))
-      ;; Based on information in (ice-9 exceptions)
-      ((eq? kind Error) (memq ex-kind '(Error
-                                        getaddrinfo-error
-                                        goops-error
-                                        host-not-found
-                                        keyword-argument-error
-                                        memory-allocation-error
-                                        no-data
-                                        no-recovery
-                                        null-pointer-error
-                                        numerical-overflow
-                                        out-of-range
-                                        program-error
-                                        read-error
-                                        regular-expression-syntax
-                                        stack-overflow
-                                        syntax-error
-                                        system-error
-                                        try-again
-                                        unbound-variable
-                                        wrong-number-of-args
-                                        wrong-type-arg)))
-      (else #f)))))
-
-
-(define* (make-ex fn-name kind
-                  #:key (msg #nil) (data #nil) (cause #nil) (suppressed #nil))
-  (validate-arg fn-name symbol? "a symbol" kind)
-  (validate-arg fn-name (lambda (x) (or (eq? #nil x) (string? x))) "a string" msg)
-  (validate-arg fn-name (lambda (x) (or (eq? #nil x) (map? x))) "a map" data)
-  (validate-arg fn-name (lambda (x) (or (eq? #nil x) (maybe-exception? x)))
-                "an exception" cause)
-  (when suppressed
-    (validate-arg fn-name (lambda (x) (lokke-vector? x)) "a vector" suppressed)
-    (let* ((n (lokke-vector-length suppressed)))
-      (do ((i 0 (1+ i)))
-          ((= i n))
-        (let* ((x (lokke-vector-ref suppressed i)))
-          (unless (maybe-exception? x)
-            (scm-error 'wrong-type-arg fn-name
-                       "suppressed item is not an exception: ~s"
-                       (list x) (list x)))))))
-  (list kind msg data cause suppressed))
-
-(define (make-ex-constructor fn-name kind)
+(define (make-basic-constructor fn-name make-base)
   (match-lambda*
-    (() (make-ex fn-name kind))
-    (((? string? x)) (make-ex fn-name kind #:msg x))
-    (((? maybe-exception? x)) (make-ex fn-name kind #:cause x))
-    ((msg cause) (make-ex fn-name kind #:msg msg #:cause cause))))
+    (() (make-base))
+    ((msg-or-cause)
+     (cond
+      ((string? msg-or-cause)
+       (make-exception (make-base) (make-exception-with-message msg-or-cause)))
+      ((exception? msg-or-cause)
+       (make-exception (make-base) (make-cause msg-or-cause)))
+      (else
+       (scm-error 'wrong-type-arg fn-name
+                  "argument is not a string message or exception cause: ~s"
+                  (list msg-or-cause) (list msg-or-cause)))))
+    ((msg cause)
+     (validate-arg fn-name string? "a string" msg)
+     (validate-arg fn-name exception? "an exception" cause)
+     (make-exception (make-base)
+                     (make-exception-with-message msg)
+                     (make-cause cause)))))
 
-(define Throwable. (make-ex-constructor 'Throwable. Throwable))
-(define Error. (make-ex-constructor 'Error. Error))
-(define Exception. (make-ex-constructor 'Exception. Exception))
+(define Throwable. (make-basic-constructor 'Throwable. make-error))
+(define Error. (make-basic-constructor 'Error. make-error))
+(define Exception. (make-basic-constructor 'Exception. make-error))
 
-(define* (ex-info msg map #:key (cause #nil) (suppressed #nil))
-  (make-ex 'ex-info ExceptionInfo
-           #:msg msg
-           #:data map
-           #:cause cause
-           #:suppressed suppressed))
+(define AssertionError.
+  (let* ((make-base (make-basic-constructor 'AssertionError. make-assertion-violation)))
+    (match-lambda*
+      (() (make-base))
+      ((x)
+       (make-exception (make-base (pr-str x))
+                       (make-exception-with-irritants (list x))))
+      ((msg cause)
+       (validate-arg 'AssertionError. string? "a string" msg)
+       (validate-arg 'AssertionError. exception? "an exception" cause)
+       (make-exception (make-base msg) (make-cause cause))))))
 
-;; *If* we keep support for new, we almost certainly don't want to
-;; handle it this way, or here, but for now, this (questionable hack)
-;; will allow some existing code to work.
+(define* (make-assert-error what #:optional (msg #f))
+  (let* ((msg (if msg
+                  (string-append "Assert failed: " msg "\n" (pr-str what))
+                  (string-append "Assert failed: " (pr-str what)))))
+    (make-exception (make-assertion-violation)
+                    (make-exception-with-message msg)
+                    (make-exception-with-irritants (list what)))))
 
-(define* (new what #:optional (msg #nil) (cause #nil) #:key (suppressed #nil))
-  (make-ex 'new what
-           #:msg msg
-           #:data #nil
-           #:cause cause
-           #:suppressed suppressed))
+(define-syntax assert
+  (syntax-rules ()
+    ((_ x) (when-not x (raise-exception (make-assert-error 'x))))
+    ((_ x message) (when-not x (raise-exception (make-assert-error 'x message))))))
 
-;; Exactly the args passed to throw
-(define (ex-info? x)
-  (and (pair? x) (= 5 (length x)) (eq? ExceptionInfo (car x))))
+(define ex-info
+  (match-lambda*
+    ((msg map)
+     (validate-arg 'ex-info string? "a string" msg)
+     (validate-arg 'ex-info map? "a map" map)
+     (make-exception (make-error)
+                     (make-exception-with-message msg)
+                     (make-ex-info map)))
+    ((msg map cause)
+     (validate-arg 'ex-info string? "a string" msg)
+     (validate-arg 'ex-info map? "a map" map)
+     (validate-arg 'ex-info exception? "an exception" cause)
+     (make-exception (make-error)
+                     (make-exception-with-message msg)
+                     (make-cause cause)
+                     (make-ex-info map)))))
 
-(define (ex-tag ex)
-  (validate-arg 'ex-tag maybe-exception? "an exception" ex)
-  (list-ref ex 0))
+;; *If* we keep support for new, this is insufficient and wrong and
+;; wouldn't go here, but for now, it allows some existing code to
+;; work.  (Could also consider define-method.)
 
-(define (ex-message ex)
-  (validate-arg 'ex-message lokke-exception? "an exception" ex)
-  (list-ref ex 1))
+(define (new type . args)
+  (cond
+   ((eq? type Exception) (apply Exception. args))
+   ((eq? type Throwable) (apply Throwable. args))
+   ((eq? type Error) (apply Error. args))
+   ((eq? type AssertionError) (apply AssertionError. args))
+   (else
+    (scm-error 'wrong-type-arg 'new "Unexpected type:: ~A"
+               (list type) (list type)))))
 
-(define (ex-data ex)
-  (validate-arg 'ex-data ex-info? "an exception" ex)
-  (list-ref ex 2))
+(define (ex-message x)
+  (validate-arg 'ex-message exception? "an exception" x)
+  (if (exception-with-message? x) (exception-message x) #nil))
 
-(define (ex-cause ex)
-  (validate-arg 'ex-cause lokke-exception? "an exception" ex)
-  (list-ref ex 3))
-
-(define (ex-suppressed ex)
-  (validate-arg 'ex-suppressed lokke-exception? "an exception" ex)
-  (list-ref ex 4))
+(define (ex-suppressed x)
+  (validate-arg 'ex-suppressed exception? "an exception" x)
+  (if (exception-with-suppression? x) (suppressed-exceptions x) #nil))
 
 (define (add-suppressed ex suppressed-ex)
-  (validate-arg 'add-suppressed lokke-exception? "an exception" ex)
-  (validate-arg 'add-suppressed (lambda (x) (maybe-exception? x))
-                "an exception" suppressed-ex)
-  (make-ex 'add-suppressed
-           (ex-tag ex)
-           #:msg (ex-message ex)
-           #:data (if (ex-info? ex) (ex-data ex) #nil)
-           #:cause (ex-cause ex)
-           #:suppressed (lokke-vector-conj (or (list-ref ex 4) (lokke-vector))
-                                           suppressed-ex)))
+  (validate-arg 'add-suppressed exception? "an exception" ex)
+  (validate-arg 'add-suppressed exception? "an exception" suppressed-ex)
+  (if (exception-with-suppression? ex)
+      (let* ((suppressed (lokke-vector-conj (suppressed-exceptions ex)
+                                            suppressed-ex)))
+        (apply make-exception (map (lambda (x)
+                                     (if (exception-with-suppression? x)
+                                         (make-suppressed suppressed)
+                                         x))
+                                   (simple-conditions ex))))
+      (make-exception ex (make-suppressed (lokke-vector suppressed-ex)))))
 
 (define (throw ex)
-  (validate-arg 'throw (lambda (x) (maybe-exception? ex)) "an exception" ex)
-  (apply %scm-throw ex))
+  (raise-exception ex))
 
 (define (call-with-exception-suppression ex thunk)
-  (let* ((result (%scm-catch
-                  #t
-                  thunk
-                  (lambda suppressed
-                    (if (lokke-exception? ex)
-                        (apply %scm-throw (add-suppressed ex suppressed))
-                        ;; Match the JVM for now -- until/unless we figure out
-                        ;; a way to handle suppressed exceptions universally.
-                        (apply %scm-throw suppressed))))))
+  ;; FIXME: double-check semantics here, i.e. #nil ex expected/ok?
+  (let* ((result (with-exception-handler
+                     (lambda (suppressed)
+                       (raise-exception (if ex
+                                            (add-suppressed ex suppressed)
+                                            suppressed)))
+                   thunk
+                   #:unwind? #t)))
     (when ex
-      (apply %scm-throw ex))
+      (raise-exception ex))
     result))
 
 ;; Wonder about allowing an exception arg for a custom finally clause,
@@ -271,7 +241,7 @@
                     (list (syntax->datum x)) #f))
         (((maybe-catch what ex catch-exp* ...) exp* ...)
          (eq? 'catch (syntax->datum #'maybe-catch))
-         #`(((ex-instance? what #,caught)
+         #`((((exception-predicate what) #,caught)
              (let* ((ex #,caught))
                #nil
                catch-exp* ...))
@@ -295,21 +265,21 @@
        (let* ((caught (car (generate-temporaries '(#t))))
               (body (body-clauses #'(exp* ...)))
               (catches (catch-clauses caught #'(exp* ...))))
-         #`(let* ((result (%scm-catch
-                           #t
-                           (lambda ()
-                             (%scm-catch
-                              #t
-                              (lambda () #nil #,@body)
-                              ;; FIXME: compiler smart enough to elide?
-                              (lambda #,caught
-                                (cond
-                                 #,@catches
-                                 (else (apply %scm-throw #,caught))))))
-                           (lambda ex
-                             (call-with-exception-suppression
-                              ex
-                              (lambda () #nil finally-exp* ...))))))
+         #`(let* ((result (with-exception-handler
+                              (lambda (ex)
+                                (call-with-exception-suppression
+                                 ex
+                                 (lambda () #nil finally-exp* ...)))
+                            (lambda ()
+                              (with-exception-handler
+                                  ;; FIXME: compiler smart enough to elide?
+                                  (lambda (#,caught)
+                                    (cond
+                                     #,@catches
+                                     (else (throw #,caught))))
+                                (lambda () #nil #,@body)
+                                #:unwind? #t))
+                            #:unwind? #t)))
              finally-exp* ...
              result)))
 
@@ -318,13 +288,14 @@
        (let* ((caught (car (generate-temporaries '(#t))))
               (body (body-clauses #'(exp* ...)))
               (catches (catch-clauses caught #'(exp* ...))))
-         #`(%scm-catch
-            #t
-            (lambda () #nil #,@body)
-            (lambda #,caught
-              (cond
-               #,@catches
-               (else (apply %scm-throw #,caught))))))))))
+         #`(with-exception-handler
+               (lambda (#,caught)
+                 (cond
+                  #,@catches
+                  (else (throw #,caught))))
+             (lambda () #nil #,@body)
+             #:unwind? #t))))))
+
 
 ;; Because otherwise the replace: prevents it from being visible and
 ;; folded into the generic as the base case.
@@ -382,13 +353,14 @@
             (finally (action resource)))))
       ((_ (resource value #:error action binding ...) body ...)
        #'(let (resource value)
-           (%scm-catch
-            #t
-            (lambda () (with-final (binding ...) body ...))
-            (lambda ex
-              (call-with-exception-suppression
-               ex
-               (lambda () (action resource)))))))
+           (with-exception-handler
+               (lambda (ex)
+                 (call-with-exception-suppression
+                  ex
+                  (lambda () (action resource))))
+             (lambda ()
+               (with-final (binding ...) body ...))
+             #:unwind? #t)))
       ((_ (var init binding ...) body ...)
        #'(let (var init)
            (with-final (binding ...) body ...)))

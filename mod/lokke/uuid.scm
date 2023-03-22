@@ -3,6 +3,11 @@
 
 (define-module (lokke uuid)
   #:duplicates (merge-generics replace warn-override-core warn last)
+  #:use-module ((ice-9 exceptions)
+                #:select (&error
+                          define-exception-type
+                          make-exception-with-message
+                          make-exception-with-irritants))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke pr) #:select (pr-readable to-string))
   #:use-module (oop goops)
@@ -51,17 +56,32 @@
           (bit-extract n 48 64)
           (bit-extract n 0 48)))
 
+(define-exception-type &uuid-syntax-error &error
+  %make-uuid-syntax-error uuid-syntax-error?)
+
+(define (uuid-syntax-error msg irritants)
+  (make-exception (%make-uuid-syntax-error)
+                  (make-exception-with-message msg)
+                  (make-exception-with-irritants irritants)))
+
 (define-inlinable (hex-substr->int s start end)
   (let ((u (substring/shared s start end)))
     (unless (string-every char-set:hex-digit u)
-      (throw 'uuid-syntax-error "Invalid UUID syntax:" s u))
+      (raise-exception
+       (uuid-syntax-error (string-append "Invalid UUID syntax: " u)
+                          (list u))))
     (string->number u 16)))
 
 (define (string->uuid-int s)
   (unless (= 36 (string-length s))
-    (throw 'uuid-syntax-error "UUID string is not 36 characters long:" s))
-  (for-each (lambda (i) (unless (eqv? #\- (string-ref s i))
-                          (throw 'uuid-syntax-error "Invalid UUID syntax:" s)))
+    (raise-exception
+     (uuid-syntax-error (string-append "UUID string is not 36 characters: " s)
+                        (list s))))
+  (for-each (lambda (i)
+              (unless (eqv? #\- (string-ref s i))
+                (raise-exception
+                 (uuid-syntax-error (string-append "Invalid UUID syntax: " s)
+                                    (list s)))))
             '(8 13 18 23))
   (let ((n (logior (ash (hex-substr->int s 0 8) 96)
                    (ash (hex-substr->int s 9 13) 80)
@@ -99,6 +119,8 @@
                      #x0000000000004000c000000000000000)))
 
 (define (parse-uuid s)
-  (catch 'uuid-syntax-error
+  (with-exception-handler
+      (lambda (ex) #nil)
     (lambda () (make-uuid (string->uuid-int s)))
-    (lambda throw-args #nil)))
+    #:unwind? #t
+    #:unwind-for-type &uuid-syntax-error))
