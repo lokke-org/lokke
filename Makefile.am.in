@@ -56,7 +56,7 @@ noinst_DATA = lok.1.txt lokke.1.txt
 # characters.
 
 lokke.1.txt: lokke.1
-	if COLUMNS=80 man -l $^ > $@.tmp; then \
+	if LANG=C COLUMNS=80 man -l $^ > $@.tmp; then \
 	    mv $@.tmp $@; \
 	fi
 
