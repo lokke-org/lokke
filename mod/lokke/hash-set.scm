@@ -13,7 +13,7 @@
                           make-transient-fash
                           persistent-fash
                           transient-fash))
-  #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((ice-9 control) #:select (let/ec))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
@@ -203,23 +203,21 @@
   (ref (set-fm s) x not-found))
 
 (define (hash-set-= s1 s2)
-  (let* ((h1 (set-fm s1))
-         (h2 (set-fm s2))
-         (exit (make-symbol "exit"))
-         (subset? (lambda (m of-m)
-                    (fash-fold (lambda (k v result)
-                                 (let ((v2 (ref of-m k not-found)))
-                                   (unless (clj= v v2)
-                                     (throw exit #f)))
-                                 #t)
-                               m
-                               #t))))
-    ;; Can't use the size check until fash supports delete and we
-    ;; don't have to ignore the not-found tokens.
-    ;; (= (fash-size h1) (fash-size h2))
-    (catch exit
-      (lambda () (and (subset? h1 h2) (subset? h2 h1)))
-      (lambda args #f))))
+  (let/ec exit
+    (let* ((h1 (set-fm s1))
+           (h2 (set-fm s2))
+           (subset? (lambda (m of-m)
+                      (fash-fold (lambda (k v result)
+                                   (let ((v2 (ref of-m k not-found)))
+                                     (unless (clj= v v2)
+                                       (exit #f)))
+                                   #t)
+                                 m
+                                 #t))))
+      ;; Can't use the size check until fash supports delete and we
+      ;; don't have to ignore the not-found tokens.
+      ;; (= (fash-size h1) (fash-size h2))
+      (and (subset? h1 h2) (subset? h2 h1)))))
 
 ;; specialize this so that we'll bypass the generic <sequential> flavor
 (define-method (clj= (s1 <hash-set>) (s2 <hash-set>)) (hash-set-= s1 s2))
@@ -227,13 +225,12 @@
 ;; FIXME: add iterator to map?
 
 (define (some-item fm)
-  (call/ec
-   (lambda (return)
-     (fash-fold (lambda (k v result)
-                  (unless (eq? v not-found)
-                    (return k)))
-                fm #t)
-     not-found)))
+  (let/ec return
+   (fash-fold (lambda (k v result)
+                (unless (eq? v not-found)
+                  (return k)))
+              fm #t)
+   not-found))
 
 (define-method (seq (s <hash-set>))
   (let loop ((s s))

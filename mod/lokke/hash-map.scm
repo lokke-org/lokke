@@ -9,7 +9,7 @@
   ;; FIXME: first and second should be together
   #:use-module ((ice-9 atomic)
                 #:select (atomic-box-ref atomic-box-set! make-atomic-box))
-  #:use-module ((ice-9 control) #:select (call/ec))
+  #:use-module ((ice-9 control) #:select (let/ec))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base collection)
                 #:select (<coll>
@@ -234,23 +234,21 @@
   (ref (map-fm m) x not-found))
 
 (define (hash-map-= m1 m2)
-  (let* ((h1 (map-fm m1))
-         (h2 (map-fm m2))
-         (exit (make-symbol "exit"))
-         (subset? (lambda (m of-m)
-                    (fash-fold (lambda (k v result)
-                                 (let ((v2 (ref of-m k not-found)))
-                                   (unless (clj= v v2)
-                                     (throw exit #f)))
-                                 #t)
-                               m
-                               #t))))
-    ;; Can't use the size check until fash supports delete and we
-    ;; don't have to ignore the not-found tokens.
-    ;; (= (fash-size h1) (fash-size h2))
-    (catch exit
-      (lambda () (and (subset? h1 h2) (subset? h2 h1)))
-      (lambda args #f))))
+  (let/ec exit
+    (let* ((h1 (map-fm m1))
+           (h2 (map-fm m2))
+           (subset? (lambda (m of-m)
+                      (fash-fold (lambda (k v result)
+                                   (let ((v2 (ref of-m k not-found)))
+                                     (unless (clj= v v2)
+                                       (exit #f)))
+                                   #t)
+                                 m
+                                 #t))))
+      ;; Can't use the size check until fash supports delete and we
+      ;; don't have to ignore the not-found tokens.
+      ;; (= (fash-size h1) (fash-size h2))
+      (and (subset? h1 h2) (subset? h2 h1)))))
 
 ;; specialize this so that we'll bypass the generic <sequential> flavor
 (define-method (clj= (m1 <hash-map>) (m2 <hash-map>)) (hash-map-= m1 m2))
