@@ -61,10 +61,10 @@ lokke.1.txt: lokke.1
 	fi
 
 lok.1:
-	$(LN_S) lokke.1 lok.1
+	$(LN_S) -f lokke.1 lok.1
 
 lok.1.txt: lokke.1.txt
-	$(LN_S) lokke.1.txt lok.1.txt
+	$(LN_S) -f lokke.1.txt lok.1.txt
 
 CLEANFILES += lok.1 lokke.1.txt.tmp
 DISTCLEANFILES += lok.1.txt lokke.1.txt
