@@ -264,7 +264,8 @@ General comparison with Clojure/JVM
   bigdec, 7N, 4.2M, etc.), but of course arbitrarily large integers
   are supported.
 
-* The integer syntax does not yet support BASErNUM bases over 16.
+* The reader currently reads invalid integer syntaxes like 2rff as
+  symbols.
 
 * `abs` returns the absolute value for all integers, i.e. it does not
   return the minimum 64-bit integer unchanged.

@@ -1,6 +1,6 @@
 /* Copyright (C) 1995-1997, 1999-2001, 2003, 2004, 2006-2012, 2014, 2015
  *   Free Software Foundation, Inc.
- * Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
+ * Copyright (C) 2015-2021 2023 Rob Browning <rlb@defaultvalue.org>
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3 of
@@ -635,7 +635,8 @@ radix_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
 
 static SCM
 sign_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
-                                  int is_negative, SCM default_radix)
+                                   int is_negative, SCM default_radix,
+                                   SCM port)
 {
   const size_t remaining = str_len - offset;
   if (remaining == 0)
@@ -668,26 +669,21 @@ sign_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
 
   const SCM radix_chr = SCM_MAKE_CHAR('r');
   if (remaining > 2 && scm_c_string_ref(str, offset + 1) == radix_chr) {
-    const SCM r1 = scm_c_string_ref(str, offset);
-    SCM radix;
-    if (r1 == SCM_MAKE_CHAR ('2'))
-      radix = SCM_I_MAKINUM(2);
-    else if (r1 == SCM_MAKE_CHAR ('8'))
-      radix = SCM_I_MAKINUM(8);
-    else
+    const scm_t_wchar r1 = SCM_CHAR(scm_c_string_ref(str, offset));
+    if (r1 < '2' || r1 > '9')
       return SCM_BOOL_F;
+    const SCM radix = SCM_I_MAKINUM(r1 - '0');
     return radix_stripped_substring_to_integer(str, str_len, offset + 2,
                                                is_negative, radix);
   } else if (remaining > 3 && scm_c_string_ref(str, offset + 2) == radix_chr) {
-    const SCM r1 = scm_c_string_ref(str, offset);
-    const SCM r2 = scm_c_string_ref(str, offset + 1);
-    SCM radix;
-    if (r1 == SCM_MAKE_CHAR ('1') && r2 == SCM_MAKE_CHAR ('0'))
-      radix = SCM_I_MAKINUM(10);
-    else if (r1 == SCM_MAKE_CHAR ('1') && r2 == SCM_MAKE_CHAR ('6'))
-      radix = SCM_I_MAKINUM(16);
-    else
-      return SCM_BOOL_F;
+    const scm_t_wchar r1 = SCM_CHAR(scm_c_string_ref(str, offset));
+    const scm_t_wchar r2 = SCM_CHAR(scm_c_string_ref(str, offset + 1));
+    if ((r1 < '1' || r1 > '3')
+        || (r1 == '3' && r2 > '6') || r2 > '9')
+      scm_i_input_error (NULL, port,
+                         "radix ~a~a was not between 2 and 36 (inclusive) in ~a",
+                         scm_list_3 (SCM_MAKE_CHAR(r1), SCM_MAKE_CHAR(r2), str));
+    const SCM radix = SCM_I_MAKINUM((r1 - '0') * 10 + (r2 - '0'));
     return radix_stripped_substring_to_integer(str, str_len, offset + 3,
                                                is_negative, radix);
   }
@@ -695,29 +691,24 @@ sign_stripped_substring_to_integer(SCM str, size_t str_len, size_t offset,
                                              is_negative, default_radix);
 }
 
-SCM_DEFINE (cljg_string_to_integer, "string->integer", 1, 1, 0,
-            (SCM string, SCM radix), "...")
-#define FUNC_NAME s_cljg_string_to_integer
+static SCM
+string_to_integer(SCM string, SCM radix, SCM port)
 {
-  SCM_VALIDATE_STRING(1, string);
-  // FIXME: validate radix?  Looks like string->number doesn't...
   radix = SCM_UNBNDP (radix) ? SCM_I_MAKINUM(10) : radix;
   const size_t len = scm_c_string_length (string);
   // FIXME: faster?
-  // FIXME: for now this only handles radix 2, 8, 10, or 16
   if (!len)
     return SCM_BOOL_F;
   switch (SCM_UNPACK(scm_c_string_ref (string, 0)))
     {
     case SCM_UNPACK(SCM_MAKE_CHAR ('-')):
-      return sign_stripped_substring_to_integer(string, len, 1, 1, radix);
+      return sign_stripped_substring_to_integer(string, len, 1, 1, radix, port);
     case SCM_UNPACK(SCM_MAKE_CHAR ('+')):
-      return sign_stripped_substring_to_integer(string, len, 1, 0, radix);
+      return sign_stripped_substring_to_integer(string, len, 1, 0, radix, port);
     default:
-      return sign_stripped_substring_to_integer(string, len, 0, 0, radix);
+      return sign_stripped_substring_to_integer(string, len, 0, 0, radix, port);
     }
 }
-#undef FUNC_NAME
 
 static int
 skip_integer_prefix(SCM string, size_t i, size_t len)
@@ -855,7 +846,7 @@ scm_read_number (scm_t_wchar chr, SCM port, lokke_read_opts_t *opts)
   str = scm_from_port_stringn (buffer, bytes_read, port);
 
   // FIXME: less dumb...
-  result = cljg_string_to_integer (str, SCM_UNDEFINED);
+  result = string_to_integer (str, SCM_UNDEFINED, port);
   if (scm_is_false (result))
     result = cljg_string_to_float(str);
   if (scm_is_false (result))

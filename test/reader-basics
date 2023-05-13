@@ -1,7 +1,7 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019-2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
@@ -42,18 +42,29 @@
 (test-equal 0 (t/read-string "0"))
 (test-equal -1 (t/read-string "-1"))
 
-(test-equal 3 (t/read-string "2r11"))
+(do ((r 2 (1+ r)))
+    ((> r 36))
+  (test-equal (1+ r)
+    (t/read-string (format #f "~ar11" r)))
+  (test-equal (- (1+ r))
+    (t/read-string (format #f "-~ar11" r)))
+  (test-equal (1+ (* r r r))
+    (t/read-string (format #f "~ar1001" r)))
+  (test-equal (- (1+ (* r r r)))
+    (t/read-string (format #f "-~ar1001" r))))
+
 (test-equal 8 (t/read-string "8r10"))
-(test-equal 8 (t/read-string "010"))
 (test-equal 10 (t/read-string "10r10"))
 (test-equal 16 (t/read-string "16r10"))
+(test-equal 36 (t/read-string "36r10"))
+(test-equal 8 (t/read-string "010"))
 (test-equal 16 (t/read-string "0x10"))
-(test-equal -3 (t/read-string "-2r11"))
 (test-equal -8 (t/read-string "-8r10"))
 (test-equal -8 (t/read-string "-010"))
 (test-equal -10 (t/read-string "-10r10"))
 (test-equal -16 (t/read-string "-16r10"))
 (test-equal -16 (t/read-string "-0x10"))
+
 (test-equal +inf.0 (t/read-string "##Inf"))
 (test-equal -inf.0 (t/read-string "##-Inf"))
 (test-equal +nan.0 (t/read-string "##NaN"))
