@@ -65,10 +65,10 @@ To build Lokke, you'll need
 
 Your system may already provide these.  For Debian, for example:
 
-    # apt-get install autoconf automake libpcre2-dev libunistring-dev
-    # apt-get install make gettext gcc git
+    # apt install autoconf automake libpcre2-dev libunistring-dev
+    # apt install make gettext gcc git
 
-and then for Guile 3.0:
+and then for Guile:
 
     # apt-get install guile-3.0 guile-3.0-dev
 
@@ -85,9 +85,9 @@ lokke like this:
     $ make check
 
 Hopefully the tests will pass.  If not, please report them to the
-[Lokke list](#additional-contacts).  Note that parallel builds are
-fully supported, so depending on the host, something like `make -j5
-check` can be much faster.
+[Lokke list](#additional-contacts).  Parallel builds are supported, so
+depending on the host, something like `make -j5 check` can be much
+faster.
 
 If you have more than one version of Guile installed, you may be able
 to select a particular version at configuration time like this:
@@ -97,13 +97,13 @@ to select a particular version at configuration time like this:
 unless your platform requires other arrangements, which should be
 mentioned in the relevant section in [INSTALL](INSTALL).
 
-At this point you should be able to run a Clojure program like this:
+After building, you can run Clojure programs like this:
 
     $ ./lok -l hello.clj
     ...
     hello
 
-or run the REPL:
+or the REPL like this:
 
     $ ./lok
     ...
@@ -113,7 +113,7 @@ or run the REPL:
 
 Currently the Lokke REPL *is* the Guile REPL, with the initial
 language and environment set for Lokke, and so all of the Guile
-features should be available.  Though for now, `lokke` loads
+features should be available.  For now, `lokke` loads
 `$XDG_CONFIG_HOME/lokke/interactive.scm` if `$XDG_CACHE_HOME` is set,
 otherwise `~/.config/lokke/interactive.scm` rather than `~/.guile`.
 
@@ -185,6 +185,11 @@ General comparison with Clojure/JVM
   with the entire Clojure namespace tree situated under `(lokke ns)`
   in the Guile module tree.
 
+* Lokke `vars` are Guile `variables`, and unlike JVM vars, they
+  include no information about their origin (JVM `vars` include a
+  namespace).  As a result Lokke vars cannot be printed as a reader
+  macro (e.g. `#'clojure.core`).
+
 * Lokke's reader conditional identifier is `:cljl`, for example,
   `#?(:cljl x)`, and at the moment reader conditionals are always
   supported by the reader functions; they are not restricted to
@@ -204,8 +209,8 @@ General comparison with Clojure/JVM
 * The default regular expressions are
   [PCRE2](http://www.pcre.org/current/doc/html/pcre2pattern.html)
   regular expressions, and right now, reader literal patterns `#"x"`
-  currently just translate to an equivalent `(re-pattern ...)` at read
-  time.  That is, they are not compiled at read time, and so are
+  just translate to an equivalent `(re-pattern ...)` at read time.
+  That is, they are not compiled at read time, and so are
   re-evaluated.
 
 * `lokke.io` is analogous to `clojure.java.io`, and `lokke.shell` is
@@ -571,12 +576,6 @@ Known issues
 
 - May be missing important specializations for say collection/seq
   operations where the fallback is a lot more expensive.
-
-- Some versions of Guile prior to 3.0 had a problem with the hash
-  function that would cause it to produce a very poor distribution of
-  values in some cases (e.g. for symbols and keywords), which is
-  likely to decrease performance.  We may attempt to address that,
-  but for now, prefer Guile 3.0 or newer when possible.
 
 - The code has not been evaluated with respect to the need for
   continuation barriers yet.

@@ -250,7 +250,7 @@ TODO
 - Add doc and attr args to defmacro.
 
 - Review handling of cons pairs.  Right now we use/allow them in
-  various places, but for example, doing so doesn't support metadata,
+  various places, but doing so doesn't support metadata, for example,
   or hashing (if we need that), and printing cons pairs as clj
   seqs/lists will break for improper lists.  One option might be to
   just shift everything to <pair-seq> or something similar,
@@ -289,29 +289,12 @@ TODO
   `/lokke/reader-list`, which might end up being desirable for other
   reasons.
 
-- Right now Lokke's `try/catch/finally` very closely follows Guile's
-  `catch/throw`, which is Guile's more efficient exception handling
-  mechanism, and is based on throwing and catching simple tags
-  (symbols) along with arbitrary additional arguments.
-
-  Our `Throwable`, `ExceptionInfo`, etc. are actually just bound to
-  uninterned symbols (i.e. guaranteed unique) in `(lokke exception)`,
-  and those symbols are what our exception handler (installed via
-  guile's `catch`) is looking for.
-
-  In fact, `ex-info` just creates and returns a list containing
-  exactly the arguments we need to pass to Guile's `throw`.  So at the
-  moment Lokke exceptions aren't objects/records/classes, they're
-  `throw` argument lists, and correspondingly, the first element is
-  the `catch` tag.  There's a good chance we'll rework everything in
-  terms of exception options for Guile 3.0 and newer.
-
-  With respect to Clojure more generally, upstream debate over
-  exceptions in the context of cljs suggested that they may really
-  want to head toward just being able to throw a data-carrying-object
-  and then do something with it -- didn't sound like they were in
-  favor of keeping much of the JVM class/hierarchy matching business
-  as the non-platform-specific method:
+- With respect to Clojure exceptions, upstream debate over exceptions
+  in the context of cljs suggested that they may really want to head
+  toward just being able to throw a data-carrying-object and then do
+  something with it -- didn't sound like they were in favor of keeping
+  much of the JVM class/hierarchy matching business as the
+  non-platform-specific method:
   https://github.com/clojure/clojurescript/wiki/Exception-Handling
 
   What we have at the moment is more along those lines, in spirit at
