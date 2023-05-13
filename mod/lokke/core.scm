@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2022 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke core)
@@ -422,7 +422,7 @@
                in-ns
                inc
                inc'
-               (inf? . infinity?)
+               (inf? . infinite?)
                (instant? . inst?)
                int-array
                int?

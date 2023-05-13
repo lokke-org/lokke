@@ -2,7 +2,7 @@
 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2020-2022 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2020-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-basics
@@ -53,10 +53,10 @@
   (is (number? 1.1))
   (is (number? (/ 1 3))))
 
-(testing "infinity?"
-  (is (infinity? ##Inf))
-  (is (infinity? ##-Inf))
-  (is (not (infinity? 0))))
+(testing "infinite?"
+  (is (infinite? ##Inf))
+  (is (infinite? ##-Inf))
+  (is (not (infinite? 0))))
 
 (testing "ratio?"
   (is (not (ratio? true)))
