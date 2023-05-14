@@ -1,7 +1,7 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
@@ -55,7 +55,9 @@
  (let ((v (t/lokke-vec (iota 3000))))
    (do ((i 0 (1+ i)))
        ((= i (t/lokke-vector-length v)))
-     (test-equal i (t/lokke-vector-ref v i)))))
+     (let ((x (t/lokke-vector-ref v i)))
+       (unless (= i x)
+         (test-equal i x))))))
 
 (test-group
  "pop"
@@ -64,7 +66,9 @@
  (let loop ((n 3000)
             (expected (iota 3000))
             (actual (t/lokke-vec (iota 3000))))
-   (test-equal expected (t/lokke-vector->list actual))
+   (let ((actual-lst (t/lokke-vector->list actual)))
+     (unless (equal? expected actual-lst)
+       (test-equal expected actual-lst)))
    (unless (= n 1)
      (loop (1- n) (iota (1- n)) (t/lokke-vector-pop actual)))))
 
