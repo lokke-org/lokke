@@ -1,7 +1,7 @@
 #!./guile
 !# ;; -*-scheme-*-
 
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2021 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (use-modules
@@ -38,9 +38,14 @@
  (test-equal '(#nil #nil) (let** (#(x y) #()) (list x y)))
  (test-equal 1 (let** (#(x) #(1 2)) x))
  (test-equal '(1 2) (let** (#(x y) #(1 2)) (list x y)))
+ ;; &
  (test-equal '(1 2) (seq->scm-list (let** (#(& more) #(1 2)) more)))
  (test-equal 1 (let** (#(x & more) #(1 2)) x))
  (test-equal '(2) (seq->scm-list (let** (#(x & more) #(1 2)) more)))
+ (test-equal '(1 2 3) (seq->scm-list (let** (#(x & #(y z)) #(1 2 3))
+                                            (list x y z))))
+ (test-equal '(1 2) (let** (#(x & #((/lokke/reader-hash-map #nil #:keys #(y))))
+                            (vector 1 (hash-map #:y 2))) (list x y)))
  ;; :as
  (test-equal '(1 2) (seq->scm-list (let** (#(x #:as all) #(1 2)) all)))
  (test-equal '(1 2) (seq->scm-list (let** (#(x & more #:as all) #(1 2)) all))))
@@ -51,9 +56,16 @@
  (test-equal '(#nil #nil) (let** ((/lokke/reader-vector #nil x y) #()) (list x y)))
  (test-equal 1 (let** ((/lokke/reader-vector #nil x) #(1 2)) x))
  (test-equal '(1 2) (let** ((/lokke/reader-vector #nil x y) #(1 2)) (list x y)))
+ ;; &
  (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector #nil & more) #(1 2)) more)))
  (test-equal 1 (let** ((/lokke/reader-vector #nil x & more) #(1 2)) x))
  (test-equal '(2) (seq->scm-list (let** ((/lokke/reader-vector #nil x & more) #(1 2)) more)))
+ (test-equal '(1 2 3) (seq->scm-list
+                       (let** ((/lokke/reader-vector #nil x & (/lokke/reader-vector #nil y z))
+                               #(1 2 3))
+                              (list x y z))))
+ (test-equal '(1 2) (let** ((/lokke/reader-vector #nil x & #((/lokke/reader-hash-map #nil #:keys #(y))))
+                            (vector 1 (hash-map #:y 2))) (list x y)))
  ;; :as
  (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector #nil x #:as all) #(1 2)) all)))
  (test-equal '(1 2) (seq->scm-list (let** ((/lokke/reader-vector #nil x & more #:as all) #(1 2)) all))))

@@ -1,4 +1,4 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke base destructure)
@@ -125,17 +125,15 @@
                (sym (syn-symbol item)))
           (cond
            ((eq? sym '&)
-            (when (null? (cdr rest)) (error "No name after &" rest))
+            (when (null? (cdr rest)) (error "Nothing after &" rest))
             (let ((x (cadr rest)))
-              (unless (syn-symbol x) (error "No symbol after &" rest))
               (unless (only-aliases? (syntax->datum (cddr rest)))
-                (error "Only :as can follow &" rest))
+                (error "Only :as aliases may follow rest argument" rest))
               (destruct-vec enclosing-binding
                             (1+ i)
                             (cddr rest)
-                            (cons (list (cadr rest)
-                                        #`(seq (drop #,i #,enclosing-binding)))
-                                  result))))
+                            (destructure (cadr rest) #`(seq (drop #,i #,enclosing-binding))
+                                         result))))
            ((eq? #:as (syn-keyword item))
             (if (null? (cdr rest))
                 (error "No value for :as" rest)
