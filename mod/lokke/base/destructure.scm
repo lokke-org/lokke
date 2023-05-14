@@ -136,12 +136,6 @@
                             (cons (list (cadr rest)
                                         #`(seq (drop #,i #,enclosing-binding)))
                                   result))))
-           (sym
-            (destruct-vec enclosing-binding
-                          (1+ i)
-                          (cdr rest)
-                          (cons (list item #`(nth #,enclosing-binding #,i #nil))
-                                result)))
            ((eq? #:as (syn-keyword item))
             (if (null? (cdr rest))
                 (error "No value for :as" rest)
