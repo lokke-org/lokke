@@ -165,6 +165,9 @@
   (require-nil 'get x)
   not-found)
 
+(define-method (get (x <null>) key) #nil)
+(define-method (get (x <null>) key not-found) not-found)
+
 (define-method (keys (x <boolean>))
   (require-nil 'get x)
   #nil)
