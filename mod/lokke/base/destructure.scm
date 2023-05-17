@@ -17,9 +17,7 @@
                           concatenate
                           every
                           find-tail
-                          first
                           proper-list?
-                          second
                           take))
   #:use-module ((srfi srfi-11) #:select (let-values))
   #:export (destructure-binding-syntax))
@@ -91,13 +89,13 @@
 (define (only-aliases? lst)
   (and (even? (length lst))
        (let ((pairs (pairify lst)))
-         (and (every (lambda (x) (eq? #:as x)) (map first pairs)))
-         (and (every (lambda (x) (symbol? x)) (map second pairs))))))
+         (and (every (lambda (x) (eq? #:as x)) (map car pairs)))
+         (and (every (lambda (x) (symbol? x)) (map cadr pairs))))))
 
 (define (valid-or-content? lst)
   (and (syn-map? lst)
        (and (every symbol?
-                   (syntax->datum (map first (pairify (syn-map->list lst))))))))
+                   (syntax->datum (map car (pairify (syn-map->list lst))))))))
 
 (define (extract-map-defaults lst)
   ;; FIXME: support alists or other scm literal too?
