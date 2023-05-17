@@ -362,7 +362,7 @@
 (define-method (with-meta (s <pair-seq>) m)
   (make-pair-seq (pair-seq-first m) (pair-seq-rest m) m))
 
-(define-method (conj (b <boolean>) x) (require-nil 'conj b) (cons x b))
+(define-method (conj (b <boolean>) x) (require-nil 'conj b) (cons x #nil))
 (define-method (cons x (b <boolean>)) (require-nil 'cons b) (make-pair-seq x '() #nil))
 (define-method (contains? (b <boolean>) x) (require-nil 'contains? b) #f)
 (define-method (count (b <boolean>)) (require-nil 'count b) 0)
