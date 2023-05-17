@@ -13,7 +13,7 @@
   #:use-module (oop goops)
   #:export (<map> map-invert map? update-keys update-vals)
   #:re-export (clj= get invoke)
-  #:replace (assoc merge)
+  #:replace (merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (re-export-and-replace! 'apply)
