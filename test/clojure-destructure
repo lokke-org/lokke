@@ -1,7 +1,8 @@
 #!./lokke -0
+;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2020 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-destructure
@@ -11,5 +12,17 @@
 (begin-tests (ns-name *ns*))
 
 (is (= 2 (let [{[_ x _] :a} {:a [1 2 3]}] x)))
+
+(testing "keword arguments"
+  ;; https://clojure.org/reference/special_forms#keyword-arguments
+  (is (= 1 (let [[& {:keys [x]}] [:x 1]] x)))
+  (is (= 1 (let [[& {:keys [x]}] [{:x 1}]] x)))
+  (is (= [1 2] (let [[& {:keys [x y]}] [:x 1 {:y 2}]] [x y])))
+  (letfn [(f [& {:keys [x]}] x)]
+    (is (= 1 (f :x 1))))
+  (letfn [(f [& {:keys [x]}] x)]
+    (is (= 1 (f {:x 1}))))
+  (letfn [(f [& {:keys [x y]}] [x y])]
+    (is (= [1 2] (f :x 1 {:y 2})))))
 
 (end-tests (ns-name *ns*) :exit? true)

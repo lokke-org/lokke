@@ -3,14 +3,16 @@
 
 (define-module (lokke base destructure)
   ;;((language tree-il) #:prefix tree-il/)
-  #:use-module ((lokke base collection) #:select (drop get nth seq seq?))
+  #:use-module ((lokke base collection)
+                #:select (assoc drop first get nth rest seq seq?))
+  #:use-module ((lokke base map) #:select (merge))
   #:use-module ((lokke base util) #:select (pairify))
   #:use-module ((lokke reader literal)
                 #:select (reader-hash-map?
                           reader-hash-map-elts
                           reader-vector?
                           reader-vector-elts))
-  #:use-module ((lokke hash-map) #:select (hash-map))
+  #:use-module ((lokke hash-map) #:select (hash-map hash-map?))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1)
                 #:select (break
@@ -114,6 +116,19 @@
               (error "Multiple :or specifications:" lst))
             (values (append head (cddr or-spec)) (cadr or-spec)))))))
 
+(define (merge-trailing-kvs args)
+  (define (merge-kvs args result)
+    (if (not (seq args))
+        result
+        (let ((x (first args))
+              (next-args (rest args)))
+          (if (not (seq next-args))
+              (if (hash-map? x)
+                  (merge result x)
+                  (error "Odd length keyword arguments did not end with map" args))
+              (merge-kvs (rest next-args) (assoc result x (first next-args)))))))
+  (merge-kvs args (hash-map)))
+
 (define (destructure-binding-syntax context binding init)
 
   (define (destruct-vec enclosing-binding i rst result)
@@ -130,7 +145,7 @@
               (destruct-vec enclosing-binding
                             (1+ i)
                             (cddr rst)
-                            (destructure (cadr rst) #`(seq (drop #,i #,enclosing-binding))
+                            (destructure x #`(seq (drop #,i #,enclosing-binding))
                                          result))))
            ((eq? #:as (syn-keyword item))
             (if (null? (cdr rst))
@@ -215,11 +230,11 @@
                       (cons (list tmp init) result)))
        ((syn-map? binding)
         (let ((specs (syn-map->list binding))
-              ;; For destructuring say (defn foo [x y {:keys
-              ;; [enable?]} ...)  called as (foo 1 2 :enable true).
-              ;; See the Clojure docs.
+              ;; For say (defn foo [x & {:keys [y]} ...)  called as
+              ;; (foo 1 :y 2 {...}):
+              ;; https://www.clojure.org/reference/special_forms#keyword-arguments
               (init #`(let ((v #,init))
-                        (if (seq? v) (apply hash-map v) v))))
+                        (if (seq? v) (merge-trailing-kvs v) v))))
           (let-values (((specs defaults) (extract-map-defaults specs)))
             (destruct-map tmp defaults specs
                           (cons (list tmp init) result)))))
