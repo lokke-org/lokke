@@ -13,7 +13,7 @@
 
 (is (= 2 (let [{[_ x _] :a} {:a [1 2 3]}] x)))
 
-(testing "keword arguments"
+(testing "keyword arguments"
   ;; https://clojure.org/reference/special_forms#keyword-arguments
   (is (= 1 (let [[& {:keys [x]}] [:x 1]] x)))
   (is (= 1 (let [[& {:keys [x]}] [{:x 1}]] x)))
