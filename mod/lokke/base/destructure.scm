@@ -118,53 +118,53 @@
 
 (define (destructure-binding-syntax context binding init)
 
-  (define (destruct-vec enclosing-binding i rest result)
-    (if (null? rest)
+  (define (destruct-vec enclosing-binding i rst result)
+    (if (null? rst)
         result
-        (let* ((item (car rest))
+        (let* ((item (car rst))
                (sym (syn-symbol item)))
           (cond
            ((eq? sym '&)
-            (when (null? (cdr rest)) (error "Nothing after &" rest))
-            (let ((x (cadr rest)))
-              (unless (only-aliases? (syntax->datum (cddr rest)))
-                (error "Only :as aliases may follow rest argument" rest))
+            (when (null? (cdr rst)) (error "Nothing after &" rst))
+            (let ((x (cadr rst)))
+              (unless (only-aliases? (syntax->datum (cddr rst)))
+                (error "Only :as aliases may follow rest argument" rst))
               (destruct-vec enclosing-binding
                             (1+ i)
-                            (cddr rest)
-                            (destructure (cadr rest) #`(seq (drop #,i #,enclosing-binding))
+                            (cddr rst)
+                            (destructure (cadr rst) #`(seq (drop #,i #,enclosing-binding))
                                          result))))
            ((eq? #:as (syn-keyword item))
-            (if (null? (cdr rest))
-                (error "No value for :as" rest)
+            (if (null? (cdr rst))
+                (error "No value for :as" rst)
                 (destruct-vec enclosing-binding
                               i
-                              (cddr rest)
-                              (cons (list (cadr rest) enclosing-binding)
+                              (cddr rst)
+                              (cons (list (cadr rst) enclosing-binding)
                                     result))))
            (else
             (destruct-vec enclosing-binding
                           (1+ i)
-                          (cdr rest)
+                          (cdr rst)
                           (destructure item #`(nth #,enclosing-binding #,i #nil)
                                        result)))))))
 
-  (define (destruct-map container-id defaults rest result)
-    (if (null? rest)
+  (define (destruct-map container-id defaults rst result)
+    (if (null? rst)
         result
-        (let* ((item (car rest))
+        (let* ((item (car rst))
                (sym (syn-symbol item))
                (kwd (syn-keyword item)))
           (cond
            ((member kwd '(#:keys #:strs #:syms))
-            (when (null? (cdr rest))
-              (error (format #f "No value for ~a in" kwd) rest))
-            (let ((names (cadr rest)))
+            (when (null? (cdr rst))
+              (error (format #f "No value for ~a in" kwd) rst))
+            (let ((names (cadr rst)))
               (unless (syn-vecish? names)
-                (error (format #f "~a value is not a vector" kwd) rest))
+                (error (format #f "~a value is not a vector" kwd) rst))
               (let ((names (syn-vecish->list names)))
                 (unless (every syn-symbol? names)
-                  (error (format #f "~a names must all be symbols" kwd) rest))
+                  (error (format #f "~a names must all be symbols" kwd) rst))
                 (let* ((syms (reverse (map syntax->datum names)))
                        (dummy (dbg "syms: ~s\n" syms))
                        (names (case kwd
@@ -173,7 +173,7 @@
                                 (else (map (lambda (x) `(quote ,x)) syms)))))
                   (destruct-map container-id
                                 defaults
-                                (cddr rest)
+                                (cddr rst)
                                 (append (map (lambda (sym name)
                                                (dbg "symname: ~s ~s\n" sym name)
                                                (let ((var (datum->syntax context sym))
@@ -185,25 +185,25 @@
                                              syms names)
                                         result))))))
            ((eq? #:as (syn-keyword item))
-            (if (null? (cdr rest))
-                (error "No value for :as" rest)
+            (if (null? (cdr rst))
+                (error "No value for :as" rst)
                 (destruct-map container-id
                               defaults
-                              (cddr rest)
-                              (cons (list (cadr rest) container-id)
+                              (cddr rst)
+                              (cons (list (cadr rst) container-id)
                                     result))))
            (else
-            (when (null? (cdr rest))
-              (error "No keyword for map destructuring:" rest))
-            (let ((k (syntax->datum (cadr rest))))
+            (when (null? (cdr rst))
+              (error "No keyword for map destructuring:" rst))
+            (let ((k (syntax->datum (cadr rst))))
               (unless (or (keyword? k) (string? k) (symbol? k))
-                (error "Invalid map destructuring key type:" rest)))
+                (error "Invalid map destructuring key type:" rst)))
             (let ((default-form (syn-map-refq defaults sym #nil)))
               (destruct-map container-id
                             defaults
-                            (cddr rest)
+                            (cddr rst)
                             (destructure item #`(get #,container-id
-                                                     (quote #,(cadr rest))
+                                                     (quote #,(cadr rst))
                                                      #,default-form)
                                          result))))))))
 
