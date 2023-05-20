@@ -140,9 +140,11 @@
                           ns
                           ns-aliases
                           ns-name
+                          ns-resolve
                           refer
                           refer-clojure
                           require
+                          resolve
                           use))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke io) #:select (flush line-seq read-line slurp spit))
@@ -473,6 +475,7 @@
                ns
                ns-aliases
                ns-name
+               ns-resolve
                nth
                number?
                odd?
@@ -518,6 +521,7 @@
                require
                reset!
                reset-vals!
+               resolve
                rest
                reverse
                second

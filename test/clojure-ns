@@ -2,7 +2,7 @@
 ;; -*-clojure-*-
 !#
 
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (ns test.clojure-ns
@@ -15,12 +15,28 @@
 (begin-tests (ns-name *ns*))
 
 (is (= 'test.clojure-ns (ns-name *ns*)))
-;; FIXME: rewrite using resolve/ns-resolve once they're added
-(is (not (guile/module-variable (guile/current-module) 'join)))
 (is (= clojure.string/join str/join))
-(is (= seq (deref (find-var 'clojure.core/seq))))
 (is (integer? (guile/current-time)))
 (is (-> (guile.srfi.srfi-4/make-u64vector 0) guile.srfi.srfi-4/u64vector?))
+
+(def local-test-def nil)
+
+(testing "resolution"
+  (let [join-var (-> (guile/resolve-module '(lokke ns clojure string))
+                     (guile/module-variable 'join))
+        local (guile/module-variable *ns* 'local-test-def)]
+    (is (not (ns-resolve *ns* 'join)))
+    (is (not (ns-resolve *ns* 'clojure.core/join)))
+    (is (not (ns-resolve 'clojure.core 'join)))
+    (is (= local (ns-resolve *ns* 'local-test-def)))
+    (is (= join-var (ns-resolve *ns* 'clojure.string/join)))
+    (is (= join-var (ns-resolve 'clojure.string 'join)))
+    (is (= join-var (ns-resolve (find-ns 'clojure.string) 'join)))
+
+    (is (not (resolve 'join)))
+    (is (= local (resolve 'local-test-def)))
+    (is (= join-var (resolve 'clojure.string/join)))
+    (is (= seq (deref (resolve 'clojure.core/seq))))))
 
 (testing "x.y/z can't refer to private/unexported bindings"
   (is (guile/module-ref (guile/resolve-module '(lokke reader)) 'expand-ref))

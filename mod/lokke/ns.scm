@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2021 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;;; Namespace underpinnings
@@ -31,14 +31,15 @@
             default-environment
             find-ns
             find-var
-            fix-let
             in-ns
             ns
             ns-aliases
             ns-name
+            ns-resolve
             re-export-all!
             refer
             refer-clojure
+            resolve
             resolve-ns
             require
             use)
@@ -212,11 +213,11 @@
          (ref (parsed-sym-ref parsed))
          (_ (unless (and ns ref)
               (error "Symbol does not include ns and name:" var-sym)))
-         (m (find-ns ns))
-         (_ (unless m
-              (error (format #f "Unable to find ns ~s for symbol" ns) var-sym)))
-         (v (module-variable m ref)))
-    (if v v #nil)))
+         (m (find-ns ns)))
+    (unless m
+      (error (format #f "Unable to find ns ~s for symbol" ns) var-sym))
+    (or (module-variable m ref)
+        #nil)))
 
 ;; FIXME: add warning on collisions?  Docs claim exception will be
 ;; thrown, but jvm doesn't, just warns.
@@ -381,6 +382,41 @@
         (atom-deref aliases)
         (hash-map))))
 
+(define (resolve-ns ns-sym)
+  (require ns-sym)
+  (resolve-module (ns-sym->mod-name ns-sym) #:ensure #f))
+
+(define (ns-resolve ns sym)
+  "Returns the variable to which sym is bound if it's fully qualified,
+otherwise the variable to which sym is bound in ns (symbol or
+namspace), or nil if sym is not bound."
+
+  (define (find-var m ref)
+    (let ((v (module-variable m ref)))
+      (or (and (variable? v) (variable-bound? v) v)
+          #nil)))
+
+  (let* ((parsed (parse-symbol sym))
+         (sns (parsed-sym-ns parsed))
+         (ref (parsed-sym-ref parsed)))
+    (if sns
+        (let* ((m (or (find-ns sns)
+                      (get (ns-aliases (current-module)) sns)
+                      (error "Unable to find namespace for" sym))))
+          (find-var m ref))
+        (let ((m (if (module? ns)
+                     ns
+                     (if ns
+                         (or (find-ns ns) (error "Unable to find namespace" ns))
+                         (current-module)))))
+          (find-var m sym)))))
+
+(define (resolve sym)
+  "Returns the variable to which sym is bound if it's fully qualified,
+otherwise the variable to which sym is bound in *ns*, or nil if sym is
+not bound."
+  (ns-resolve (current-module) sym))
+
 (define (incorporate-deps dep-specs)
   (define (use-spec-mod spec)
     (dbgf "mod-use: ~s ~s\n" (current-module) spec)
@@ -442,10 +478,6 @@
                    cmds
                    (cons '(refer 'clojure.core) cmds))))
     cmds))
-
-(define (resolve-ns ns-sym)
-  (require ns-sym)
-  (resolve-module (ns-sym->mod-name ns-sym) #:ensure #f))
 
 (define (clj-syntax->scm syn)
   (literals->scm-instances (syntax->datum syn)))
