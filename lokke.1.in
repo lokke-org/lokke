@@ -84,9 +84,9 @@ meaning that
 values, for example, will usually differ across invocations.
 .P
 You can invoke
-.B lokke run ... \-e guile.guile/%load\-path
+.B lokke run ... \-e guile/%load\-path
 or
-.B lok ... \-e guile.guile/%load\-path
+.B lok ... \-e guile/%load\-path
 to display the Guile load path (including any dependencies) for a
 given invocation.
 .

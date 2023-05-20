@@ -5,7 +5,7 @@
   (:require
    [clojure.string :as str]
    [guile.ice-9.iconv :refer [bytevector->string]]
-   [guile.guile
+   [guile
     :refer [dirname
             chdir
             closedir
@@ -109,7 +109,7 @@
 
 (defn subdirs [path]
   (with-final [dir (opendir path) :always closedir]
-    (doall (take-while #(not (guile.guile/eof-object? %))
+    (doall (take-while #(not (guile/eof-object? %))
                        (repeatedly #(readdir dir))))))
 
 (def all-digit-dir-rx (re-pattern "/\\d+$"))
@@ -126,7 +126,7 @@
                      :let [full (str paths "/" dir)]
                      :when (all-digit-dir? full)]
                  full))
-          (when-let [edn (and (guile.guile/file-exists? edn)
+          (when-let [edn (and (guile/file-exists? edn)
                               (read-string (slurp edn)))]
             (derive-load-path edn cache)))))
 
@@ -137,7 +137,7 @@
               :else
               (do
                 (note println "Unrecognized deps.edn entry:" (prn dep))
-                (guile.guile/exit 2))))
+                (guile/exit 2))))
           ;; FIXME: why did a {} here cause (I think) an infloop?
           []
           (:deps deps-edn)))
@@ -147,7 +147,7 @@
   ;; FIXME: binary paths
   (doseq [path (derive-load-path deps-edn (ensure-cache-dir))]
     (append-to-load-path path))
-  (when (guile.guile/file-exists? ".lokke/path")
+  (when (guile/file-exists? ".lokke/path")
     (doseq [path (for [dir (subdirs ".lokke/path")
                        :let [full (str top "/.lokke/path/" dir)]
                        :when (all-digit-dir? full)]
@@ -237,9 +237,9 @@
                _ (mkdir "-p" (dirname path))
                path-tmp (mktemp "-d" (str path "-XXXXXX-tmp")) :always rm-rf]
     ;; FIXME: unify somehow with (clojure/jvm) ~/.gitlibs/ _repo or libs?
-    (when-not (guile.guile/file-exists? path)
-      (when-not (guile.guile/file-exists? root)
-        (when-not (guile.guile/file-exists? repo)
+    (when-not (guile/file-exists? path)
+      (when-not (guile/file-exists? root)
+        (when-not (guile/file-exists? repo)
           (if-not tag
             (exc "git" "clone" "--bare" url repo-tmp)
             (exc "git" "clone" "--bare" "--depth" "1"
@@ -249,7 +249,7 @@
         (rename-file repo-tmp repo)
         (rm-rf root)
         (exc "git" "-C" repo "worktree" "add" relative-root oidx))
-      (link-dep-paths (when (guile.guile/file-exists? edn)
+      (link-dep-paths (when (guile/file-exists? edn)
                         (:paths (read-string (slurp edn))))
                       path-tmp "../../../root/")
       (rm-rf path)
@@ -290,7 +290,7 @@
             :else
             (do
               (note println "Unrecognized deps.edn entry:" (prn dep))
-              (guile.guile/exit 2))))
+              (guile/exit 2))))
         ;; FIXME: unify?
         (ensure-top-level-paths deps top)
         (augment-load-path deps top)

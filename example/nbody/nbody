@@ -202,13 +202,13 @@
   (println "    n, a positive integer, is the number of simulation steps to run")
   (flush)
   #?(:clj (System/exit exit-code)
-     :cljl (guile.guile/exit exit-code)
+     :cljl (guile/exit exit-code)
      :default (assert false)))
 
 
 (defn -main [& args]
   (let [n #?(:clj (. Integer valueOf (nth args 0) 10)
-             :cljl (guile.guile/string->number (nth args 0) 10))]
+             :cljl (guile/string->number (nth args 0) 10))]
     (when (not= (count args) 1)
       (usage 1))
     (when (not (re-matches #"^\d+$" (nth args 0)))

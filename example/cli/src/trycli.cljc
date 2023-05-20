@@ -2,7 +2,7 @@
 (ns trycli
   (:require
    [clojure.tools.cli :refer [parse-opts]]
-   #?(:cljl [guile.guile :refer [string->number]])))
+   #?(:cljl [guile :refer [string->number]])))
 
 (def opt-spec
   [["-i" "--integer N" "An integer"

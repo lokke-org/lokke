@@ -86,7 +86,7 @@
   (is (= true (seqable? [])))
   (is (= true (seqable? {})))
   (is (= true (seqable? #{})))
-  (is (= true (seqable? (guile.guile/vector))))
+  (is (= true (seqable? (guile/vector))))
   (is (= false (seqable? true)))
   (is (= false (seqable? false))))
 

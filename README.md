@@ -281,7 +281,7 @@ General comparison with Clojure/JVM
 * Rather than throwing an exception, the Clojure and edn reader
   functions, `read`, `read-string`, etc. return the [rnrs end-of-file
   object](https://www.gnu.org/software/guile/manual/html_node/rnrs-io-ports.html),
-  which can be identified with `guile.guile/eof-object?`.
+  which can be identified with `guile/eof-object?`.
 
 * There are some differences and limitations with respect to the
   handling of [comparisons, hashes, and equality](#comparisons-hashing-and-equality).
@@ -511,7 +511,7 @@ Comparisons, hashing, and equality
 
 * As on the JVM, `hash` does not produce values *consistent* with `=`
   across Clojure and non-clojure collections, e.g. `(hash [1 2 3])` is
-  not likely to be equal to `(hash (guile.guile/vector 1 2 3))`.
+  not likely to be equal to `(hash (guile/vector 1 2 3))`.
   Although as an exception, proper Scheme lists should be handled
   consistently right now, given the way seqs are implemented via
   Scheme `<pair>`s.

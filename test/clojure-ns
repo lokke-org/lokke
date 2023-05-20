@@ -9,7 +9,7 @@
   (:require
    [clojure.string :as str]
    [clojure.test :refer [begin-tests end-tests is testing]]
-   [guile.guile :refer [module-public-interface module-variable]]
+   [guile :refer [module-public-interface module-variable]]
    [guile.ice-9.exceptions :refer [undefined-variable-error?]]))
 
 (begin-tests (ns-name *ns*))

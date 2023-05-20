@@ -38,9 +38,9 @@ DESCRIPTION
        dom-state-from-platform,  meaning  that  rand-int  values, for example,
        will usually differ across invocations.
 
-       You can invoke lokke run ... -e guile.guile/%load-path or  lok  ...  -e
-       guile.guile/%load-path  to  display  the Guile load path (including any
-       dependencies) for a given invocation.
+       You can invoke  lokke  run  ...  -e  guile/%load-path  or  lok  ...  -e
+       guile/%load-path  to  display the Guile load path (including any depen-
+       dencies) for a given invocation.
 
 RUN_OPT
        -l, --load file

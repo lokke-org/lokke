@@ -3,7 +3,7 @@
 
 (ns lokke.io
   (:require
-   [guile.guile
+   [guile
     :refer [closedir eof-object? opendir readdir stat stat:mode stat:type]]
    [guile.lokke.io
     :refer [copy

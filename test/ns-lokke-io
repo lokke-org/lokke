@@ -24,7 +24,7 @@
     (with-final [_ outname :always delete-file]
       (spit out message)
       (is (= message (slurp outname))))
-    (is (not (guile.guile/file-exists? outname))))
+    (is (not (guile/file-exists? outname))))
   (is (= "Lokke" (subs (slurp (str src-prefix "README")) 0 5))))
 
 (testing "path-seq"
