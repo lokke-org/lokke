@@ -40,7 +40,6 @@
                           long-array
                           short-array))
   #:use-module ((lokke base collection) #:select (define-nth-seq))
-  #:use-module ((lokke base doc) #:select (doc))
   #:use-module ((lokke base dynamic) #:select (set!))
   #:use-module ((lokke base map)
                 #:select (<map> map-invert map? update-keys update-vals))
@@ -370,7 +369,6 @@
                disj
                dissoc
                doall
-               doc
                dorun
                doseq
                dotimes

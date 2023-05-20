@@ -13,6 +13,9 @@
       #f))
 
 (define (repl)
-  (set-current-module (default-environment))
-  (current-language 'lokke)
+  (let ((repl-env (default-environment)))
+    (set-current-module (default-environment))
+    (current-language 'lokke)
+    (module-add! repl-env 'doc
+                 (module-variable (resolve-module '(lokke base doc)) 'doc)))
   (repl-for-current-module))

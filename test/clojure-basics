@@ -8,7 +8,8 @@
 (ns test.clojure-basics
   (:require
    [clojure.string :as str]
-   [clojure.test :refer [begin-tests end-tests is testing]]))
+   [clojure.test :refer [begin-tests end-tests is testing]]
+   [guile.lokke.base.doc :refer [doc]]))
 
 (begin-tests (ns-name *ns*))
 
