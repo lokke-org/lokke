@@ -7,6 +7,7 @@
 
 (ns test.clojure-basics
   (:require
+   [clojure.string :as str]
    [clojure.test :refer [begin-tests end-tests is testing]]))
 
 (begin-tests (ns-name *ns*))
@@ -318,6 +319,20 @@
 
 (testing "random-uuid"
   (is (uuid? (random-uuid))))
+
+(def def-w-doc "def doc" nil)
+(defn defn-w-doc "defn doc" [] nil)
+
+(testing "doc"
+  (let [docstr (with-out-str (doc def-w-doc))]
+    (str/includes? docstr "test.clojure-basics/def-w-doc")
+    (str/includes? docstr "def doc"))
+  (let [docstr (with-out-str (doc def-w-doc))]
+    (str/includes? docstr "test.clojure-basics/defn-w-doc")
+    (str/includes? docstr "defn doc"))
+  (let [docstr (with-out-str (doc guile/assoc))]
+    (str/includes? docstr "guile.guile/assoc")
+    (str/includes? docstr "Scheme procedure")))
 
 (is (= *warn-on-reflection* false))
 

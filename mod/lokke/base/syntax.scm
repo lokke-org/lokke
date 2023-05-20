@@ -41,7 +41,8 @@
                           take-while
                           seq))
   #:use-module ((lokke base destructure) #:select (destructure-binding-syntax))
-  #:use-module ((lokke base doc) #:select (clear-def-doc! maybe-set-def-doc!))
+  #:use-module ((lokke base doc)
+                #:select (clear-var-doc! set-var-doc! set-fn-doc!))
   #:use-module ((lokke base dynamic) #:select (binding defdyn defdynloc))
   #:use-module ((lokke base metadata) #:select (alter-meta!))
   #:use-module ((lokke base util)
@@ -135,9 +136,9 @@
     (%scm-if #'doc
              #`(begin
                  (define sym value)
-                 (maybe-set-def-doc! (module-variable (current-module) 'sym)
-                                     sym
-                                     #,(global-identifier? #'sym) doc)
+                 (when #,(global-identifier? #'sym)
+                   (set-var-doc! (module-variable (current-module) 'sym)
+                                 doc))
                  (when metadata
                    (alter-meta! (module-variable (current-module) 'sym)
                                 (lambda (prev) metadata)))
@@ -148,8 +149,8 @@
                  (var sym))
              #`(begin
                  (define sym value)
-                 (clear-def-doc! (module-variable (current-module) 'sym)
-                                 #,(global-identifier? #'sym))
+                 (when #,(global-identifier? #'sym)
+                   (clear-var-doc! (module-variable (current-module) 'sym)))
                  (when metadata
                    (alter-meta! (module-variable (current-module) 'sym)
                                 (lambda (prev) metadata)))
@@ -535,7 +536,7 @@
       ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
        #'(begin
-           (def name doc (fn expr ...))
+           (def name doc (set-fn-doc! (fn expr ...) doc))
            (alter-meta! (module-variable (current-module) 'name)
                         (lambda (prev) (map-tag meta attr ...)))
            (var name)))
@@ -548,7 +549,7 @@
            (var name)))
       ;; just doc
       ((_ name doc expr ...) (string? (syntax->datum #'doc))
-       #'(def name doc (fn expr ...)))
+       #'(def name doc (set-fn-doc! (fn expr ...) doc)))
       ;; none
       ((_ name expr ...)
        #'(def name (fn expr ...))))))
@@ -564,7 +565,7 @@
       ((_ name doc (map-tag meta attr ...) expr ...)
        (and (string? (syntax->datum #'doc)) (map-tag? #'map-tag))
        #'(begin
-           (def- name doc (fn expr ...))
+           (def- name doc (set-fn-doc! (fn expr ...) doc))
            (alter-meta! (module-variable (current-module) 'name)
                         (lambda (prev) (map-tag meta attr ...)))
            (var name)))
@@ -577,7 +578,7 @@
            (var name)))
       ;; just doc
       ((_ name doc expr ...) (string? (syntax->datum #'doc))
-       #'(def- name doc (fn expr ...)))
+       #'(def- name doc (set-fn-doc! (fn expr ...) doc)))
       ;; none
       ((_ name expr ...)
        #'(def- name (fn expr ...))))))
