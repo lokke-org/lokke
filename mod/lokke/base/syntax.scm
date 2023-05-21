@@ -142,8 +142,6 @@
                  (when metadata
                    (alter-meta! (module-variable (current-module) 'sym)
                                 (lambda (prev) metadata)))
-                 (when (procedure? sym)
-                   (set-procedure-property! sym 'name 'sym))
                  (unless (or must-be-private? (get metadata #:private))
                    (export sym))
                  (var sym))
