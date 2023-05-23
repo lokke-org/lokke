@@ -87,7 +87,6 @@
   #:use-module ((lokke base quote) #:select (clj-quote))
   #:use-module (lokke collection)
   #:use-module ((lokke compare) #:select (== clj= compare hash))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke compile) #:select (clj-defmacro load-file))
   #:use-module ((lokke concurrent)
                 #:select (<atom>
@@ -580,22 +579,21 @@
                with-meta
                zero?
                zipmap)
+  #:re-export-and-replace (apply
+                           assoc
+                           cons
+                           format
+                           list
+                           list?
+                           merge
+                           newline
+                           nil?
+                           peek
+                           (clj-quote . quote)
+                           read
+                           set!
+                           sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! 'apply
-                        'assoc
-                        'cons
-                        'format
-                        'list
-                        'list?
-                        'merge
-                        'newline
-                        'nil?
-                        'peek
-                        '(clj-quote . quote)
-                        'read
-                        'set!
-                        'sort)
 
 (defdyn *clojure-version*
   (hash-map #:major ver/major

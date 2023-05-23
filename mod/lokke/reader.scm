@@ -11,7 +11,6 @@
                           string->keyword
                           synquote-resolve-symbol-str))
   #:use-module ((lokke collection) #:select (empty? merge))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke ns) #:select (ns-aliases))
   #:use-module ((lokke reader literal)

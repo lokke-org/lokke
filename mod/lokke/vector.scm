@@ -38,7 +38,6 @@
                           take-last
                           update))
   #:use-module ((lokke compare) #:select (clj= compare hash))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (<hash-map>))
   #:use-module ((lokke metadata) #:select (meta with-meta))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
@@ -91,10 +90,8 @@
                take-last
                with-meta
                update)
+  #:re-export-and-replace (apply assoc hash)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! 'apply 'assoc 'hash)
-
 
 ;;; <lokke-vector>
 

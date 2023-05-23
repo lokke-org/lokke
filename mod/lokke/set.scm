@@ -15,7 +15,6 @@
   #:use-module ((lokke base map) #:select (<map>))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:export (<set>
             difference
@@ -31,9 +30,8 @@
             superset?
             union)
   #:re-export (clj= invoke)
+  #:re-export-and-replace (apply)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! 'apply)
 
 (define-class <set> (<coll>))
 (define-generic difference)

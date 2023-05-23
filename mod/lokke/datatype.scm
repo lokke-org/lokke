@@ -23,7 +23,6 @@
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke collection) #:select (some))
   #:use-module ((lokke compare) #:select (clj= hash))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (hash-map hash-map?))
   #:use-module ((lokke reader literal)
                 #:select (reader-vector? reader-vector-elts))
@@ -35,9 +34,8 @@
   #:use-module ((srfi srfi-71))
   #:export (defprotocol defrecord extend-type)
   #:re-export (count dissoc get keys seq vals)
+  #:re-export-and-replace (assoc)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! 'assoc)
 
 ;; FIXME: avoid method as binding name?
 ;; FIXME: add extends?

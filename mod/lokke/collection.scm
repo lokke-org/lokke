@@ -90,7 +90,6 @@
   #:use-module ((lokke base map-entry)
                 #:select (<map-entry> key map-entry map-entry? val))
   #:use-module ((lokke compare) #:select (clj= hash))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke hash-map) #:select (hash-map))
   #:use-module ((lokke pr) #:select (pr-readable pr-approachable))
   #:use-module ((lokke scm vector)
@@ -185,17 +184,8 @@
                update-in
                val
                vals)
+  #:re-export-and-replace (apply assoc cons hash list? merge peek reverse sort)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! 'apply
-                        'assoc
-                        'cons
-                        'hash
-                        'list?
-                        'merge
-                        'peek
-                        'reverse
-                        'sort)
 
 (define-method (assoc (x <boolean>) k v)
   (require-nil 'get x)

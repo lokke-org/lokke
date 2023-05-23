@@ -9,14 +9,13 @@
   #:use-module ((lokke base map-entry) #:select (key val))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj=))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module (oop goops)
   #:export (<map> map-invert map? update-keys update-vals)
   #:re-export (clj= get invoke)
+  #:re-export-and-replace (apply)
   #:replace (merge)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
-(re-export-and-replace! 'apply)
 
 ;; Define the <map> basics here.  They can't go in anything that
 ;; depends on (lokke collection) because it depends on (lokke base

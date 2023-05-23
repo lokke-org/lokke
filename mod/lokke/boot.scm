@@ -13,7 +13,6 @@
                           /lokke/reader-vector
                           clj-quote
                           synerr))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke ns) #:select (ns))
   #:use-module ((lokke transmogrify)
                 #:select (/lokke/ref-scoped-sym-if-syntax
@@ -24,10 +23,9 @@
                /lokke/reader-vector
                /lokke/ref-scoped-sym-if-syntax
                ns)
+  #:re-export-and-replace ((clj-quote . quote))
   #:replace (unquote unquote-splicing)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! '(clj-quote . quote))
 
 (define-syntax-rule (/lokke/reader-meta x ...)
   (warn (format #f "Ignoring metadata in unsupported position: ~s"

@@ -2,7 +2,7 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke compat)
-  #:export (if-at-least-guile-version re-export-and-replace!))
+  #:export (if-at-least-guile-version))
 
 (define-syntax if-at-least-guile-version
   (lambda (x)
@@ -16,6 +16,3 @@
                   (>= (string->number (micro-version)) mic))
              #'then
              #'else))))))
-
-(define (re-export-and-replace! . names)
-  (module-re-export! (current-module) names #:replace? #t))

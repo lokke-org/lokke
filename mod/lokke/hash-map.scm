@@ -49,7 +49,6 @@
   #:use-module ((lokke base map-entry) #:select (map-entry))
   #:use-module ((lokke base util) #:select (require-nil))
   #:use-module ((lokke compare) #:select (clj= hash))
-  #:use-module ((lokke compat) #:select (re-export-and-replace!))
   #:use-module ((lokke pr) #:select (pr-approachable pr-readable))
   #:use-module ((lokke set) #:select (rename-keys))
   #:use-module (oop goops)
@@ -84,9 +83,8 @@
                update-keys
                update-vals
                vals)
+  #:re-export-and-replace (assoc hash)
   #:duplicates (merge-generics replace warn-override-core warn last))
-
-(re-export-and-replace! 'assoc 'hash)
 
 ;; FIXME: move rest of common map generics to (lokke map)
 
