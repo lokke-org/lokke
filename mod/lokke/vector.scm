@@ -2,10 +2,10 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke vector)
+  #:pure
+  #:use-module ((guile) #:hide (apply peek))
   #:use-module ((guile) #:select ((apply . %scm-apply)))
-  #:use-module ((guile) #:hide (peek))
   #:use-module ((ice-9 match) #:select (match match-lambda*))
-  #:use-module (oop goops)
   #:use-module ((lokke base collection) #:select (define-nth-seq))
   #:use-module ((lokke base invoke) #:select (apply invoke))
   #:use-module ((lokke base map-entry) #:select (map-entry))
@@ -56,6 +56,7 @@
                           lokke-vector-with-meta
                           lokke-vector?
                           vector->lokke-vector))
+  #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (fold))
   #:use-module ((srfi srfi-43) #:select (vector-unfold))
   #:use-module ((srfi srfi-67) #:select (vector-compare))
