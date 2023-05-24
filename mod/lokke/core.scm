@@ -166,7 +166,8 @@
   #:use-module ((lokke set) #:select (<set> set?))
   #:use-module ((lokke time) #:select (instant?))
   #:use-module ((lokke uuid) #:select (parse-uuid random-uuid uuid?))
-  #:use-module (lokke vector) ;; #:FIXME select
+  #:use-module ((lokke vector)
+                #:select (into-array invoke subvec vec vector vector?))
   #:use-module ((lokke metadata)
                 #:select (*print-meta* alter-meta! meta vary-meta with-meta))
   #:use-module ((lokke regex)
