@@ -128,7 +128,7 @@
                           try
                           with-open))
   #:use-module ((lokke hash-map) #:select (hash-map hash-map?))
-  #:use-module (lokke hash-set)
+  #:use-module ((lokke hash-set) #:select (disj hash-set set))
   #:use-module ((lokke ns)
                 #:select (*ns*
                           alias
