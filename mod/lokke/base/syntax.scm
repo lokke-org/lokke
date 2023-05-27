@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2022 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; Commonly useful code, including most notably, destructuring let and
@@ -16,12 +16,12 @@
 ;; liberal use of syntax pattern guards.
 
 (define-module (lokke base syntax)
+  #:pure
+  #:use-module ((guile) #:hide (and cond if nil? or when))
   #:use-module ((guile)
                 #:select ((and . %scm-and)
                           (cond . %scm-cond)
-                          (do . %scm-do)
                           (if . %scm-if)
-                          (let . %scm-let)
                           (or . %scm-or)))
   #:use-module ((srfi srfi-1)
                 #:select (append-map!
@@ -89,7 +89,7 @@
             when-not
             when-some)
   ;; We leave let as let within this module.
-  #:replace (and or cond if (let** . let) nil? when))
+  #:replace (and cond if (let** . let) nil? or when))
 
 (eval-when (expand load eval)
   (define debug-fn? #f)
@@ -240,13 +240,13 @@
   (syntax-rules ()
     ((_) #t)
     ((_ x) x)
-    ((_ x x* ...) (%scm-let ((result x)) (if result (and x* ...) result)))))
+    ((_ x x* ...) (let ((result x)) (if result (and x* ...) result)))))
 
 (define-syntax or
   (syntax-rules ()
     ((_) #nil)
     ((_ x) x)
-    ((_ x x* ...) (%scm-let ((result x)) (if result result (or x* ...))))))
+    ((_ x x* ...) (let ((result x)) (if result result (or x* ...))))))
 
 (define-syntax when
   (syntax-rules ()
@@ -268,7 +268,7 @@
       ((_ (var test) then)
        #'(if-let (var test) then #nil))
       ((_ (var test) then else)
-       #'(%scm-let ((outcome test))
+       #'(let ((outcome test))
            (if outcome
                (let** (var outcome) then)
                else))))))
@@ -281,7 +281,7 @@
       ((_ (var test) then)
        #'(if-some (var test) then #nil))
       ((_ (var test) then else)
-       #'(%scm-let ((outcome test))
+       #'(let ((outcome test))
            (if (some? outcome)
                (let** (var outcome) then)
                else))))))
@@ -322,9 +322,9 @@
                                         (list (car var-val) shim))
                                       shim-args
                                       var-vals)))
-          #`(%scm-let recur #,recur-args
-                      (let** #,let-args
-                             #,@body)))))
+          #`(let recur #,recur-args
+              (let** #,let-args
+                     #,@body)))))
     (syntax-case x ()
       ((loop (vec-tag meta binding ...) body ...) (vec-tag? #'vec-tag)
        (expand #'loop #'(binding ...) #'(body ...)))
@@ -339,10 +339,10 @@
       ((dotimes (var n)) #nil)
       ((dotimes (var n) body ...)
        #'(when (positive? n)
-           (%scm-let ((max (truncate n)))
-             (%scm-do ((var 0 (1+ var)))
-                      ((or (= var max) (> var 100)) #nil)
-                      body ...)))))))
+           (let ((max (truncate n)))
+             (do ((var 0 (1+ var)))
+                 ((or (= var max) (> var 100)) #nil)
+               body ...)))))))
 
 (define-syntax dbgfn
   (lambda (x)
@@ -699,7 +699,7 @@
   (syntax-rules ()
     ((_ x) x)
     ((_ x exp exp* ...)
-     (%scm-let ((y x))
+     (let ((y x))
        (%scm-if (nil? y)
                 #nil
                 (some-> (-> y exp) exp* ...))))))
@@ -708,7 +708,7 @@
   (syntax-rules ()
     ((_ x) x)
     ((_ x exp exp* ...)
-     (%scm-let ((y x))
+     (let ((y x))
        (%scm-if (nil? y)
                 #nil
                 (some->> (->> y exp) exp* ...))))))
