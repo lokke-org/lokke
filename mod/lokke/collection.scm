@@ -1,9 +1,11 @@
-;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2020 2022-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke collection)
   #:version (0 0 0)
-  #:use-module ((guile) #:hide (peek))
+  #:pure
+  #:use-module ((guile)
+                #:hide (apply assoc cons hash list? merge peek reverse sort))
   #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 match) #:select (match))
   #:use-module (oop goops)

@@ -1,7 +1,9 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke base invoke)
+  #:pure
+  #:use-module ((guile) #:hide (apply))
   #:use-module ((guile) #:select ((apply . %scm-apply)))
   #:use-module (oop goops)
   #:export (invoke)

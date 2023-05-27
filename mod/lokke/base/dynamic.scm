@@ -1,10 +1,12 @@
-;;; Copyright (C) 2019-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;; This is in a separate file for now so that pr can depend on it
 ;; without needing a full dependency on (lokke base syntax).
 
 (define-module (lokke base dynamic)
+  #:pure
+  #:use-module ((guile) #:hide (set!))
   #:use-module ((guile) #:select ((set! . %set!)))
   #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base util) #:select (module-name->ns-str vec-tag?))
