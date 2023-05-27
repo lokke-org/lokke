@@ -1,7 +1,10 @@
-;;; Copyright (C) 2019 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2020 2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke symbol)
+  #:pure
+  #:use-module ((guile) #:hide (gensym symbol))
+  #:use-module ((guile) #:select ((gensym . %scm-gensym)))
   #:use-module ((ice-9 receive) #:select (receive))
   #:use-module ((lokke base util) #:select (string->keyword))
   #:use-module ((lokke pr) #:select (str))
@@ -22,16 +25,14 @@
 ;; FIXME: we may over-validate here, i.e. run too much through the
 ;; full parse-object gauntlet too often.
 
-;; FIXME: namepsace support is ... incomplete, to put it generously.
-
 (define (ident? x)
   (or (symbol? x) (keyword? x)))
 
 (define* (gensym #:optional prefix)
   ;; Generate something obscure that's a valid clj symbol
   (if prefix
-      ((@ (guile) gensym) (string-append "__<?!?>__" (str prefix)))
-      ((@ (guile) gensym) "__<?!?>__")))
+      (%scm-gensym (string-append "__<?!?>__" (str prefix)))
+      (%scm-gensym "__<?!?>__")))
 
 (define simple-symbol?
   ;; No . or / characters excepting perhaps a trailing dot (e.g. Exception.)
