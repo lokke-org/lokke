@@ -8,6 +8,8 @@
 
 (define-module (lokke exception)
   #:version (0 0 0)
+  #:pure
+  #:use-module ((guile) #:hide (close throw))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((ice-9 exceptions)
                 #:select (define-exception-type
@@ -27,7 +29,6 @@
                           make-assertion-violation
                           simple-conditions))
   #:use-module ((srfi srfi-1) :select (drop-while find))
-  #:replace (close throw)
   #:export (AssertionError
             AssertionError.
             Error
@@ -49,6 +50,7 @@
             try
             with-final
             with-open)
+  #:replace (close throw)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 ;; FIXME: do we want/need any with-continuation-barrier wrappers,
