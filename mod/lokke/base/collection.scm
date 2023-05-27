@@ -1,4 +1,4 @@
-;;; Copyright (C) 2015-2020 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2015-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 ;;; This is the core of the collection implementation.  It's in a
@@ -13,9 +13,12 @@
 
 (define-module (lokke base collection)
   #:version (0 0 0)
+  #:pure
+  #:use-module ((guile) #:hide (assoc list? peek reverse sort))
   #:use-module ((guile)
-                #:hide (peek reverse sort)
-                :select ((apply . %scm-apply) (cons . %scm-cons) (list? . %scm-list?)))
+                :select ((apply . %scm-apply)
+                         (cons . %scm-cons)
+                         (list? . %scm-list?)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((ice-9 q) #:select (enq! deq! make-q q-length))
   #:use-module ((lokke base invoke) #:select (apply))
@@ -95,7 +98,6 @@
 
 ;; FIXME: should these implmentations of rest actually be next?
 
-(set! assoc #f)  ;; We do not want the guile assoc as the fallback
 (define-generic assoc)
 (define-generic dissoc)
 (define-generic contains)
