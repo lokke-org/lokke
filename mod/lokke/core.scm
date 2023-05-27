@@ -2,6 +2,28 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke core)
+  #:pure
+  #:use-module ((guile)
+                #:hide (=
+                        apply
+                        assoc
+                        begin
+                        boolean?
+                        case
+                        cons
+                        do
+                        format
+                        if
+                        let
+                        list?
+                        merge
+                        newline
+                        nil?
+                        peek
+                        read
+                        set!
+                        sort
+                        throw))
   #:use-module ((guile)
                 #:select ((apply . %scm-apply)
                           (begin . %scm-begin)
@@ -9,7 +31,7 @@
                           (let . %scm-let)
                           (format . %scm-format)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
-  #:use-module (oop goops)
+  #:use-module ((oop goops) #:hide (instance?))
   #:use-module ((srfi srfi-1) #:select (iota))
   #:use-module ((lokke array)
                 #:select (aclone
@@ -85,7 +107,7 @@
   #:use-module ((lokke base util) #:select (map-tag? set-tag? vec-tag?))
   #:use-module ((lokke base version) #:prefix ver/)
   #:use-module ((lokke base quote) #:select (clj-quote))
-  #:use-module (lokke collection)
+  #:use-module ((lokke collection))
   #:use-module ((lokke compare) #:select (== clj= compare hash))
   #:use-module ((lokke compile) #:select (clj-defmacro load-file))
   #:use-module ((lokke concurrent)
@@ -256,7 +278,8 @@
             time
             trampoline)
   #:replace (= boolean? case do instance?)
-  #:re-export (*
+  #:re-export (%scm-begin
+               *
                *err*
                *in*
                *ns*
@@ -317,8 +340,7 @@
                assoc-in
                atom
                atom?
-               (begin . %scm-begin)
-               (begin . do)
+               (%scm-begin . do)
                binding
                bit-and
                bit-clear
@@ -442,6 +464,7 @@
                let
                letfn
                line-seq
+               list
                list*
                load-file
                long-array
@@ -553,7 +576,6 @@
                take-last
                take-nth
                take-while
-               throw
                true?
                try
                update
@@ -584,7 +606,6 @@
                            assoc
                            cons
                            format
-                           list
                            list?
                            merge
                            newline
@@ -593,7 +614,8 @@
                            (clj-quote . quote)
                            read
                            set!
-                           sort)
+                           sort
+                           throw)
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (defdyn *clojure-version*
