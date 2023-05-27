@@ -2,7 +2,6 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke scm vector)
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 match) #:select (match))
   #:use-module ((lokke base collection) #:select (<sequential>))
   #:use-module ((lokke hash-map) #:select (hash-map?))
@@ -43,7 +42,8 @@
 (define (lokke-vector? x) (is-a? x <lokke-vector>))
 
 (define-inlinable (show v port emit)
-  (format port "#<<lokke-vector> ~x [" (object-address v))
+  (simple-format port "#<<lokke-vector> ~a ["
+                 (number->string (object-address v) 16))
   (let ((len (lokke-vector-length v)))
     (when (> len 0)
       (emit (lokke-vector-ref v 0) port))

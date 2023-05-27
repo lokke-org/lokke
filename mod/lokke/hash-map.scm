@@ -10,7 +10,6 @@
   #:use-module ((ice-9 atomic)
                 #:select (atomic-box-ref atomic-box-set! make-atomic-box))
   #:use-module ((ice-9 control) #:select (let/ec))
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base collection)
                 #:select (<coll>
                           assoc
@@ -147,7 +146,9 @@
   (show m pr-approachable port))
 
 (define-method (write (m <hash-map>) port)
-  (format port "#<~s ~x " (class-name (class-of m)) (object-address m))
+  (simple-format port "#<~s ~a "
+                 (class-name (class-of m))
+                 (number->string (object-address m) 16))
   (display (map-fm m) port)
   (display ">" port))
 

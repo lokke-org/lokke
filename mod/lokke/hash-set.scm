@@ -14,7 +14,6 @@
                           persistent-fash
                           transient-fash))
   #:use-module ((ice-9 control) #:select (let/ec))
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke base invoke) #:select (invoke))
   #:use-module ((lokke base metadata) #:select (meta with-meta))
   #:use-module ((lokke base util) #:select (require-nil))
@@ -131,7 +130,9 @@
   (show s pr-approachable port))
 
 (define-method (write (m <hash-set>) port)
-  (format port "#<~s ~x " (class-name (class-of m)) (object-address m))
+  (simple-format port "#<~s ~a "
+                 (class-name (class-of m))
+                 (number->string (object-address m) 16))
   (display (set-fm m) port)
   (display ">" port))
 

@@ -2,6 +2,7 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke reader)
+  #:use-module ((guile) #:select ((simple-format . fmt)))
   #:use-module ((ice-9 pretty-print) #:select (pretty-print))
   #:use-module ((ice-9 receive) #:select (receive))
   #:use-module ((lokke base util)
@@ -120,8 +121,9 @@
      ((char? expr) expr)
      (else
       (error
-       (format #f "Unexpected expression while expanding symbols and keywords ~s:"
-               (class-of expr)) expr))))
+       (fmt #f "Unexpected expression while expanding symbols and keywords ~s:"
+            (class-of expr))
+       expr))))
 
   (expand expr #f))
 
@@ -146,7 +148,7 @@
 
   (define (make-binding pos)
     (cond
-     ((integer? pos) (gensym (format #f "fn%~a_" pos)))
+     ((integer? pos) (gensym (string-append "fn%" (number->string pos) "_")))
      ((eq? '%& pos) (gensym "fn%&_"))
      (else (error "Unexpected #() argument position type:" pos))))
 
@@ -178,11 +180,11 @@
             (if (eq? '/lokke/reader-anon-fn (car expr))
                 ;; FIXME: recursively (/lokke/reader-anon-fn ...) as
                 ;; #() for error
-                (error (format #f "Encountered nested #() form: #~s" top))
+                (error (fmt #f "Encountered nested #() form: #~s" top))
                 (map expand-anon-args expr)))
            (else
-            (error (format #f "Unexpected type ~s for ~s in #() form:"
-                           (class-of expr) expr)
+            (error (fmt #f "Unexpected type ~s for ~s in #() form:"
+                        (class-of expr) expr)
                    top)))))
 
       (let* ((expanded (expand-anon-args top))
@@ -213,7 +215,7 @@
     ((keyword? expr) expr)
     ((boolean? expr) expr)
     ((char? expr) expr)
-    (else (error (format #f "Unexpected ~s while rewriting #():" (class-of expr))
+    (else (error (fmt #f "Unexpected ~s while rewriting #():" (class-of expr))
                  expr)))))
 
 
@@ -247,7 +249,7 @@
      ((keyword? expr) expr)
      ((boolean? expr) expr)
      ((char? expr) expr)
-     (else (error (format #f "Unexpected unquoted ~s:" (class-of expr)) expr))))
+     (else (error (fmt #f "Unexpected unquoted ~s:" (class-of expr)) expr))))
 
   (if (not bindings)
       (expand-unquoted expr)
@@ -323,8 +325,7 @@
                       (merge (literals->clj-instances m) pending-meta)
                       result))
                (else
-                (error (format #f "Unexpected metadata type ~s for:"
-                               (class-of m))
+                (error (fmt #f "Unexpected metadata type ~s for:" (class-of m))
                        m))))
             ;; Not (/lokke/reader-meta ...)
             (let ((x (apply-internal-metadata expr (hash-map))))
@@ -366,13 +367,13 @@
         ((/lokke/reader-vector) (reader-vector-elts selected))
         (else selected)))
      (else
-      (error (format #f "Improper splice in #?@~s" reader-cond)))))
+      (error (fmt #f "Improper splice in #?@~s" reader-cond)))))
   (define (select-for-dialect reader-cond splice?)
     ;; Returns a list of expressions (if any) to be spliced into the
     ;; parent.
     (unless (even? (length reader-cond))
-      (error (format #f "Improper reader conditional: #?~a~s"
-                     (if splice? "@" "") reader-cond)))
+      (error (fmt #f "Improper reader conditional: #?~a~s"
+                  (if splice? "@" "") reader-cond)))
     (let* ((cases (pairify reader-cond))
            (code (or (assq-ref cases #:cljl)
                      (assq-ref cases #:default))))
@@ -399,13 +400,13 @@
           (list (concatenate (map expand expr))))))
       (else (list expr)))))
   (when debug-conditionals?
-    (format (current-error-port) "expand reader conditional:\n")
+    (display "expand reader conditional:\n" (current-error-port))
     (pretty-print expr (current-error-port)))
   (let* ((result (expand expr)))
     (when debug-conditionals?
-      (format (current-error-port) "reader conditional expanded:\n")
+      (display "reader conditional expanded:\n" (current-error-port))
       (pretty-print expr (current-error-port))
-      (format (current-error-port) "  =>\n")
+      (display "  =>\n" (current-error-port))
       (pretty-print result (current-error-port)))
     result))
 
@@ -421,13 +422,13 @@
            ;; time so we can remove this error.
            ((not (null? (cdr result)))
             (when (eq? '/lokke/reader-cond (car expr))
-              (error (format #f "#?(...) produced multiple top level values (BUG): #?~s"
-                             (cdr expr))))
+              (error (fmt #f "#?(...) produced multiple top level values (BUG): #?~s"
+                          (cdr expr))))
             (unless (eq? '/lokke/reader-cond-splice (car expr))
               (error "Unexpected reader conditional marker:" expr))
             (error
-             (format #f "#?@(...) cannot unsplice multiple top level values yet: #?@~s"
-                     (cdr expr))))
+             (fmt #f "#?@(...) cannot unsplice multiple top level values yet: #?@~s"
+                  (cdr expr))))
            (else (car result)))))))
 
 ;; FIXME: drop/adjust "meta pending at end of file/form" errors?
@@ -459,37 +460,36 @@
                 (merge (literals->clj-instances m)
                        pending-meta)))
          (else
-          (error (format #f "Unexpected metadata type ~s for:" (class-of m))
-                 m)))))
+          (error (fmt #f "Unexpected metadata type ~s for:" (class-of m)) m)))))
      (else  ;; Not (/lokke/reader-meta ...)
       (let* ((result expr)
              (_ (when debug-reader?
-                  (format (current-error-port) "reader expanding syms/keys: ~s\n" result)))
+                  (fmt (current-error-port) "reader expanding syms/keys: ~s\n" result)))
              (result (expand-sym/key-aliases result env aliases))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader rewriting #(): ~s\n" result)))
+                  (fmt (current-error-port) "reader rewriting #(): ~s\n" result)))
              (result (rewrite-anon-fns result))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader expanding syntax-quote (`): ~s\n" result)))
+                  (fmt (current-error-port) "reader expanding syntax-quote (`): ~s\n" result)))
              (result (expand-synquote-gensyms result))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader compiling metadata: ~s\n" result)))
+                  (fmt (current-error-port) "reader compiling metadata: ~s\n" result)))
              (result (apply-internal-metadata result (hash-map)))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader finishing up: ~s\n" result)))
+                  (fmt (current-error-port) "reader finishing up: ~s\n" result)))
              (_ (when debug-reader?
-                  (format (current-error-port) "reader pending meta: ~s\n" pending-meta)))
+                  (fmt (current-error-port) "reader pending meta: ~s\n" pending-meta)))
              (result (if (empty? pending-meta)
                          result
                          (if (supports-reader-meta? result)
                              (with-reader-meta result pending-meta)
                              (begin
-                               (format (current-error-port)
-                                       "Ignoring metadata in unsupported position: ~s\n"
-                                       pending-meta)
+                               (fmt (current-error-port)
+                                    "Ignoring metadata in unsupported position: ~s\n"
+                                    pending-meta)
                                result)))))
         (when debug-reader?
-          (format (current-error-port) "reader returning: ~s\n" result))
+          (fmt (current-error-port) "reader returning: ~s\n" result))
         result)))))
 
 (define (read-for-compiler port env)

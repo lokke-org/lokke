@@ -91,11 +91,11 @@
      (string-append
       "#object["
       (if (tree-il? x)
-          (%scm-format #f "~s" x)
+          (simple-format #f "~s" x)
           ;; This may not be the preferred rep for structs/records/etc.
-          (apply %scm-format #f "~s 0x~x~a~a"
+          (apply simple-format #f "~s 0x~a~a~a"
                  (class-name (class-of x))
-                 (object-address x)
+                 (number->string (object-address x) 16)
                  (if details
                      (list " " details)
                      '("" ""))))
@@ -212,7 +212,8 @@
 
 (define-inlinable (var-desc v)
   (read-only-str
-   (%scm-format #f "#object[<variable> 0x~x]" (object-address v))))
+   (simple-format #f "#object[<variable> 0x~a]"
+                  (number->string (object-address v) 16))))
 
 (define-method (pr-str (x var-class))
   (var-desc x))
