@@ -1,10 +1,17 @@
-;;; Copyright (C) 2019-2022 Rob Browning <rlb@defaultvalue.org>
+;;; Copyright (C) 2019-2023 Rob Browning <rlb@defaultvalue.org>
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke pr)
+  #:pure
+  #:use-module ((guile) #:hide (format newline))
   #:use-module ((guile) #:select ((newline . %scm-newline)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((ice-9 format) #:select ((format . %scm-format)))
+  ;; (guile) doesn't currently export these
+  #:use-module ((ice-9 ports)
+                #:select (call-with-input-string
+                          current-input-port
+                          current-output-port))
   #:use-module ((language tree-il) #:prefix tree-il/)
   #:use-module ((lokke base dynamic) #:select (binding defdyn))
   #:use-module ((lokke base util)
