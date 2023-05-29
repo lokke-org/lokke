@@ -36,8 +36,8 @@
 (define-syntax synerr
   (syntax-rules ()
     ((_ name exp msg)
-     (error (format #f "~s: ~a in form ~s" name msg
-                    (convert-for-public-message (syntax->datum exp)))))))
+     (error (simple-format #f "~s: ~a in form ~s" name msg
+                           (convert-for-public-message (syntax->datum exp)))))))
 
 ;; If we eventually have a lower-level module for vector, hash-map,
 ;; and hash-set (to avoid circular references via ns, etc.), we could
@@ -53,8 +53,8 @@
   (with-meta ((@ (lokke vector) vector) exp ...) meta))
 
 (define-syntax-rule (/lokke/reader-meta x ...)
-  (warn (format #f "Ignoring metadata in unsupported position: ~s"
-                '(/lokke/reader-meta x ...))))
+  (warn (simple-format #f "Ignoring metadata in unsupported position: ~s"
+                       '(/lokke/reader-meta x ...))))
 
 (define-syntax clj-quote
   ;; Note that ~ and ~@ (i.e. unquote and unquote-splicing) still

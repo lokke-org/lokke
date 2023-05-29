@@ -28,8 +28,7 @@
                 #:select ((apply . %scm-apply)
                           (begin . %scm-begin)
                           (if . %scm-if)
-                          (let . %scm-let)
-                          (format . %scm-format)))
+                          (let . %scm-let)))
   #:use-module ((ice-9 match) #:select (match-lambda*))
   #:use-module ((oop goops) #:hide (instance?))
   #:use-module ((srfi srfi-1) #:select (iota))
@@ -725,9 +724,9 @@
   (let* ((start (current-time time-monotonic))
          (result exp)
          (elapsed (time-difference (current-time time-monotonic) start)))
-    (%scm-format *out* "\"Elapsed time: ~s msecs\"\n"
-                 (+ (* 1000 (time-second elapsed))
-                    (/ (time-nanosecond elapsed) 1000.0)))
+    (simple-format *out* "\"Elapsed time: ~s msecs\"\n"
+                   (+ (* 1000 (time-second elapsed))
+                      (/ (time-nanosecond elapsed) 1000.0)))
     result))
 
 (define (trampoline f . args)

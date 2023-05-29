@@ -65,10 +65,10 @@
               (info (dynamic-fluid var)))
          (unless info
            (error
-            (format #f
-                    "binding: unable to resolve dynamic variable ~a in ns ~a"
-                    name-sym
-                    (module-name->ns-str (module-name mod)))))
+            (simple-format #f
+                           "binding: unable to resolve dynamic variable ~a in ns ~a"
+                           name-sym
+                           (module-name->ns-str (module-name mod)))))
          (match info
            ((mod name fluid-name fluid)
             (with-syntax ((mod (datum->syntax x mod))
@@ -88,10 +88,10 @@
               (info (dynamic-fluid var)))
          (unless info
            (error
-            (format #f
-                    "binding: unable to resolve dynamic variable ~a in ns ~a"
-                    name-sym
-                    (module-name->ns-str (module-name mod)))))
+            (simple-format #f
+                           "binding: unable to resolve dynamic variable ~a in ns ~a"
+                           name-sym
+                           (module-name->ns-str (module-name mod)))))
          (match info
            ((mod name fluid-name fluid)
             (with-syntax ((mod (datum->syntax x mod))

@@ -190,7 +190,7 @@
   (lambda (x)
     (syntax-case x ()
       ((_ arg ...) (%scm-if debug-let?
-                            #'(format (current-error-port) arg ...)
+                            #'(simple-format (current-error-port) arg ...)
                             #t)))))
 
 (define (strip-top-level-metadata forms)
@@ -348,7 +348,7 @@
   (lambda (x)
     (syntax-case x ()
       ((_ arg ...) (%scm-if debug-fn?
-                            #'(format (current-error-port) arg ...)
+                            #'(simple-format (current-error-port) arg ...)
                             #t)))))
 
 (define (undotted lst)

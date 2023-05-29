@@ -28,8 +28,8 @@
   #:duplicates (merge-generics replace warn-override-core warn last))
 
 (define-syntax-rule (/lokke/reader-meta x ...)
-  (warn (format #f "Ignoring metadata in unsupported position: ~s"
-                '(/lokke/reader-meta x ...))))
+  (warn (simple-format #f "Ignoring metadata in unsupported position: ~s"
+                       '(/lokke/reader-meta x ...))))
 
 (define-syntax-rule (/lokke/reader-tagged tag data)
   ((@ (lokke transmogrify) instantiate-tagged) 'tag data))

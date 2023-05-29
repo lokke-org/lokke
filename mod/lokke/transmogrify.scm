@@ -201,13 +201,13 @@
          (_ (error "Unexpected expression while uninstantiating literals:"
                    expr (class-of expr) (list? expr))))))))
   (when debug-transmogrify?
-    (format (current-error-port) "uninstantiate:\n")
+    (display "uninstantiate:\n" (current-error-port))
     (pretty-print expr (current-error-port)))
   (let ((result (convert expr)))
     (when debug-transmogrify?
-      (format (current-error-port) "uninstantiated:\n")
+      (display "uninstantiated:\n" (current-error-port) )
       (pretty-print expr (current-error-port))
-      (format (current-error-port) "  =>\n")
+      (display "  =>\n" (current-error-port))
       (pretty-print result (current-error-port)))
     result))
 

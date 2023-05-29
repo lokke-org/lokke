@@ -4,6 +4,9 @@
 ;;; Namespace underpinnings
 
 (define-module (lokke ns)
+  #:pure
+  #:use-module ((guile) #:hide (format))
+  #:use-module ((guile) #:select ((simple-format . fmt)))
   #:use-module ((ice-9 threads) #:select (make-mutex))
   #:use-module ((lokke base util) #:select (map-tag? module-name->ns-sym))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
@@ -53,7 +56,7 @@
 
 (define dbgf
   (if debug-ns?
-      (lambda args (apply format (current-error-port) args))
+      (lambda args (apply fmt (current-error-port) args))
       (lambda args #t)))
 
 (define dbgwn
@@ -188,18 +191,18 @@
                   (save-module-excursion (lambda () (load-compiled compiled)))
                   (let ((mod (resolve-module name #f #:ensure #f)))
                     (unless mod
-                      (error (format #f "Namespace ~s not defined by ~s"
-                                     (module-name->ns-sym name)
-                                     compiled)))
+                      (error (fmt #f "Namespace ~s not defined by ~s"
+                                  (module-name->ns-sym name)
+                                  compiled)))
                     (dbgf "resolved: ~s -> ~s\n" name mod)
                     mod))))))))
 
 (define (resolve-ns-module name)
   (let ((m (maybe-resolve-ns-module name)))
     (unless m
-      (error (format #f "Unable to find module ~s for namespace ~s"
-                     name
-                     (module-name->ns-sym name))))
+      (error (fmt #f "Unable to find module ~s for namespace ~s"
+                  name
+                  (module-name->ns-sym name))))
     m))
 
 (define (find-ns ns-sym)
@@ -215,7 +218,7 @@
               (error "Symbol does not include ns and name:" var-sym)))
          (m (find-ns ns)))
     (unless m
-      (error (format #f "Unable to find ns ~s for symbol" ns) var-sym))
+      (error (fmt #f "Unable to find ns ~s for symbol" ns) var-sym))
     (or (module-variable m ref)
         #nil)))
 
@@ -303,10 +306,10 @@
                           (eq? #:only kind))
                  (error "Encountered :only in require clause:" item))
                (when (null? (cdr specs))
-                 (error (format #f "No values for ~a in" select-src) item))
+                 (error (fmt #f "No values for ~a in" select-src) item))
                (when select-src
                  ;; select should only be false here for prev :refer :all
-                 (warn (format #f "~a is suppressing" kind)
+                 (warn (fmt #f "~a is suppressing" kind)
                        (cons select-src (or select #:all))))
                (let ((names (cadr specs)))
                  (if (eq? #:all names)
@@ -351,15 +354,15 @@
     result))
 
 (define (dump-mod-info mod port)
-  (format port "module: ~s\n" (module-name mod))
+  (fmt port "module: ~s\n" (module-name mod))
   (let ((pub (module-public-interface mod)))
     (when pub
-      (format port "  public:\n")
-      (module-map (lambda (name var) (format port "    ~s -> ~s\n" name var))
+      (display "  public:\n" port)
+      (module-map (lambda (name var) (fmt port "    ~s -> ~s\n" name var))
                   pub)))
-  (format port "  private:\n")
+  (display "  private:\n" port)
   (module-map (lambda (name var)
-                (format port "    ~s -> ~s\n" name var))
+                (fmt port "    ~s -> ~s\n" name var))
               mod)
   *unspecified*)
 
@@ -371,8 +374,8 @@
       (let ((existing-target (get aliases name)))
         (if existing-target
             (unless (eq? (find-ns aliased-ns) existing-target)
-              (error (format #f "Alias ~s already exists in namespace ~s, aliasing ~s"
-                             name (ns-name mod) aliased-ns)))
+              (error (fmt #f "Alias ~s already exists in namespace ~s, aliasing ~s"
+                          name (ns-name mod) aliased-ns)))
             (assoc aliases name (find-ns aliased-ns)))))
     (atom-swap! (module-ref mod '/lokke/ns-aliases) set-alias-if-unset)))
 

@@ -7,6 +7,7 @@
   #:use-module ((lokke base util) #:select (string->keyword))
   #:use-module ((rnrs arithmetic fixnums) #:version (6) #:select (fixnum?))
   #:use-module ((srfi srfi-1) #:select (fold reduce first second third))
+  #:use-module ((srfi srfi-28) #:select (format))
   #:re-export ((+ . +')
                (- . -')
                ->
@@ -118,7 +119,7 @@
   (random (truncate n)))
 
 (define (str . items)
-  (string-concatenate (map (lambda (x) (format #f "~a" x)) items)))
+  (string-concatenate (map (lambda (x) (format "~a" x)) items)))
 
 (define (ratio? x)
   (and (not (exact-integer? x)) (rational? x) (exact? x)))

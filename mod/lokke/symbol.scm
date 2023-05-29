@@ -10,6 +10,7 @@
   #:use-module ((lokke pr) #:select (str))
   #:use-module (oop goops)
   #:use-module ((srfi srfi-1) #:select (any))
+  #:use-module ((srfi srfi-28) #:select (format))
   #:export (ident?
             keyword
             name
@@ -80,7 +81,7 @@ clojure string) for clojure.string."
   (string-append sym-component-first-chars "0-9"))
 
 (define valid-symbol-component-name?
-  (let ((rx (make-regexp (format #f "^[~a][~a]*$"
+  (let ((rx (make-regexp (format "^[~a][~a]*$"
                                  sym-component-first-chars
                                  sym-component-other-chars)
                          regexp/icase)))
@@ -115,12 +116,12 @@ clojure string) for clojure.string."
                   (error "Found \".\" character in symbol's var ref:" sym))
                 (for-each (lambda (x)
                             (unless (valid-symbol-component-name? x)
-                              (error (format #f "Invalid ns component ~s in symbol:" x)
+                              (error (format "Invalid ns component ~s in symbol:" x)
                                      sym)))
                           ns)
                 (unless (or (not ref) (valid-symbol-component-name? ref))
                   (if (pair? ns)
-                      (error (format #f "Invalid var ref component ~s in symbol:"
+                      (error (format "Invalid var ref component ~s in symbol:"
                                      ref)
                              sym)
                       (error "Invalid symbol syntax:" sym)))
@@ -151,7 +152,7 @@ clojure string) for clojure.string."
       (error "Improper \".\" placement in symbol's namespace:" s))
     (for-each (lambda (x)
                 (unless (valid-symbol-component-name? x)
-                  (error (format #f "Invalid ns component ~s in symbol:" x)
+                  (error (format "Invalid ns component ~s in symbol:" x)
                          s)))
               ns))
   s)
@@ -184,8 +185,9 @@ clojure string) for clojure.string."
               sym
               (begin
                 (when (parsed-sym-ns parsed)
-                  (error (format #f
-                                 "Can't construct symbol with ns ~s; name already has one: ~s" ns name)))
+                  (error
+                   (format "Can't construct symbol with ns ~s; name already has one: ~s"
+                           ns name)))
                 (validate-ns-str ns)
                 (string->symbol (string-append ns "/" name))))))))
 

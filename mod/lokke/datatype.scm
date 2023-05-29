@@ -42,7 +42,7 @@
 ;; FIXME: need to strip arg metadata?
 
 (define (error* fmt . args)
-  (error (apply format #f fmt args)))
+  (error (apply simple-format #f fmt args)))
 
 (define (arglist? x)
   (and (reader-vector? x)

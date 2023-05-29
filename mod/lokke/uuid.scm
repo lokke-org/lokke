@@ -102,7 +102,9 @@
   (uuid-int->string (uuid-value uuid)))
 
 (define-method (write (uuid <uuid>) port)
-  (format port "#<~s ~x " (class-name (class-of uuid)) (object-address uuid))
+  (simple-format port "#<~s ~a "
+                 (class-name (class-of uuid))
+                 (number->string (object-address uuid) 16))
   (display (uuid->tagged-data uuid) port)
   (display ">" port))
 

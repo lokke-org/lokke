@@ -2,7 +2,6 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke ns clojure main)
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((lokke config) #:select (ensure-config-dir))
   #:export (repl))
 

@@ -526,9 +526,9 @@
                (make-transient-fash #:hash hash #:equal equal)))
 
 (define (print-fash fash port)
-  (format port "#<fash ~a>" (fash->alist fash)))
+  (simple-format port "#<fash ~a>" (fash->alist fash)))
 (define (print-transient-fash fash port)
-  (format port "#<transient-fash ~a>" (fash->alist fash)))
+  (simple-format port "#<transient-fash ~a>" (fash->alist fash)))
 
 (set-record-type-printer! <fash> print-fash)
 (set-record-type-printer! <transient-fash> print-transient-fash)

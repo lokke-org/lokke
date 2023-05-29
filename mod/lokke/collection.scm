@@ -6,7 +6,6 @@
   #:pure
   #:use-module ((guile)
                 #:hide (apply assoc cons hash list? merge peek reverse sort))
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 match) #:select (match))
   #:use-module (oop goops)
   #:use-module ((ice-9 match) #:select (match-lambda match-lambda*))
@@ -287,16 +286,18 @@
   (show s
         (lambda (x port) (write x port))
         port
-        (format #f "#<<class> ~s ~x ("
-                (class-name (class-of s)) (object-address s))
+        (simple-format #f "#<<class> ~s ~a ("
+                       (class-name (class-of s))
+                       (number->string (object-address s) 16))
         ")>"))
 
 (define-method (display (s <seq>) port)
   (show s
         (lambda (x port) (display x port))
         port
-        (format #f "#<<class> ~s ~x ("
-                (class-name (class-of s)) (object-address s))
+        (simple-format #f "#<<class> ~s ~a ("
+                       (class-name (class-of s))
+                       (number->string (object-address s) 16))
         ")>"))
 
 ;; FIXME: Implement rseq...

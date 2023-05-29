@@ -18,12 +18,14 @@
 
 ;; prompt not borrowed, I think (can be moved to lokke proper)
 (define (prompt repl)
-  (format #f "~A@~A~A> " (language-name (repl-language repl))
-          (module-name->ns-sym (module-name (current-module)))
-          (let ((level (length (cond
-                                ((fluid-ref *repl-stack*) => cdr)
-                                (else '())))))
-            (if (zero? level) "" (format #f " [~a]" level)))))
+  (simple-format #f "~a@~a~a> " (language-name (repl-language repl))
+                 (module-name->ns-sym (module-name (current-module)))
+                 (let ((level (length (cond
+                                       ((fluid-ref *repl-stack*) => cdr)
+                                       (else '())))))
+                   (if (zero? level)
+                       ""
+                       (simple-format #f " [~a]" level)))))
 
 ;; start-repl adapted from the version in Guile 2.2.6 (LGPL 3)
 (define* (start-repl-w-reader #:optional (lang (current-language))
@@ -83,9 +85,9 @@
             (lambda ()
               (setlocale LC_ALL ""))
             (lambda (key subr fmt args errno)
-              (format (current-error-port)
-                      "warning: failed to install locale: ~a~%"
-                      (strerror (car errno))))))
+              (simple-format (current-error-port)
+                             "warning: failed to install locale: ~a~%"
+                             (strerror (car errno))))))
      (let ((status (start-repl-w-reader (current-language))))
        (run-hook exit-hook)
        status))))

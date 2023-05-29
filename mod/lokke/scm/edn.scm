@@ -10,6 +10,7 @@
                 #:select (eof-object get-char get-string-n lookahead-char))
   #:use-module ((srfi srfi-1) #:select (delete-duplicates!))
   #:use-module ((srfi srfi-9) #:select (define-record-type))
+  #:use-module ((srfi srfi-28) #:select (format))
   #:use-module ((srfi srfi-43) #:select (reverse-list->vector))
   #:use-module ((srfi srfi-88) #:select (string->keyword))
   ;; Expect imports to use a #:prefix edn/ or similar
@@ -111,7 +112,7 @@
       (error (string-append "Unexpected end of file while reading " name)))
      ((string=? s remaining)
       (must-end port (lambda (c)
-                       (format #f "Unrecognized edn character ~a~a..." name c)))
+                       (format "Unrecognized edn character ~a~a..." name c)))
       result))))
 
 (define (read-unicode-point port)
@@ -122,7 +123,7 @@
       (error "Unexpected end of file while reading \\uNNNN character"))
      (else
       (must-end port (lambda (c)
-                       (format #f "Unrecognized edn character \\u~a~a..." s c)))
+                       (format "Unrecognized edn character \\u~a~a..." s c)))
       (integer->char (string->number s 16))))))
 
 (define (read-character-remainder port)
@@ -253,7 +254,7 @@
                (reverse-list->string pending) "M"))
       (must-end port
                 (lambda (c)
-                  (format #f "Invalid edn floating point syntax ~aM~a..."
+                  (format "Invalid edn floating point syntax ~aM~a..."
                           (reverse-list->string pending) c)))
       (parse-float (string-append "#e" (reverse-list->string pending))))
      (else
@@ -299,7 +300,7 @@
         ((#\M)
          (must-end port
                    (lambda (c)
-                     (format #f "Invalid edn floating point syntax ~aM~a..."
+                     (format "Invalid edn floating point syntax ~aM~a..."
                              (reverse-list->string pending) c)))
          (parse-float (string-append "#e" (reverse-list->string pending))))
         (else
@@ -344,7 +345,7 @@
      ((eqv? c #\M)
       (must-end port
                 (lambda (c)
-                  (format #f "Invalid edn nummeric syntax ~aM~a..."
+                  (format "Invalid edn nummeric syntax ~aM~a..."
                           (reverse-list->string pending) c)))
       (string->number (reverse-list->string pending)))
      ((char-set-contains? char-set:digit c)
@@ -388,7 +389,7 @@
      ((blank? c)
       (error "Unexpected blank space after start of edn keyword"))
      ((delimiter? c)
-      (error (format #f "Unexpected delimiter ~s after start of edn keyword"
+      (error (format "Unexpected delimiter ~s after start of edn keyword"
                      (string c))))
      ((eqv? c #\:) (error "Read :: at start of edn keyword"))
      (else

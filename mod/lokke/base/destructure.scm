@@ -31,7 +31,7 @@
   (lambda (x)
     (syntax-case x ()
       ((_ arg ...) (if debug?
-                       #'(format (current-error-port) arg ...)
+                       #'(simple-format (current-error-port) arg ...)
                        #t)))))
 
 ;; For now, we don't bother to try to be smart about dropping unnecessary
@@ -171,13 +171,13 @@
           (cond
            ((member kwd '(#:keys #:strs #:syms))
             (when (null? (cdr rst))
-              (error (format #f "No value for ~a in" kwd) rst))
+              (error (simple-format #f "No value for ~a in" kwd) rst))
             (let ((names (cadr rst)))
               (unless (syn-vecish? names)
-                (error (format #f "~a value is not a vector" kwd) rst))
+                (error (simple-format #f "~a value is not a vector" kwd) rst))
               (let ((names (syn-vecish->list names)))
                 (unless (every syn-symbol? names)
-                  (error (format #f "~a names must all be symbols" kwd) rst))
+                  (error (simple-format #f "~a names must all be symbols" kwd) rst))
                 (let* ((syms (reverse (map syntax->datum names)))
                        (dummy (dbg "syms: ~s\n" syms))
                        (names (case kwd

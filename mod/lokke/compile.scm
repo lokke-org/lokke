@@ -2,6 +2,7 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-or-later OR EPL-1.0+
 
 (define-module (lokke compile)
+  #:use-module ((guile) #:select ((simple-format . fmt)))
   #:use-module ((ice-9 pretty-print) #:select (pretty-print))
   #:use-module ((ice-9 receive) #:select (receive))
   #:use-module ((ice-9 sandbox)
@@ -57,7 +58,7 @@
 
 (define dbg
   (if debug-compile?
-      (lambda args (apply format (current-error-port) args))
+      (lambda args (apply fmt (current-error-port) args))
       (lambda args #t)))
 
 (eval-when (expand load eval)
@@ -119,41 +120,41 @@ Clojure reference like clojure.string/join to the corresponding Guile
   ;; FIXME: source-properties...
   (define (up tree)
     (let* ((count (begin (set! il-count (1+ il-count)) il-count))
-           (_ (when debug-il? (format (current-error-port) "il[~a]: ~s\n" count tree)))
+           (_ (when debug-il? (fmt (current-error-port) "il[~a]: ~s\n" count tree)))
            (result (cond
                     ((tree-il/call? tree)
                      (let ((result (rewrite-il-call tree)))
                        (when debug-il?
-                         (format (current-error-port) "il[~a]: ~s\n" count result))
+                         (fmt (current-error-port) "il[~a]: ~s\n" count result))
                        result))
                     ((tree-il/toplevel-ref? tree)
                      (let ((result (rewrite-il-toplevel tree ns-aliases)))
                        (when debug-il?
-                         (format (current-error-port) "il[~a]: ~s\n" count result))
+                         (fmt (current-error-port) "il[~a]: ~s\n" count result))
                        result))
                     (else
                      (when debug-il?
-                       (format (current-error-port) "il[~a]: <<unchanged>>\n" count))
+                       (fmt (current-error-port) "il[~a]: <<unchanged>>\n" count))
                      tree))))
       result))
   (let ((result (tree-il/post-order up il)))
     (when debug-il?
-      (format (current-error-port) "tree-il:\n")
+      (display "tree-il:\n" (current-error-port))
       (pretty-print (tree-il/unparse-tree-il il) (current-error-port))
-      (format (current-error-port) "  =>\n")
+      (display "  =>\n" (current-error-port))
       (pretty-print (tree-il/unparse-tree-il result) (current-error-port)))
     result))
 
 (define (tree->tree-il expr env opts)
   ;; FIXME: source-properties...
-  (when debug-compile? (format (current-error-port) "compile: ~s\n" expr))
+  (when debug-compile? (fmt (current-error-port) "compile: ~s\n" expr))
   ;; At the moment, env and cenv will be the same from the scheme compiler
   (receive (result env cenv)
       (scheme/compile-tree-il expr env opts)
     (when debug-compile?
-      (format (current-error-port) "initial-tree-il: ~s\n" result))
+      (fmt (current-error-port) "initial-tree-il: ~s\n" result))
     (let ((result (rewrite-il-calls result (ns-aliases env))))
-      (when debug-compile? (format (current-error-port) "final-tree-il: ~s\n" result))
+      (when debug-compile? (fmt (current-error-port) "final-tree-il: ~s\n" result))
       (values result env env))))
 
 (define (load-file path)

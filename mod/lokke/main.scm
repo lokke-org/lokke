@@ -7,8 +7,8 @@
 ;; avoid setting the lanugage.
 
 (define-module (lokke main)
+  #:use-module ((guile) #:select ((simple-format . fmt)))
   #:use-module ((ice-9 eval-string) #:select (eval-string))
-  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((ice-9 rdelim) #:select (read-delimited))
   #:use-module ((ice-9 textual-ports) #:select (get-string-n))
   #:use-module ((lokke base dynamic) #:select (binding))
@@ -74,7 +74,7 @@
   (exit status))
 
 (define (quit-early msg . args)
-  (apply format (err) msg args)
+  (apply fmt (err) msg args)
   (exit not-even-started))
 
 (define (misuse usage)
@@ -209,7 +209,7 @@
             (hash-table-set! result 'args (cdr args))
             (clean-up result))
            (else
-            (format (err) "lokke: unrecognized argument: ~s\n" arg)
+            (fmt (err) "lokke: unrecognized argument: ~s\n" arg)
             (quit-early (usage))))))))
 
 (define (lokke-run args usage)
@@ -285,7 +285,8 @@ terminator."
                                 (i 1 (1+ i)))
                                ((null? args))
                              (module-define! m
-                                             (string->symbol (format #f "%~d" i))
+                                             (string->symbol
+                                              (string-append "%" (number->string i)))
                                              (car args)))
                            (module-define! m 'run cli-run)
                            m)))
