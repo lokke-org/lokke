@@ -22,8 +22,7 @@
   #:use-module (srfi srfi-4)
   #:use-module (srfi srfi-71)
   #:duplicates (merge-generics replace warn-override-core warn last)
-  #:export (aget
-            amap
+  #:export (amap
             areduce
             aset
             aset-boolean
