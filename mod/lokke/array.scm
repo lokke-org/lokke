@@ -138,7 +138,7 @@
              (ret (datum->syntax #'expr (syntax->datum #'ret))))
          #`(let* ((count _make ref set (array-fns array))
                   (len (count array))
-                  (result (aclone array))
+                  (result (array-copy array))
                   (#,ret result))
              (do ((#,i 0 (1+ #,i)))
                  ((= #,i len) result)
