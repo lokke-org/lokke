@@ -8,6 +8,7 @@
   #:use-module ((guile) #:hide (format))
   #:use-module ((guile) #:select ((simple-format . fmt)))
   #:use-module ((ice-9 threads) #:select (make-mutex))
+  ;; We also use (@ (ice-9 pretty-print)) pretty-print) if debug-ns? is true
   #:use-module ((lokke base util) #:select (map-tag? module-name->ns-sym))
   #:use-module ((lokke hash-map) #:select (assoc get hash-map hash-map?))
   #:use-module ((lokke metadata) #:select (alter-meta! meta with-meta))
@@ -529,6 +530,32 @@ not bound."
           (set! augmented? #t))
         m))))
 
+(define (expand-ns ctx name specs)
+  (let* ((mod (ns-sym->mod-name (require-ns-sym (syntax->datum name))))
+         (core? (core-module? mod))
+         (specs (clj-syntax->scm specs))
+         (ref-cmds (datum->syntax ctx (incorporate-refs-syntax specs core?))))
+    #`(eval-when (expand load eval)
+        ;; Only define the module here -- needs to be top level,
+        ;; and language will be lokke, so we don't want to let it
+        ;; autocompile.  Rely on require/use instead which
+        ;; autodetects.
+        ;; FIXME: duplication with create-ns
+        (define-module #,(datum->syntax ctx mod)
+          #:duplicates (merge-generics replace warn-override-core warn last)
+          #:pure)
+        (let ((m (current-module)))
+          (module-define! m '/lokke/doc-lock (make-mutex))
+          (module-define! m '/lokke/doc (make-hash-table))
+          (module-define! m '/lokke/ns-aliases (atom (hash-map)))
+          (module-define! m '/lokke/ns-metadata (ns-meta-atom)))
+        ;; FIXME: minimze this set
+        (require 'guile.language.lokke.spec) ;; FIXME: may not be needed
+        (use 'guile.lokke.boot)
+        (require '(guile.lokke.ns #:refer (refer refer-clojure require use)))
+        #,@ref-cmds
+        #nil)))
+
 ;; For now, this only works for lokke since we can't use a let to
 ;; capture/restore the current language without hiding the
 ;; define-module from the compiler (assuming I understood what I saw
@@ -572,27 +599,8 @@ not bound."
            #nil))
       ;; none
       ((_ name specs ...)
-       (let* ((mod (ns-sym->mod-name (require-ns-sym (syntax->datum #'name))))
-              (core? (core-module? mod))
-              (specs (clj-syntax->scm #'(specs ...)))
-              (ref-cmds (datum->syntax x (incorporate-refs-syntax specs core?))))
-         #`(eval-when (expand load eval)
-             ;; Only define the module here -- needs to be top level,
-             ;; and language will be lokke, so we don't want to let it
-             ;; autocompile.  Rely on require/use instead which
-             ;; autodetects.
-             ;; FIXME: duplication with create-ns
-             (define-module #,(datum->syntax x mod)
-               #:duplicates (merge-generics replace warn-override-core warn last)
-               #:pure)
-             (let ((m (current-module)))
-               (module-define! m '/lokke/doc-lock (make-mutex))
-               (module-define! m '/lokke/doc (make-hash-table))
-               (module-define! m '/lokke/ns-aliases (atom (hash-map)))
-               (module-define! m '/lokke/ns-metadata (ns-meta-atom)))
-             ;; FIXME: minimze this set
-             (require 'guile.language.lokke.spec)  ;; FIXME: may not be needed
-             (use 'guile.lokke.boot)
-             (require '(guile.lokke.ns #:refer (refer refer-clojure require use)))
-             #,@ref-cmds
-             #nil))))))
+       (let ((syn (expand-ns x #'name #'(specs ...))))
+         (when debug-ns?
+           (fmt (current-error-port) "ns: ~s\n" syn)
+           ((@ (ice-9 pretty-print) pretty-print) (syntax->datum syn) (current-error-port)))
+         syn)))))
